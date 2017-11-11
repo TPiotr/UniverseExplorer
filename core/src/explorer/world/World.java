@@ -342,7 +342,7 @@ public class World extends StaticWorldObject {
             last_time_chunk_changed = System.currentTimeMillis();
         }
 
-        //if we have to load all chunks turn off delayed chunks loading system
+        //if we have to load all chunks avoid delayed chunks loading system
         if(Math.abs(move_factor_x) > 1 || Math.abs(move_factor_y) > 1) {
             last_time_chunk_changed -= load_chunk_after * 2;
         }

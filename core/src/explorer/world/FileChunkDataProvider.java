@@ -162,7 +162,10 @@ public class FileChunkDataProvider extends ChunkDataProvider {
     }
 
     @Override
-    public void saveChunkData(final DataSaved callback, final explorer.world.chunk.WorldChunk chunk, Vector2 chunk_pos, World world, Game game) {
+    public void saveChunkData(final DataSaved callback, final explorer.world.chunk.WorldChunk chunk, Vector2 chunk_poss, World world, Game game) {
+        //store chunk pos in final variable to avoid situation when chunk will be saved on wrong pos which would destroy players world
+        final Vector2 chunk_pos = new Vector2(chunk_poss);
+
         int x = (int) chunk_pos.x / World.CHUNK_WORLD_SIZE;
         int y = (int) chunk_pos.y / World.CHUNK_WORLD_SIZE;
 
@@ -171,7 +174,7 @@ public class FileChunkDataProvider extends ChunkDataProvider {
 
         final String path = getPathToChunkFile(world_dir, new Vector2(x * World.CHUNK_WORLD_SIZE, y * World.CHUNK_WORLD_SIZE));
 
-        System.out.println("Save request: "+path);
+        System.out.println("Save request: " + path);
 
         //because I want to save in background we have to copy chunk data here
         final int[][] foreground_blocks = new int[World.CHUNK_SIZE][World.CHUNK_SIZE];
@@ -179,8 +182,8 @@ public class FileChunkDataProvider extends ChunkDataProvider {
 
         for(int i = 0; i < foreground_blocks.length; i++) {
             for(int j = 0; j < foreground_blocks[0].length; j++) {
-                foreground_blocks[i][j] = chunk.getBlocks()[i][j].getForegroundBlock();
-                background_blocks[i][j] = chunk.getBlocks()[i][j].getBackgroundBlock();
+                foreground_blocks[i][j] = chunk.getBlocks()[i][j].getForegroundBlock().getBlockID();
+                background_blocks[i][j] = chunk.getBlocks()[i][j].getBackgroundBlock().getBlockID();
             }
         }
 

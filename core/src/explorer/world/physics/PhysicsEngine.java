@@ -459,7 +459,7 @@ public class PhysicsEngine {
 	 * Add given world object to simulation
 	 * @param object world object that will be added to simulation
 	 */
-	public synchronized void addWorldObject(WorldObject object) {
+	public void addWorldObject(WorldObject object) {
 		synchronized (add_objects_bufor) {
 			add_objects_bufor.add(object);
 		}
@@ -469,14 +469,14 @@ public class PhysicsEngine {
 	 * Add array of objects to simulation
 	 * @param objects list of objects that will be added
 	 */
-	public synchronized void addWorldObjects(Array<WorldObject> objects) {
+	public void addWorldObjects(Array<WorldObject> objects) {
 		synchronized (add_objects_bufor) {
 			for (WorldObject o : objects)
 				addWorldObject(o);
 		}
 	}
 
-	public synchronized void addWorldObjects(List<WorldObject> objects) {
+	public void addWorldObjects(List<WorldObject> objects) {
 		synchronized (add_objects_bufor) {
 			System.out.println("adding objects count: " + objects.size());
 			for (WorldObject o : objects)
@@ -488,7 +488,7 @@ public class PhysicsEngine {
 	 * Remove one world object
 	 * @param object object to remove
 	 */
-	public synchronized void removeWorldObject(WorldObject object) {
+	public void removeWorldObject(WorldObject object) {
 		synchronized (remove_objects_bufor) {
 			remove_objects_bufor.add(object);
 		}
@@ -498,14 +498,14 @@ public class PhysicsEngine {
 	 * Remove given objects in array from simulation
 	 * @param objects list of objects that will be removed
 	 */
-	public synchronized void removeWorldObjects(Array<WorldObject> objects) {
+	public void removeWorldObjects(Array<WorldObject> objects) {
 		synchronized (remove_objects_bufor) {
 			for (WorldObject o : objects)
 				removeWorldObject(o);
 		}
 	}
 
-	public synchronized void removeWorldObjects(List<WorldObject> objects) {
+	public void removeWorldObjects(List<WorldObject> objects) {
 		synchronized (remove_objects_bufor) {
 			for (WorldObject o : objects)
 				removeWorldObject(o);

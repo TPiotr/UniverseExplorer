@@ -98,7 +98,7 @@ public class WorldChunk extends StaticWorldObject {
         blocks = new TileHolder[World.CHUNK_SIZE][World.CHUNK_SIZE];
         for(int i = 0; i < World.CHUNK_SIZE; i++) {
             for(int j = 0; j < World.CHUNK_SIZE; j++) {
-                blocks[i][j] = new TileHolder(world.getBlocks().AIR.getBlockID(), world.getBlocks().AIR.getBlockID());
+                blocks[i][j] = new TileHolder(world.getBlocks().AIR, world.getBlocks().AIR);
             }
         }
 
@@ -154,6 +154,9 @@ public class WorldChunk extends StaticWorldObject {
         loading_future = provider.getChunkData(new ChunkDataProvider.DataLoaded() {
             @Override
             public void loaded(ChunkDataProvider.ChunkData data) {
+
+                boolean started_creating_physics_body = false;
+
                 try {
                     //first compare positions of chunk if not equal stop loading data,
                     //because it means that player moved fast and this result is some old random one
@@ -168,8 +171,8 @@ public class WorldChunk extends StaticWorldObject {
                     //copy new data
                     for (int i = 0; i < blocks.length; i++) {
                         for (int j = 0; j < blocks[0].length; j++) {
-                            blocks[i][j].setForegroundBlock(data.foreground_blocks[i][j]);
-                            blocks[i][j].setBackgroundBlock(data.background_blocks[i][j]);
+                            blocks[i][j].setForegroundBlock(world.getBlocks().getBlock(data.foreground_blocks[i][j]));
+                            blocks[i][j].setBackgroundBlock(world.getBlocks().getBlock(data.background_blocks[i][j]));
 
                             if(Thread.interrupted()) {
                                 throw new InterruptedException();
@@ -231,6 +234,9 @@ public class WorldChunk extends StaticWorldObject {
                         throw new InterruptedException();
                     }
 
+                    //set creating physics stuff flag
+                    started_creating_physics_body = true;
+
                     //calculate physics body for chunk
                     //world.getPhysicsEngine().getPhysicsEngineChunksHelper().createChunkPhysicsBody(WorldChunk.this);
                     physics_body_helper.createBody();
@@ -250,9 +256,15 @@ public class WorldChunk extends StaticWorldObject {
                     System.out.println("Total loading time: " + TimeUtils.nanosToMillis(end_time - loading_start) + " milis");
                 } catch(Exception e) {
                     System.out.println("Loading exception: " + e.getClass().getSimpleName());
+
+                    //if creating physics stuff flag is true and task was aborted we have to clean loaded mess up
+                    if(started_creating_physics_body) {
+                        world.getPhysicsEngine().removeWorldObjects(objects);
+                        physics_body_helper.destroyBody();
+                    }
                 }
             }
-        }, getPosition(), world, game);
+        }, new Vector2(getPosition()), world, game);
     }
 
     /**
@@ -311,9 +323,9 @@ public class WorldChunk extends StaticWorldObject {
      */
     public void setBlock(int x, int y, int new_id, boolean background) {
         if(!background) {
-            blocks[x][y].setForegroundBlock(new_id);
+            blocks[x][y].setForegroundBlock(world.getBlocks().getBlock(new_id));
         } else {
-            blocks[x][y].setBackgroundBlock(new_id);
+            blocks[x][y].setBackgroundBlock(world.getBlocks().getBlock(new_id));
         }
 
         //update blocks textures in area where block was set
@@ -327,8 +339,8 @@ public class WorldChunk extends StaticWorldObject {
                     continue;
                 }
 
-                Block this_block_background = world.getBlocks().getBlock(blocks[i][j].getBackgroundBlock());
-                Block this_block_foreground = world.getBlocks().getBlock(blocks[i][j].getForegroundBlock());
+                Block this_block_background = blocks[i][j].getBackgroundBlock();
+                Block this_block_foreground = blocks[i][j].getForegroundBlock();
 
                 if(background) {
                     short texture_id = TileHolderTools.getTileTextureID(blocks, this_block_background, i, j, true, this, world);
@@ -377,8 +389,8 @@ public class WorldChunk extends StaticWorldObject {
     private void updateBlocksTextures() {
         for(int i = 0; i < World.CHUNK_SIZE; i++) {
             for(int j = 0; j < World.CHUNK_SIZE; j++) {
-                Block this_block_background = world.getBlocks().getBlock(blocks[i][j].getBackgroundBlock());
-                Block this_block_foreground = world.getBlocks().getBlock(blocks[i][j].getForegroundBlock());
+                Block this_block_background = blocks[i][j].getBackgroundBlock();
+                Block this_block_foreground = blocks[i][j].getForegroundBlock();
 
                 if(this_block_foreground == null || this_block_background == null)
                     continue;
@@ -406,8 +418,8 @@ public class WorldChunk extends StaticWorldObject {
         for(int i = 0; i < World.CHUNK_SIZE; i++) {
             for (int j = 0; j < World.CHUNK_SIZE; j++) {
                 if(i == 0 || j == 0 || i == World.CHUNK_SIZE - 1 || j == World.CHUNK_SIZE - 1) {
-                    Block this_block_background = world.getBlocks().getBlock(blocks[i][j].getBackgroundBlock());
-                    Block this_block_foreground = world.getBlocks().getBlock(blocks[i][j].getForegroundBlock());
+                    Block this_block_background = blocks[i][j].getBackgroundBlock();
+                    Block this_block_foreground = blocks[i][j].getForegroundBlock();
 
                     if(this_block_foreground == null || this_block_background == null)
                         continue;
@@ -434,8 +446,8 @@ public class WorldChunk extends StaticWorldObject {
     private void calculateGroundLight() {
         for(int i = 0; i < World.CHUNK_SIZE; i++) {
             for (int j = 0; j < World.CHUNK_SIZE; j++) {
-                int foreground_id = blocks[i][j].getForegroundBlock();
-                int background_id = blocks[i][j].getBackgroundBlock();
+                int foreground_id = blocks[i][j].getForegroundBlock().getBlockID();
+                int background_id = blocks[i][j].getBackgroundBlock().getBlockID();
 
                 //if block is clear air
                 if(foreground_id == world.getBlocks().AIR.getBlockID() && background_id == world.getBlocks().AIR.getBlockID()) {
@@ -566,10 +578,10 @@ public class WorldChunk extends StaticWorldObject {
 
                 TileHolder holder = blocks[i + chunk_x_camera][j + chunk_y_camera];
 
-                if(holder.getForegroundBlock() != AIR_ID || holder.getBackgroundBlock() == AIR_ID)
+                if(holder.getForegroundBlock().getBlockID() != AIR_ID || holder.getBackgroundBlock().getBlockID() == AIR_ID)
                     continue;
 
-                Block block = world.getBlocks().getBlock(holder.getBackgroundBlock());
+                Block block = holder.getBackgroundBlock();
                 if(block instanceof CustomColorBlock) {
                     CustomColorBlock cblock = (CustomColorBlock) block;
                     batch.setColor(cblock.getBlockColor().r, cblock.getBlockColor().g, cblock.getBlockColor().b, cblock.getBlockColor().a);
@@ -607,10 +619,10 @@ public class WorldChunk extends StaticWorldObject {
 
                 TileHolder holder = blocks[i + chunk_x_camera][j + chunk_y_camera];
 
-                if(holder.getForegroundBlock() == AIR_ID)
+                if(holder.getForegroundBlock().getBlockID() == AIR_ID)
                     continue;
 
-                Block block = world.getBlocks().getBlock(holder.getForegroundBlock());
+                Block block = holder.getForegroundBlock();
                 if(block instanceof CustomColorBlock) {
                     CustomColorBlock cblock = (CustomColorBlock) block;
                     batch.setColor(cblock.getBlockColor().r, cblock.getBlockColor().g, cblock.getBlockColor().b, cblock.getBlockColor().a);

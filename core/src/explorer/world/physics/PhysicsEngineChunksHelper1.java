@@ -52,7 +52,7 @@ public class PhysicsEngineChunksHelper1 {
 
         for(int i = 0; i < World.CHUNK_SIZE; i++) {
             for(int j = 0; j < World.CHUNK_SIZE; j++) {
-                Block b = world.getBlocks().getBlock(chunk.getBlocks()[i][j].getForegroundBlock());
+                Block b = chunk.getBlocks()[i][j].getForegroundBlock();
                 int AIR_ID = world.getBlocks().AIR.getBlockID();
 
                 boolean add = false;
@@ -70,8 +70,8 @@ public class PhysicsEngineChunksHelper1 {
                     //first check if block with offset is in chunk bounds
                     if(TileHolderTools.inChunkBounds(i, j - block_offset)) {
                         //next check if block is not air and collidable
-                        if(chunk.getBlocks()[i][j - block_offset].getForegroundBlock() != AIR_ID) {
-                            Block block = world.getBlocks().getBlock(chunk.getBlocks()[i][j - block_offset].getForegroundBlock());
+                        if(chunk.getBlocks()[i][j - block_offset].getForegroundBlock().getBlockID() != AIR_ID) {
+                            Block block = chunk.getBlocks()[i][j - block_offset].getForegroundBlock();
 
                             if(block.isCollidable()) {
                                 //if true our collider can be higher
@@ -167,7 +167,7 @@ public class PhysicsEngineChunksHelper1 {
 
     private boolean isAir(int x, int y, int AIR_ID, WorldChunk chunk) {
         if(TileHolderTools.inChunkBounds(x, y)) {
-            return chunk.getBlocks()[x][y].getForegroundBlock() == AIR_ID;
+            return chunk.getBlocks()[x][y].getForegroundBlock().getBlockID() == AIR_ID;
         } else {
             //first find from which chunk we have to get data
 
@@ -186,7 +186,7 @@ public class PhysicsEngineChunksHelper1 {
 
                 //left
                 WorldChunk other_chunk = world.getWorldChunks()[this_chunk_x - 1][this_chunk_y];
-                return other_chunk.getBlocks()[x][y].getForegroundBlock() == AIR_ID;
+                return other_chunk.getBlocks()[x][y].getForegroundBlock().getBlockID() == AIR_ID;
             } else if(x >= World.CHUNK_SIZE) {
                 //right
                 x -= World.CHUNK_SIZE;
@@ -196,7 +196,7 @@ public class PhysicsEngineChunksHelper1 {
                 }
 
                 WorldChunk other_chunk = world.getWorldChunks()[this_chunk_x + 1][this_chunk_y];
-                return other_chunk.getBlocks()[x][y].getForegroundBlock() == AIR_ID;
+                return other_chunk.getBlocks()[x][y].getForegroundBlock().getBlockID() == AIR_ID;
             } else if(y < 0) {
                 //down
                 y = World.CHUNK_SIZE + y;
@@ -206,7 +206,7 @@ public class PhysicsEngineChunksHelper1 {
                 }
 
                 WorldChunk other_chunk = world.getWorldChunks()[this_chunk_x][this_chunk_y - 1];
-                return other_chunk.getBlocks()[x][y].getForegroundBlock() == AIR_ID;
+                return other_chunk.getBlocks()[x][y].getForegroundBlock().getBlockID() == AIR_ID;
             } else if(y >= World.CHUNK_SIZE) {
                 //up
                 y -= World.CHUNK_SIZE;
@@ -216,7 +216,7 @@ public class PhysicsEngineChunksHelper1 {
                 }
 
                 WorldChunk other_chunk = world.getWorldChunks()[this_chunk_x][this_chunk_y + 1];
-                return other_chunk.getBlocks()[x][y].getForegroundBlock() == AIR_ID;
+                return other_chunk.getBlocks()[x][y].getForegroundBlock().getBlockID() == AIR_ID;
             }
 
             return false;

@@ -213,7 +213,7 @@ public class LightEngine {
         //int block_y = (int) (chunk_object.getPosition().y) / World.BLOCK_SIZE;
 
         if(WorldChunk.inChunkBounds(block_x, block_y)) {
-            if(chunk.getBlocks()[block_x][block_y].getForegroundBlock() != world.getBlocks().AIR.getBlockID()) {
+            if(chunk.getBlocks()[block_x][block_y].getForegroundBlock().getBlockID() != world.getBlocks().AIR.getBlockID()) {
                 //because our object overlaps with some block we will not render any light
                 return false;
             }

@@ -2,6 +2,8 @@ package explorer.world.chunk;
 
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
+import explorer.world.block.Block;
+
 /**
  * Class that holds all variables for one block stored in chunk
  * Created by RYZEN on 07.10.2017.
@@ -12,12 +14,12 @@ public class TileHolder {
     /**
      * what is foreground block id
      */
-    private int foreground_block;
+    private Block foreground_block;
 
     /**
      * What is background block id
      */
-    private int background_block;
+    private Block background_block;
 
     /**
      * Texture regions for foreground and background blocks
@@ -35,7 +37,7 @@ public class TileHolder {
      */
     private short background_block_texture_id;
 
-    public TileHolder(int foreground_block, int background_block) {
+    public TileHolder(Block foreground_block, Block background_block) {
         this.foreground_block = foreground_block;
         this.background_block = background_block;
     }
@@ -58,28 +60,28 @@ public class TileHolder {
     /**
      * @return id of foreground block
      */
-    public int getForegroundBlock() {
+    public Block getForegroundBlock() {
         return foreground_block;
     }
 
     /**
      * @param block set foreground block by given ID
      */
-    public void setForegroundBlock(int block) {
+    public void setForegroundBlock(Block block) {
         this.foreground_block = block;
     }
 
     /**
      * @return id of background block
      */
-    public int getBackgroundBlock() {
+    public Block getBackgroundBlock() {
         return background_block;
     }
 
     /**
      * @param block set background block by given ID
      */
-    public void setBackgroundBlock(int block) {
+    public void setBackgroundBlock(Block block) {
         this.background_block = block;
     }
 
