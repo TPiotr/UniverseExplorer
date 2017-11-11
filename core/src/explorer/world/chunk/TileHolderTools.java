@@ -23,8 +23,8 @@ public class TileHolderTools {
      */
     public static synchronized boolean canPlaceLight(int x, int y, int move_x, int move_y, World world, TileHolder[][] tiles_data) {
         if(inChunkBounds(x + move_x, y + move_y)) {
-            if(tiles_data[x][y].getForegroundBlock() == world.getBlocks().AIR.getBlockID() && tiles_data[x][y].getBackgroundBlock() == world.getBlocks().AIR.getBlockID()) {
-                if (tiles_data[x + move_x][y + move_y].getForegroundBlock() != world.getBlocks().AIR.getBlockID() || tiles_data[x + move_x][y + move_y].getBackgroundBlock() != world.getBlocks().AIR.getBlockID()) {
+            if(tiles_data[x][y].getForegroundBlock().getBlockID() == world.getBlocks().AIR.getBlockID() && tiles_data[x][y].getBackgroundBlock().getBlockID() == world.getBlocks().AIR.getBlockID()) {
+                if (tiles_data[x + move_x][y + move_y].getForegroundBlock().getBlockID() != world.getBlocks().AIR.getBlockID() || tiles_data[x + move_x][y + move_y].getBackgroundBlock().getBlockID() != world.getBlocks().AIR.getBlockID()) {
                     return true;
                 }
             }
@@ -341,12 +341,8 @@ public class TileHolderTools {
                 //left
                 WorldChunk other_chunk = world.getWorldChunks()[this_chunk_x - 1][this_chunk_y];
                 if(background) {
-                    if (other_chunk.getBlocks()[x][y].getBackgroundBlock() != world.getBlocks().AIR.getBlockID()) {
-                        if (world
-                                .getBlocks()
-                                .getBlock(
-                                        other_chunk.getBlocks()[x][y].getBackgroundBlock())
-                                .getBlockGroup().equals(this_block.getBlockGroup())) {
+                    if (other_chunk.getBlocks()[x][y].getBackgroundBlock().getBlockID() != world.getBlocks().AIR.getBlockID()) {
+                        if (other_chunk.getBlocks()[x][y].getBackgroundBlock().getBlockGroup().equals(this_block.getBlockGroup())) {
                             return true;
                         } else {
                             return false;
@@ -355,10 +351,8 @@ public class TileHolderTools {
                         return false;
                     }
                 } else {
-                    if (other_chunk.getBlocks()[x][y].getForegroundBlock() != world.getBlocks().AIR.getBlockID()) {
-                        if(world.getBlocks()
-                                .getBlock(other_chunk.getBlocks()[x][y].getForegroundBlock())
-                                .getBlockGroup().equals(this_block.getBlockGroup())) {
+                    if (other_chunk.getBlocks()[x][y].getForegroundBlock().getBlockID() != world.getBlocks().AIR.getBlockID()) {
+                        if(other_chunk.getBlocks()[x][y].getForegroundBlock().getBlockGroup().equals(this_block.getBlockGroup())) {
                             return true;
                         } else {
                             return false;
@@ -377,12 +371,8 @@ public class TileHolderTools {
 
                 WorldChunk other_chunk = world.getWorldChunks()[this_chunk_x + 1][this_chunk_y];
                 if(background) {
-                    if (other_chunk.getBlocks()[x][y].getBackgroundBlock() != world.getBlocks().AIR.getBlockID()) {
-                        if (world
-                                .getBlocks()
-                                .getBlock(
-                                        other_chunk.getBlocks()[x][y].getBackgroundBlock())
-                                .getBlockGroup().equals(this_block.getBlockGroup())) {
+                    if (other_chunk.getBlocks()[x][y].getBackgroundBlock().getBlockID() != world.getBlocks().AIR.getBlockID()) {
+                        if (other_chunk.getBlocks()[x][y].getBackgroundBlock().getBlockGroup().equals(this_block.getBlockGroup())) {
                             return true;
                         } else {
                             return false;
@@ -391,10 +381,8 @@ public class TileHolderTools {
                         return false;
                     }
                 } else {
-                    if (other_chunk.getBlocks()[x][y].getForegroundBlock() != world.getBlocks().AIR.getBlockID()) {
-                        if(world.getBlocks()
-                                .getBlock(other_chunk.getBlocks()[x][y].getForegroundBlock())
-                                .getBlockGroup().equals(this_block.getBlockGroup())) {
+                    if (other_chunk.getBlocks()[x][y].getForegroundBlock().getBlockID() != world.getBlocks().AIR.getBlockID()) {
+                        if(other_chunk.getBlocks()[x][y].getForegroundBlock().getBlockGroup().equals(this_block.getBlockGroup())) {
                             return true;
                         } else {
                             return false;
@@ -413,12 +401,8 @@ public class TileHolderTools {
 
                 WorldChunk other_chunk = world.getWorldChunks()[this_chunk_x][this_chunk_y - 1];
                 if(background) {
-                    if (other_chunk.getBlocks()[x][y].getBackgroundBlock() != world.getBlocks().AIR.getBlockID()) {
-                        if (world
-                                .getBlocks()
-                                .getBlock(
-                                        other_chunk.getBlocks()[x][y].getBackgroundBlock())
-                                .getBlockGroup().equals(this_block.getBlockGroup())) {
+                    if (other_chunk.getBlocks()[x][y].getBackgroundBlock().getBlockID() != world.getBlocks().AIR.getBlockID()) {
+                        if (other_chunk.getBlocks()[x][y].getBackgroundBlock().getBlockGroup().equals(this_block.getBlockGroup())) {
                             return true;
                         } else {
                             return false;
@@ -427,10 +411,8 @@ public class TileHolderTools {
                         return false;
                     }
                 } else {
-                    if (other_chunk.getBlocks()[x][y].getForegroundBlock() != world.getBlocks().AIR.getBlockID()) {
-                        if(world.getBlocks()
-                                .getBlock(other_chunk.getBlocks()[x][y].getForegroundBlock())
-                                .getBlockGroup().equals(this_block.getBlockGroup())) {
+                    if (other_chunk.getBlocks()[x][y].getForegroundBlock().getBlockID() != world.getBlocks().AIR.getBlockID()) {
+                        if(other_chunk.getBlocks()[x][y].getForegroundBlock().getBlockGroup().equals(this_block.getBlockGroup())) {
                             return true;
                         } else {
                             return false;
@@ -449,12 +431,8 @@ public class TileHolderTools {
 
                 WorldChunk other_chunk = world.getWorldChunks()[this_chunk_x][this_chunk_y + 1];
                 if(background) {
-                    if (other_chunk.getBlocks()[x][y].getBackgroundBlock() != world.getBlocks().AIR.getBlockID()) {
-                        if (world
-                                .getBlocks()
-                                .getBlock(
-                                        other_chunk.getBlocks()[x][y].getBackgroundBlock())
-                                .getBlockGroup().equals(this_block.getBlockGroup())) {
+                    if (other_chunk.getBlocks()[x][y].getBackgroundBlock().getBlockID() != world.getBlocks().AIR.getBlockID()) {
+                        if (other_chunk.getBlocks()[x][y].getBackgroundBlock().getBlockGroup().equals(this_block.getBlockGroup())) {
                             return true;
                         } else {
                             return false;
@@ -463,10 +441,8 @@ public class TileHolderTools {
                         return false;
                     }
                 } else {
-                    if (other_chunk.getBlocks()[x][y].getForegroundBlock() != world.getBlocks().AIR.getBlockID()) {
-                        if(world.getBlocks()
-                                .getBlock(other_chunk.getBlocks()[x][y].getForegroundBlock())
-                                .getBlockGroup().equals(this_block.getBlockGroup())) {
+                    if (other_chunk.getBlocks()[x][y].getForegroundBlock().getBlockID() != world.getBlocks().AIR.getBlockID()) {
+                        if(other_chunk.getBlocks()[x][y].getForegroundBlock().getBlockGroup().equals(this_block.getBlockGroup())) {
                             return true;
                         } else {
                             return false;
@@ -480,11 +456,8 @@ public class TileHolderTools {
             return false;
         } else {
             if (!background) {
-                if (tiles_data[x][y].getForegroundBlock() != world.getBlocks().AIR
-                        .getBlockID()) {
-                    if (world.getBlocks()
-                            .getBlock(tiles_data[x][y].getForegroundBlock())
-                            .getBlockGroup().equals(this_block.getBlockGroup())) {
+                if (tiles_data[x][y].getForegroundBlock().getBlockID() != world.getBlocks().AIR.getBlockID()) {
+                    if (tiles_data[x][y].getForegroundBlock().getBlockGroup().equals(this_block.getBlockGroup())) {
                         return true;
                     } else {
                         return false;
@@ -493,13 +466,8 @@ public class TileHolderTools {
                     return false;
                 }
             } else {
-                if (tiles_data[x][y].getBackgroundBlock() != world.getBlocks().AIR
-                        .getBlockID()) {
-                    if (world
-                            .getBlocks()
-                            .getBlock(
-                                    tiles_data[x][y].getBackgroundBlock())
-                            .getBlockGroup().equals(this_block.getBlockGroup())) {
+                if (tiles_data[x][y].getBackgroundBlock().getBlockID() != world.getBlocks().AIR.getBlockID()) {
+                    if (tiles_data[x][y].getBackgroundBlock().getBlockGroup().equals(this_block.getBlockGroup())) {
                         return true;
                     } else {
                         return false;

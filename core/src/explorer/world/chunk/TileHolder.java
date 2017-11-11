@@ -12,12 +12,12 @@ import explorer.world.block.Block;
 public class TileHolder {
 
     /**
-     * what is foreground block id
+     * foreground block instance READ ONLY!
      */
     private Block foreground_block;
 
     /**
-     * What is background block id
+     * background block instance READ ONLY!
      */
     private Block background_block;
 
@@ -58,28 +58,28 @@ public class TileHolder {
     }
 
     /**
-     * @return id of foreground block
+     * @return foreground block instance READ ONLY DO NOT MODIFY IT!
      */
     public Block getForegroundBlock() {
         return foreground_block;
     }
 
     /**
-     * @param block set foreground block by given ID
+     * @param block set foreground block by given block instance
      */
     public void setForegroundBlock(Block block) {
         this.foreground_block = block;
     }
 
     /**
-     * @return id of background block
+     * @return background block instance READ ONLY DO NOT MODIFY IT!
      */
     public Block getBackgroundBlock() {
         return background_block;
     }
 
     /**
-     * @param block set background block by given ID
+     * @param block set background block by given block instance
      */
     public void setBackgroundBlock(Block block) {
         this.background_block = block;
