@@ -37,7 +37,7 @@ public class FileChunkDataProvider extends ChunkDataProvider {
      * @param chunk_position in world space
      * @return path to chunk
      */
-    public synchronized static String getPathToChunkFile(String world_dir, Vector2 chunk_position) {
+    public synchronized static String getPathToChunkFile(String world_dir, final Vector2 chunk_position) {
         int x = (int) chunk_position.x / World.CHUNK_WORLD_SIZE;
         int y = (int) chunk_position.y / World.CHUNK_WORLD_SIZE;
 

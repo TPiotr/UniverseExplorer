@@ -56,7 +56,7 @@ public class World extends StaticWorldObject {
     /**
      * Determines in milis how long wait with chunks loading when player is on new one
      */
-    private long load_chunk_after = 200;
+    private long load_chunk_after = 1000;
     /**
      * Last time when player changed chunk
      */

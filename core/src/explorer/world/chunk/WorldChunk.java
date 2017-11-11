@@ -500,7 +500,7 @@ public class WorldChunk extends StaticWorldObject {
                             if(chunk_bounds_rectangle.overlaps(object_bounds_rectangle)) {
                                 //here we found proper chunk
 
-                                //so remove object from this chunk and assign to proper one
+                                //so remove object from this chunk and assign to proper new one
                                 objects.removeValue(o, true);
 
                                 chunk.addObject(o);
@@ -543,7 +543,7 @@ public class WorldChunk extends StaticWorldObject {
         int screen_height_blocks = (int) Math.ceil(game.getMainViewport().getScreenHeight() * game.getMainCamera().zoom / World.BLOCK_SIZE);
 
         //update culling rectangle
-        screen_bounding_rectangle.set(game.getMainCamera().position.x - game.getMainViewport().getWorldWidth() / 2, game.getMainCamera().position.y - game.getMainViewport().getWorldHeight() / 2, game.getMainViewport().getWorldWidth(), game.getMainViewport().getWorldHeight());
+        screen_bounding_rectangle.set(game.getMainCamera().position.x - (game.getMainViewport().getWorldWidth() * game.getMainCamera().zoom) / 2, game.getMainCamera().position.y - (game.getMainViewport().getWorldHeight() * game.getMainCamera().zoom) / 2, game.getMainViewport().getWorldWidth() * game.getMainCamera().zoom, game.getMainViewport().getWorldHeight() * game.getMainCamera().zoom);
 
         //store air id
         int AIR_ID = world.getBlocks().AIR.getBlockID();
@@ -594,9 +594,8 @@ public class WorldChunk extends StaticWorldObject {
             WorldObject o = objects.get(i);
 
             //cull
-            //object_bounding_rectangle.set(o.getPosition().x, o.getPosition().y, o.getWH().x, o.getWH().y);
-
-            //if(screen_bounding_rectangle.overlaps(object_bounding_rectangle))
+            object_bounding_rectangle.set(o.getPosition().x, o.getPosition().y, o.getWH().x, o.getWH().y);
+            if(screen_bounding_rectangle.overlaps(object_bounding_rectangle))
                 o.render(batch);
         }
 
