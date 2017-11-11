@@ -158,9 +158,9 @@ public class WorldChunk extends StaticWorldObject {
                     //first compare positions of chunk if not equal stop loading data,
                     //because it means that player moved fast and this result is some old random one
                     //and loading it like normal would cause serious bug where chunk would be totally broken (old & new data would mix and make total mess)
-                    if (!start_loading_pos.equals(getPosition())) {
-                        return;
-                    }
+                    //if (!start_loading_pos.equals(getPosition())) {
+                    //    return;
+                    //}
 
                     //reset save flag
                     need_save = false;
@@ -265,6 +265,9 @@ public class WorldChunk extends StaticWorldObject {
         if(loading_future != null && !loading_future.isDone()) {
             System.out.println("Aborting loading task!");
             loading_future.cancel(true);
+
+            if(!physics_body_helper.hasBody())
+                physics_body_helper.createBody();
         }
 
         //first update this chunk position

@@ -28,6 +28,8 @@ public class PhysicsBodyChunkHelper {
     private World world;
     private WorldChunk chunk;
 
+    private boolean has_body;
+
     /**
      * Simple class that represent chunk collidable tile
      */
@@ -124,6 +126,7 @@ public class PhysicsBodyChunkHelper {
             }
 
             world.getPhysicsEngine().addWorldObjects(chunk_colliders);
+            has_body = true;
         }
     }
 
@@ -131,6 +134,7 @@ public class PhysicsBodyChunkHelper {
         synchronized (chunk_colliders) {
             world.getPhysicsEngine().removeWorldObjects(chunk_colliders);
             chunk_colliders.clear();
+            has_body = false;
         }
     }
 
@@ -140,6 +144,9 @@ public class PhysicsBodyChunkHelper {
             chunk_colliders.addAll(other.chunk_colliders);
 
             other.chunk_colliders.clear();
+            other.has_body = false;
+
+            has_body = true;
         }
     }
 
@@ -199,5 +206,9 @@ public class PhysicsBodyChunkHelper {
 
             return false;
         }
+    }
+
+    public boolean hasBody() {
+        return has_body;
     }
 }

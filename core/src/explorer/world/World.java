@@ -800,8 +800,8 @@ public class World extends StaticWorldObject {
         //render gui screen
         game.getScreen(Screens.GAME_GUI_SCREEN_NAME, GameGUIScreen.class).render(batch);
 
-        //if(true)
-        //return;
+        if(true)
+            return;
 
         /** DEBUG SHAPE RENDERING **/
         batch.end();
