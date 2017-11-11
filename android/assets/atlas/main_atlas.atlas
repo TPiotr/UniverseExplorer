@@ -1,0 +1,83 @@
+
+main_atlas.png
+size: 1024,1024
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+background/sky_day
+  rotate: false
+  xy: 2, 437
+  size: 512, 512
+  orig: 512, 512
+  offset: 0, 0
+  index: -1
+badlogic
+  rotate: false
+  xy: 516, 693
+  size: 256, 256
+  orig: 256, 256
+  offset: 0, 0
+  index: -1
+blocks/dirt
+  rotate: false
+  xy: 2, 71
+  size: 256, 256
+  orig: 256, 256
+  offset: 0, 0
+  index: -1
+blocks/grass1_mask
+  rotate: false
+  xy: 516, 435
+  size: 256, 256
+  orig: 256, 256
+  offset: 0, 0
+  index: -1
+blocks/light
+  rotate: false
+  xy: 260, 71
+  size: 256, 256
+  orig: 256, 256
+  offset: 0, 0
+  index: -1
+blocks/stone
+  rotate: false
+  xy: 518, 177
+  size: 256, 256
+  orig: 256, 256
+  offset: 0, 0
+  index: -1
+player/base_arm
+  rotate: false
+  xy: 280, 383
+  size: 55, 52
+  orig: 55, 52
+  offset: 0, 0
+  index: -1
+player/base_head
+  rotate: false
+  xy: 2, 2
+  size: 62, 67
+  orig: 62, 67
+  offset: 0, 0
+  index: -1
+player/base_legs
+  rotate: false
+  xy: 2, 329
+  size: 276, 106
+  orig: 276, 106
+  offset: 0, 0
+  index: -1
+player/base_torso
+  rotate: false
+  xy: 774, 868
+  size: 34, 81
+  orig: 34, 81
+  offset: 0, 0
+  index: -1
+white_texture
+  rotate: false
+  xy: 518, 159
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: -1
