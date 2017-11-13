@@ -37,6 +37,7 @@ public class Player extends DynamicWorldObject {
         getWH().set(player_renderer.body_root.getWH());
         this.physics_shape = new RectanglePhysicsShape(new Vector2(), new Vector2(getWH()), this);
 
+        //because player is always on center of in ram map
         setParentChunk(w.getWorldChunks()[1][1]);
 
         //debug

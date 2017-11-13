@@ -15,6 +15,9 @@ import java.util.Vector;
 
 import explorer.game.framework.Game;
 import explorer.world.World;
+import explorer.world.block.Block;
+import explorer.world.chunk.TileHolder;
+import explorer.world.chunk.WorldChunk;
 import explorer.world.object.DynamicWorldObject;
 import explorer.world.object.StaticWorldObject;
 import explorer.world.object.WorldObject;
@@ -171,7 +174,24 @@ public class PhysicsEngine {
 				if(static_objects_map.get(getMapIndex(dynamic_object.getPosition().x) - 1) != null) { 
 					reusable_static_objects_array.addAll(static_objects_map.get(getMapIndex(dynamic_object.getPosition().x) - 1));
 				}
-				
+
+				//here check if center of object overlaps with some block if so lift object up to resolve collision with block
+				int block_x_object_center = (int) ((dynamic_object.getPosition().x + (dynamic_object.getWH().x / 2f)) - dynamic_object.getParentChunk().getPosition().x) / World.BLOCK_SIZE;
+				int block_y_object_center = (int) ((dynamic_object.getPosition().y + (dynamic_object.getWH().y / 2f)) - dynamic_object.getParentChunk().getPosition().y) / World.BLOCK_SIZE;
+				boolean resolved = false;
+
+				if(WorldChunk.inChunkBounds(block_x_object_center, block_y_object_center)) {
+					Block colliding_block = dynamic_object.getParentChunk().getBlocks()[block_x_object_center][block_y_object_center].getForegroundBlock();
+
+					//if colliding block is collidable we have problem and we have to lift our object
+					if(colliding_block.isCollidable()) {
+						dynamic_object.getVelocity().set(0, 0);
+						dynamic_object.getPosition().y += World.BLOCK_SIZE;
+
+						resolved = true;
+					}
+				}
+
 				Vector2 object_velocity = dynamic_object.getVelocity();
 				
 				object_velocity.add(0, GRAVITY * delta);
@@ -204,7 +224,11 @@ public class PhysicsEngine {
 					StaticWorldObject static_object = ii.next();
 
 					if(dynamic_object.getPhysicsShape().overlaps(static_object, static_object.getPhysicsShape(), 0, dynamic_object.getVelocity().y, 0, 0)) {
-						if(dynamic_object.getPosition().y + object_velocity.y > static_object.getPosition().y + (static_object.getWH().y / 2f)) {
+						if(resolved) {
+							//special case because we want to get dynamic object back to to the ground level so we resolve collision always on top of collider
+							//pos od dynamic dont matter there
+							dynamic_object.getPosition().y = static_object.getPosition().y + static_object.getWH().y;
+						} else if(dynamic_object.getPosition().y + object_velocity.y > static_object.getPosition().y + (static_object.getWH().y / 2f)) {
 							//dynamic object is under static
 							dynamic_object.getPosition().y = static_object.getPosition().y + static_object.getWH().y;
 						} else {

@@ -115,6 +115,10 @@ public class TestWorldGenerator extends WorldGenerator {
             DeflaterOutputStream output = new DeflaterOutputStream(Gdx.files.local(chunk_path).write(false, 1024));
             DataOutputStream data_output = new DataOutputStream(output);
 
+            //save chunk pos
+            data_output.writeInt((int) chunk_position.x / World.CHUNK_WORLD_SIZE);
+            data_output.writeInt((int) chunk_position.y / World.CHUNK_WORLD_SIZE);
+
             //save blocks
             for(int i = 0; i < data.foreground_blocks.length; i++) {
                 for(int j = 0; j < data.foreground_blocks[0].length; j++) {

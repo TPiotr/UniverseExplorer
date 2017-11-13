@@ -89,6 +89,10 @@ public class FileChunkDataProvider extends ChunkDataProvider {
             InflaterInputStream input = new InflaterInputStream(handle.read(1024));
             DataInputStream data_input = new DataInputStream(input);
 
+            int chunk_x = data_input.readInt() * World.CHUNK_WORLD_SIZE;
+            int chunk_y = data_input.readInt() * World.CHUNK_WORLD_SIZE;
+            data.chunk_loaded_position.set(chunk_x, chunk_y);
+
             //load blocks
             for (int i = 0; i < World.CHUNK_SIZE; i++) {
                 for (int j = 0; j < World.CHUNK_SIZE; j++) {
@@ -162,7 +166,7 @@ public class FileChunkDataProvider extends ChunkDataProvider {
     }
 
     @Override
-    public void saveChunkData(final DataSaved callback, final explorer.world.chunk.WorldChunk chunk, Vector2 chunk_poss, World world, Game game) {
+    public void saveChunkData(final DataSaved callback, final explorer.world.chunk.WorldChunk chunk, Vector2 chunk_poss, final World world, Game game) {
         //store chunk pos in final variable to avoid situation when chunk will be saved on wrong pos which would destroy players world
         final Vector2 chunk_pos = new Vector2(chunk_poss);
 
@@ -197,6 +201,11 @@ public class FileChunkDataProvider extends ChunkDataProvider {
                 try {
                     DeflaterOutputStream output = new DeflaterOutputStream(Gdx.files.local(path).write(false, 1024));
                     DataOutputStream data_output = new DataOutputStream(output);
+
+                    //at first save chunk position at
+                    chunk_position.x %= world.getPlanetProperties().PLANET_SIZE * World.CHUNK_WORLD_SIZE;
+                    data_output.writeInt((int) chunk_position.x / World.CHUNK_WORLD_SIZE);
+                    data_output.writeInt((int) chunk_position.y / World.CHUNK_WORLD_SIZE);
 
                     //save blocks
                     for(int i = 0; i < foreground_blocks.length; i++) {

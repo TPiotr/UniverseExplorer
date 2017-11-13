@@ -21,6 +21,9 @@ public abstract class ChunkDataProvider {
         public int[][] foreground_blocks = new int[World.CHUNK_SIZE][World.CHUNK_SIZE];
         public int[][] background_blocks = new int[World.CHUNK_SIZE][World.CHUNK_SIZE];
 
+        //coords system 1 = World.CHUNK_WORLD_SIZE
+        public Vector2 chunk_loaded_position = new Vector2(-1, -1);
+
         public Array<WorldObject> objects = new Array<WorldObject>();
     }
 

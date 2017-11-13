@@ -165,6 +165,17 @@ public class WorldChunk extends StaticWorldObject {
                     //    return;
                     //}
 
+                    //check if loaded position is proper
+                    Vector2 loaded_position = data.chunk_loaded_position;
+
+                    Vector2 this_pos = new Vector2(getPosition());
+                    this_pos.x %= world.getPlanetProperties().PLANET_SIZE * World.CHUNK_WORLD_SIZE;
+
+                    if(!loaded_position.equals(this_pos)) {
+                        System.out.println("Loaded wrong chunk file (position check failed)!" + "(acc pos: " + this_pos + " loaded pos: " + loaded_position + ")");
+                        return;
+                    }
+
                     //reset save flag
                     need_save = false;
 
@@ -535,11 +546,13 @@ public class WorldChunk extends StaticWorldObject {
         }
 
         //and finally just call tick() for every object
-        for(int i = 0; i < objects.size; i++) {
-            WorldObject o = objects.get(i);
+        synchronized (objects) {
+            for (int i = 0; i < objects.size; i++) {
+                WorldObject o = objects.get(i);
 
-            if(o != null)
-                o.tick(delta);
+                if (o != null)
+                    o.tick(delta);
+            }
         }
     }
 
