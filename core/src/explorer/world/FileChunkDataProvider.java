@@ -2,6 +2,7 @@ package explorer.world;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 
@@ -105,6 +106,11 @@ public class FileChunkDataProvider extends ChunkDataProvider {
                     if(WorldChunk.YIELD) {
                         Thread.yield();
                     }
+
+                    //check if loading is interrupted
+                    if(Thread.interrupted()) {
+                        throw new InterruptedException();
+                    }
                 }
             }
 
@@ -130,6 +136,11 @@ public class FileChunkDataProvider extends ChunkDataProvider {
                 if(WorldChunk.YIELD) {
                     Thread.yield();
                 }
+
+                //check if loading is interrupted
+                if(Thread.interrupted()) {
+                    throw new InterruptedException();
+                }
             }
 
             input.close();
@@ -138,6 +149,8 @@ public class FileChunkDataProvider extends ChunkDataProvider {
         } catch(IOException e) {
             e.printStackTrace();
             return false;
+        } catch(InterruptedException e) {
+            return true;
         }
     }
 

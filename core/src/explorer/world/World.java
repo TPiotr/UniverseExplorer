@@ -2,7 +2,6 @@ package explorer.world;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -10,22 +9,18 @@ import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.TimeUtils;
 
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import explorer.game.framework.Game;
 import explorer.game.Helper;
-import explorer.game.screen.screens.GameGUIScreen;
-import explorer.game.screen.screens.GameScreen;
+import explorer.game.screen.screens.PlanetGUIScreen;
+import explorer.game.screen.screens.PlanetScreen;
 import explorer.game.screen.screens.Screens;
 import explorer.game.screen.screens.WorldGeneratingScreen;
 import explorer.game.screen.screens.WorldLoadingScreen;
 import explorer.world.block.Blocks;
-import explorer.world.chunk.TileHolderTools;
 import explorer.world.chunk.WorldChunk;
 import explorer.world.lighting.LightEngine;
 import explorer.world.object.StaticWorldObject;
@@ -207,7 +202,7 @@ public class World extends StaticWorldObject {
             generating = true;
 
             //set this screen visible to false and show loading screen
-            final GameScreen game_screen = game.getScreen(Screens.GAME_SCREEN_NAME, GameScreen.class);
+            final PlanetScreen game_screen = game.getScreen(Screens.PLANET_SCREEN_NAME, PlanetScreen.class);
             final WorldGeneratingScreen generating_screen = game.getScreen(Screens.WORLD_GENERATING_SCREEN_NAME, WorldGeneratingScreen.class);
 
             game_screen.setVisible(false);
@@ -283,6 +278,9 @@ public class World extends StaticWorldObject {
      * @param new_h new screen height
      */
     public void screenSizeChanged(int new_w, int new_h) {
+        if(combine_shader == null)
+            return;
+
         combine_shader.begin();
         combine_shader.setUniformf("viewport_size", new Vector2(new_w, new_h));
         combine_shader.end();
@@ -350,7 +348,7 @@ public class World extends StaticWorldObject {
         //if chunk that will be new center is not loaded yet show loading screen load it and then move
         if(chunks.length > (1 + move_factor_x) && (1 + move_factor_x) >= 0) {
             if(getWorldChunks()[1 + move_factor_x][1].isDirty()) {
-                GameScreen game_screen = game.getScreen(Screens.GAME_SCREEN_NAME, GameScreen.class);
+                PlanetScreen game_screen = game.getScreen(Screens.PLANET_SCREEN_NAME, PlanetScreen.class);
                 WorldLoadingScreen loading_screen = game.getScreen(Screens.WORLD_LOADING_SCREEN_NAME, WorldLoadingScreen.class);
 
                 game_screen.setVisible(false);
@@ -700,7 +698,7 @@ public class World extends StaticWorldObject {
                 }
             }
 
-            //because is special object not bound to any chunk call move() function manually
+            //because player is special object not bound to any chunk call move() function manually
             player.move(new Vector2(getPlanetProperties().PLANET_SIZE * CHUNK_WORLD_SIZE, 0));
         } else {
 
@@ -716,7 +714,7 @@ public class World extends StaticWorldObject {
 
             //if more than 70% of chunks are generating stop the game and wait
             if (dirty_count >= (chunks.length * chunks.length) * .75f) {
-                GameScreen game_screen = game.getScreen(Screens.GAME_SCREEN_NAME, GameScreen.class);
+                PlanetScreen game_screen = game.getScreen(Screens.PLANET_SCREEN_NAME, PlanetScreen.class);
                 WorldLoadingScreen loading_screen = game.getScreen(Screens.WORLD_LOADING_SCREEN_NAME, WorldLoadingScreen.class);
 
                 game_screen.setVisible(false);
@@ -744,7 +742,7 @@ public class World extends StaticWorldObject {
         last_can_move = can_move;
 
         //tick gui
-        game.getScreen(Screens.GAME_GUI_SCREEN_NAME, GameGUIScreen.class).tick(delta);
+        game.getScreen(Screens.PLANET_GUI_SCREEN_NAME, PlanetGUIScreen.class).tick(delta);
     }
 
     @Override
@@ -798,7 +796,7 @@ public class World extends StaticWorldObject {
         batch.setShader(null);
 
         //render gui screen
-        game.getScreen(Screens.GAME_GUI_SCREEN_NAME, GameGUIScreen.class).render(batch);
+        game.getScreen(Screens.PLANET_GUI_SCREEN_NAME, PlanetGUIScreen.class).render(batch);
 
         if(true)
             return;

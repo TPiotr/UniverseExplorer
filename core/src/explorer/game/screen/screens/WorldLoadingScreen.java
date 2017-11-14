@@ -39,7 +39,7 @@ public class WorldLoadingScreen extends Screen {
     @Override
     public void tick(float delta) {
         //calc progress
-        GameScreen game_screen = game.getScreen(Screens.GAME_SCREEN_NAME, GameScreen.class);
+        PlanetScreen game_screen = game.getScreen(Screens.PLANET_SCREEN_NAME, PlanetScreen.class);
 
         int not_dirty_count = 0;
         for(int i = 0; i < game_screen.getWorld().getWorldChunks().length; i++) {

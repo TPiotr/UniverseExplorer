@@ -5,8 +5,6 @@ import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.badlogic.gdx.tools.texturepacker.TexturePacker;
 
 import explorer.game.ExplorerGame;
-import explorer.game.framework.Game;
-import explorer.game.screen.screens.GameScreen;
 
 public class DesktopLauncher {
 	public static void main (String[] arg) {

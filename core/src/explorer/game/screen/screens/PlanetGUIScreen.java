@@ -14,7 +14,7 @@ import explorer.world.World;
  * Created by RYZEN on 05.11.2017.
  */
 
-public class GameGUIScreen extends Screen {
+public class PlanetGUIScreen extends Screen {
 
     private TextureButton left_button, right_button, jump_button;
 
@@ -23,10 +23,10 @@ public class GameGUIScreen extends Screen {
      *
      * @param game game instance
      */
-    public GameGUIScreen(final World world, Game game) {
+    public PlanetGUIScreen(final World world, Game game) {
         super(game);
 
-        NAME = Screens.GAME_GUI_SCREEN_NAME;
+        NAME = Screens.PLANET_GUI_SCREEN_NAME;
 
         TextureRegion white_texture = game.getAssetsManager().getTextureRegion("white_texture");
         left_button = new TextureButton(new Vector2(-550, -300), new Vector2(128, 128), new TextureRegion(white_texture), game.getGUIViewport(), game);
@@ -74,6 +74,15 @@ public class GameGUIScreen extends Screen {
                 world.getPlayer().setJump(false);
             }
         });
+    }
+
+    @Override
+    public void setVisible(boolean visible) {
+        super.setVisible(visible);
+
+        jump_button.setVisible(visible);
+        left_button.setVisible(visible);
+        right_button.setVisible(visible);
     }
 
     @Override

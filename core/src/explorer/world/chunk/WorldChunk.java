@@ -161,11 +161,6 @@ public class WorldChunk extends StaticWorldObject {
                     //first compare positions of chunk if not equal stop loading data,
                     //because it means that player moved fast and this result is some old random one
                     //and loading it like normal would cause serious bug where chunk would be totally broken (old & new data would mix and make total mess)
-                    //if (!start_loading_pos.equals(getPosition())) {
-                    //    return;
-                    //}
-
-                    //check if loaded position is proper
                     Vector2 loaded_position = data.chunk_loaded_position;
 
                     Vector2 this_pos = new Vector2(getPosition());
@@ -173,7 +168,11 @@ public class WorldChunk extends StaticWorldObject {
 
                     if(!loaded_position.equals(this_pos)) {
                         System.out.println("Loaded wrong chunk file (position check failed)!" + "(acc pos: " + this_pos + " loaded pos: " + loaded_position + ")");
-                        return;
+
+                        //call chunk to load proper chunk now
+                        move(0, 0);
+
+                        throw new InterruptedException();
                     }
 
                     //reset save flag

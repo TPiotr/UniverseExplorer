@@ -1,13 +1,10 @@
 package explorer.game;
 
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-
-import explorer.game.framework.*;
-import explorer.game.screen.screens.GameGUIScreen;
-import explorer.game.screen.screens.GameScreen;
+import explorer.game.screen.screens.PlanetGUIScreen;
+import explorer.game.screen.screens.PlanetScreen;
+import explorer.game.screen.screens.UniverseScreen;
 import explorer.game.screen.screens.WorldGeneratingScreen;
 import explorer.game.screen.screens.WorldLoadingScreen;
-import explorer.world.World;
 
 /**
  * Created by RYZEN on 26.10.2017.
@@ -15,18 +12,23 @@ import explorer.world.World;
 
 public class ExplorerGame extends explorer.game.framework.Game {
 
-    private GameScreen game_screen;
-    private GameGUIScreen game_gui_screen;
+    private PlanetScreen game_screen;
+    private PlanetGUIScreen game_gui_screen;
 
     @Override
     protected void initGame() {
         Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 
-        game_screen = new GameScreen(this);
+        UniverseScreen universe_screen = new UniverseScreen(this);
+        universe_screen.setVisible(true);
+        addScreen(universe_screen);
+
+        game_screen = new PlanetScreen(this);
         addScreen(game_screen);
 
-        game_gui_screen = new GameGUIScreen(game_screen.getWorld(), this);
+        game_gui_screen = new PlanetGUIScreen(game_screen.getWorld(), this);
         addScreen(game_gui_screen);
+        game_screen.setVisible(false);
 
         WorldLoadingScreen world_loading_screen = new WorldLoadingScreen(this);
         world_loading_screen.setVisible(false);
@@ -37,7 +39,7 @@ public class ExplorerGame extends explorer.game.framework.Game {
         addScreen(world_generating_screen);
 
         //call init of world after all screens init stuff
-        game_screen.getWorld().init();
+        //game_screen.getWorld().init();
     }
 
 

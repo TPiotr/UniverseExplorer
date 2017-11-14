@@ -3,7 +3,6 @@ package explorer.game.screen.screens;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.profiling.GL20Profiler;
 import com.badlogic.gdx.graphics.profiling.GLProfiler;
 
 import explorer.game.framework.Game;
@@ -14,7 +13,7 @@ import explorer.world.World;
  * Created by RYZEN on 26.10.2017.
  */
 
-public class GameScreen extends Screen {
+public class PlanetScreen extends Screen {
 
     private World world;
     private BitmapFont font;
@@ -23,10 +22,10 @@ public class GameScreen extends Screen {
      * Construct new screen instance
      * @param game game instance
      */
-    public GameScreen(Game game) {
+    public PlanetScreen(Game game) {
         super(game);
 
-        NAME = Screens.GAME_SCREEN_NAME;
+        NAME = Screens.PLANET_SCREEN_NAME;
 
         //int seed = Integer.parseInt(JOptionPane.showInputDialog(null, "Seed (random integer number):"));
 
@@ -78,7 +77,7 @@ public class GameScreen extends Screen {
 
     public void setVisible(boolean visible) {
         super.setVisible(visible);
-        game.getScreen(Screens.GAME_GUI_SCREEN_NAME, GameGUIScreen.class).setVisible(visible);
+        game.getScreen(Screens.PLANET_GUI_SCREEN_NAME, PlanetGUIScreen.class).setVisible(visible);
     }
 
     @Override
