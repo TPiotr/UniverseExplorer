@@ -1,4 +1,4 @@
-package explorer.game.screen.screens;
+package explorer.game.screen.screens.planet;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.profiling.GLProfiler;
 
 import explorer.game.framework.Game;
 import explorer.game.screen.Screen;
+import explorer.game.screen.screens.Screens;
 import explorer.world.World;
 
 /**

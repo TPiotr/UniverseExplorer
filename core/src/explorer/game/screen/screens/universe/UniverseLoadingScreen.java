@@ -1,18 +1,19 @@
-package explorer.game.screen.screens;
+package explorer.game.screen.screens.universe;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
 import explorer.game.framework.Game;
 import explorer.game.screen.Screen;
+import explorer.game.screen.screens.Screens;
 
 /**
- * Screen that is showing progress bar when player teleports and engine have to load whole >=75% of chunks,
- * we have to stop game because of possibility of bugs (like falling down from the world because world wasn't loaded yet)
- * Created by RYZEN on 26.10.2017.
+ * Screen that is showing progress bar when universe camera teleports or universe want to load lot of universe chunks
+ * we have to stop game because of possibility of bugs and to now show how universe is loading on the eyes of user
+ * Created by RYZEN on 18.11.2017.
  */
 
-public class WorldLoadingScreen extends Screen {
+public class UniverseLoadingScreen extends Screen {
 
     /**
      * For now this class is just placeholder for something nice but main mechanism is implemented
@@ -28,10 +29,10 @@ public class WorldLoadingScreen extends Screen {
      *
      * @param game game instance
      */
-    public WorldLoadingScreen(Game game) {
+    public UniverseLoadingScreen(Game game) {
         super(game);
 
-        NAME = Screens.WORLD_LOADING_SCREEN_NAME;
+        NAME = Screens.UNIVERSE_LOADING_SCREEN_NAME;
 
         shape_renderer = new ShapeRenderer();
     }
@@ -39,21 +40,21 @@ public class WorldLoadingScreen extends Screen {
     @Override
     public void tick(float delta) {
         //calc progress
-        PlanetScreen game_screen = game.getScreen(Screens.PLANET_SCREEN_NAME, PlanetScreen.class);
+        UniverseScreen universe_screen = game.getScreen(Screens.UNIVERSE_SCREEN_NAME, UniverseScreen.class);
 
         int not_dirty_count = 0;
-        for(int i = 0; i < game_screen.getWorld().getWorldChunks().length; i++) {
-            for(int j = 0; j < game_screen.getWorld().getWorldChunks()[0].length; j++) {
-                if(!game_screen.getWorld().getWorldChunks()[i][j].isDirty())
+        for(int i = 0; i < universe_screen.getUniverse().getUniverseChunks().length; i++) {
+            for(int j = 0; j < universe_screen.getUniverse().getUniverseChunks()[0].length; j++) {
+                if(!universe_screen.getUniverse().getUniverseChunks()[i][j].isDirty())
                     not_dirty_count++;
             }
         }
 
-        progress = (float) not_dirty_count / (float) (game_screen.getWorld().getWorldChunks().length * game_screen.getWorld().getWorldChunks().length);
+        progress = (float) not_dirty_count / (float) (universe_screen.getUniverse().getUniverseChunks().length * universe_screen.getUniverse().getUniverseChunks().length);
 
         //>= to avoid some bugs if something other is broken this will not stop whole game
         if(progress >= 1f) {
-            game_screen.setVisible(true);
+            universe_screen.setVisible(true);
             setVisible(false);
 
             progress = 0f;

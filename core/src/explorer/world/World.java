@@ -15,11 +15,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import explorer.game.framework.Game;
 import explorer.game.Helper;
-import explorer.game.screen.screens.PlanetGUIScreen;
-import explorer.game.screen.screens.PlanetScreen;
+import explorer.game.screen.screens.planet.PlanetGUIScreen;
+import explorer.game.screen.screens.planet.PlanetScreen;
 import explorer.game.screen.screens.Screens;
-import explorer.game.screen.screens.WorldGeneratingScreen;
-import explorer.game.screen.screens.WorldLoadingScreen;
+import explorer.game.screen.screens.planet.WorldGeneratingScreen;
+import explorer.game.screen.screens.planet.WorldLoadingScreen;
 import explorer.world.block.Blocks;
 import explorer.world.chunk.WorldChunk;
 import explorer.world.lighting.LightEngine;
@@ -840,7 +840,8 @@ public class World extends StaticWorldObject {
 
     @Override
     public void dispose() {
-        light_engine.dispose();
+        if(light_engine != null)
+            light_engine.dispose();
     }
 
     /**

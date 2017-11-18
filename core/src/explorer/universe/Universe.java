@@ -8,6 +8,9 @@ import com.badlogic.gdx.utils.TimeUtils;
 
 import explorer.game.framework.Game;
 import explorer.game.screen.ScreenComponent;
+import explorer.game.screen.screens.Screens;
+import explorer.game.screen.screens.universe.UniverseLoadingScreen;
+import explorer.game.screen.screens.universe.UniverseScreen;
 import explorer.universe.chunk.UniverseChunk;
 import explorer.universe.generator.BasicUniverseGenerator;
 import explorer.universe.generator.UniverseChunkDataProvider;
@@ -18,7 +21,7 @@ import explorer.universe.generator.UniverseChunkDataProvider;
 
 public class Universe implements ScreenComponent {
 
-    public static final int UNIVERSE_CHUNK_SIZE = 1024;
+    public static final int UNIVERSE_CHUNK_SIZE = 16384;
 
     private Game game;
 
@@ -35,14 +38,21 @@ public class Universe implements ScreenComponent {
     public Universe(Game game) {
         this.game = game;
 
+        chunks_data_provider = new BasicUniverseGenerator();
+
         chunks = new UniverseChunk[3][3];
         for(int i = 0; i < chunks.length; i++) {
             for(int j = 0; j < chunks[0].length; j++) {
                 chunks[i][j] = new UniverseChunk(new Vector2(i * UNIVERSE_CHUNK_SIZE, j * UNIVERSE_CHUNK_SIZE), this, game);
+                chunks[i][j].move(0, 0);
             }
         }
 
-        chunks_data_provider = new BasicUniverseGenerator();
+        for(int i = 0; i < chunks.length; i++) {
+            for(int j = 0; j < chunks[0].length; j++) {
+                chunks[i][j].move(0, 0);
+            }
+        }
     }
 
     @Override
@@ -59,15 +69,13 @@ public class Universe implements ScreenComponent {
         int move_factor_x = camera_chunk_pos_x - center_chunk_pos_x;
         int move_factor_y = camera_chunk_pos_y - center_chunk_pos_y;
 
-        System.out.println("MFX: " + move_factor_x + " MFY: " + move_factor_y);
-
         //check if move will not cause going into negative position
         boolean can_move = (move_factor_x != 0 || move_factor_y != 0);
 
         if(chunks[0][0].getPosition().x + (move_factor_x * UNIVERSE_CHUNK_SIZE) < 0) {
-            //can_move = false;
+            can_move = false;
         } else if(chunks[0][0].getPosition().y + (move_factor_y * UNIVERSE_CHUNK_SIZE) < 0) {
-            //can_move = false;
+            can_move = false;
         }
 
         //time delayed chunks loading mechanism
@@ -83,12 +91,14 @@ public class Universe implements ScreenComponent {
         //if chunk that will be new center is not loaded yet show loading screen wait until it will be loaded and then move
         if(chunks.length > (1 + move_factor_x) && (1 + move_factor_x) >= 0) {
             if(getUniverseChunks()[1 + move_factor_x][1].isDirty()) {
-                /*PlanetScreen game_screen = game.getScreen(Screens.GAME_SCREEN_NAME, PlanetScreen.class);
-                WorldLoadingScreen loading_screen = game.getScreen(Screens.WORLD_LOADING_SCREEN_NAME, WorldLoadingScreen.class);
+                UniverseScreen universe_screen = game.getScreen(Screens.UNIVERSE_SCREEN_NAME, UniverseScreen.class);
+                UniverseLoadingScreen loading_screen = game.getScreen(Screens.UNIVERSE_LOADING_SCREEN_NAME, UniverseLoadingScreen.class);
 
-                game_screen.setVisible(false);
-                loading_screen.setVisible(true);*/
-                //TODO make and show generating progress screen
+                universe_screen.setVisible(false);
+                loading_screen.setVisible(true);
+
+                System.out.println("(Universe) Showing chunks loading screen");
+
                 return;
             }
         }
@@ -102,10 +112,6 @@ public class Universe implements ScreenComponent {
                 chunks[2][0].dispose();
                 chunks[2][1].dispose();
                 chunks[2][2].dispose();
-
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[2][0]);
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[2][1]);
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[2][2]);
 
                 chunks[2][0].moveAndCopy(move_factor_x, move_factor_y, chunks[1][0]);
                 chunks[2][1].moveAndCopy(move_factor_x, move_factor_y, chunks[1][1]);
@@ -260,6 +266,7 @@ public class Universe implements ScreenComponent {
                 chunks[2][0].move(move_factor_x, move_factor_y);
                 chunks[1][0].move(move_factor_x, move_factor_y);
             }
+
             /* CHUNKS TELEPORTING AND UPDATING STUFF */
             else {
                 //this is used if we f.e. teleported so we have to load all 9 chunks
@@ -286,14 +293,14 @@ public class Universe implements ScreenComponent {
 
             //if more than 70% of chunks are generating stop the game and wait
             if (dirty_count >= (chunks.length * chunks.length) * .75f) {
-                /*PlanetScreen game_screen = game.getScreen(Screens.GAME_SCREEN_NAME, PlanetScreen.class);
-                WorldLoadingScreen loading_screen = game.getScreen(Screens.WORLD_LOADING_SCREEN_NAME, WorldLoadingScreen.class);
+                UniverseScreen universe_screen = game.getScreen(Screens.UNIVERSE_SCREEN_NAME, UniverseScreen.class);
+                UniverseLoadingScreen loading_screen = game.getScreen(Screens.UNIVERSE_LOADING_SCREEN_NAME, UniverseLoadingScreen.class);
 
-                game_screen.setVisible(false);
-                loading_screen.setVisible(true);*/
-                //TODO make and show generating progress screen
+                universe_screen.setVisible(false);
+                loading_screen.setVisible(true);
+                System.out.println("(Universe) Showing chunks loading screen");
 
-                //return;
+                return;
             }
 
             //update chunks
@@ -315,6 +322,8 @@ public class Universe implements ScreenComponent {
             }
         }
 
+        batch.end();
+
         //debug render
         shape_renderer.setProjectionMatrix(batch.getProjectionMatrix());
         shape_renderer.begin(ShapeRenderer.ShapeType.Line);
@@ -328,6 +337,8 @@ public class Universe implements ScreenComponent {
         }
 
         shape_renderer.end();
+
+        batch.begin();
     }
 
     public UniverseChunkDataProvider getChunksDataProvider() {

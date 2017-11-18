@@ -1,10 +1,11 @@
-package explorer.game.screen.screens;
+package explorer.game.screen.screens.planet;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
 import explorer.game.framework.Game;
 import explorer.game.screen.Screen;
+import explorer.game.screen.screens.Screens;
 
 /**
  * Screen for showing progress bar of world generation

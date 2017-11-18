@@ -60,7 +60,7 @@ public class UniverseChunk {
         this.position = position;
         this.game = game;
 
-        this.wh = new Vector2();
+        this.wh = new Vector2(Universe.UNIVERSE_CHUNK_SIZE, Universe.UNIVERSE_CHUNK_SIZE);
         
         wh.set(Universe.UNIVERSE_CHUNK_SIZE, Universe.UNIVERSE_CHUNK_SIZE);
         
@@ -163,6 +163,10 @@ public class UniverseChunk {
         //just iterate through objects array and call tick()
         for(int i = 0; i < objects.size; i++) {
             UniverseObject o = objects.get(i);
+
+            if(o == null)
+                continue;
+
             o.tick(delta);
         }
     }
@@ -172,8 +176,12 @@ public class UniverseChunk {
         screen_bounding_rectangle.set(game.getMainCamera().position.x - (game.getMainViewport().getWorldWidth() * game.getMainCamera().zoom) / 2, game.getMainCamera().position.y - (game.getMainViewport().getWorldHeight() * game.getMainCamera().zoom) / 2, game.getMainViewport().getWorldWidth() * game.getMainCamera().zoom, game.getMainViewport().getWorldHeight() * game.getMainCamera().zoom);
 
         //render chunk objects
+
         for(int i = 0; i < objects.size; i++) {
             UniverseObject o = objects.get(i);
+
+            if(o == null)
+                continue;
 
             //cull
             object_bounding_rectangle.set(o.getPosition().x, o.getPosition().y, o.getWH().x, o.getWH().y);

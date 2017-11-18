@@ -1,10 +1,11 @@
 package explorer.game;
 
-import explorer.game.screen.screens.PlanetGUIScreen;
-import explorer.game.screen.screens.PlanetScreen;
-import explorer.game.screen.screens.UniverseScreen;
-import explorer.game.screen.screens.WorldGeneratingScreen;
-import explorer.game.screen.screens.WorldLoadingScreen;
+import explorer.game.screen.screens.planet.PlanetGUIScreen;
+import explorer.game.screen.screens.planet.PlanetScreen;
+import explorer.game.screen.screens.universe.UniverseLoadingScreen;
+import explorer.game.screen.screens.universe.UniverseScreen;
+import explorer.game.screen.screens.planet.WorldGeneratingScreen;
+import explorer.game.screen.screens.planet.WorldLoadingScreen;
 
 /**
  * Created by RYZEN on 26.10.2017.
@@ -22,6 +23,10 @@ public class ExplorerGame extends explorer.game.framework.Game {
         UniverseScreen universe_screen = new UniverseScreen(this);
         universe_screen.setVisible(true);
         addScreen(universe_screen);
+
+        UniverseLoadingScreen universe_loading_screen = new UniverseLoadingScreen(this);
+        universe_loading_screen.setVisible(false);
+        addScreen(universe_loading_screen);
 
         game_screen = new PlanetScreen(this);
         addScreen(game_screen);
