@@ -9,7 +9,7 @@ import explorer.game.framework.Game;
 import explorer.game.screen.Screen;
 import explorer.game.screen.gui.TextureButton;
 import explorer.game.screen.screens.Screens;
-import explorer.world.World;
+import explorer.game.screen.screens.planet.PlanetScreen;
 
 /**
  * Created by RYZEN on 05.11.2017.
@@ -18,13 +18,13 @@ import explorer.world.World;
 public class PlanetGUIScreen extends Screen {
 
     private TextureButton left_button, right_button, jump_button;
-
+    
     /**
      * Construct new screen instance
      *
      * @param game game instance
      */
-    public PlanetGUIScreen(final World world, Game game) {
+    public PlanetGUIScreen(final PlanetScreen planet_screen, Game game) {
         super(game);
 
         NAME = Screens.PLANET_GUI_SCREEN_NAME;
@@ -43,36 +43,36 @@ public class PlanetGUIScreen extends Screen {
         left_button.setButtonListener(new TextureButton.ButtonListener() {
             @Override
             public void touched() {
-                world.getPlayer().setLeft(true);
+                planet_screen.getWorld().getPlayer().setLeft(true);
             }
 
             @Override
             public void released() {
-                world.getPlayer().setLeft(false);
+                planet_screen.getWorld().getPlayer().setLeft(false);
             }
         });
 
         right_button.setButtonListener(new TextureButton.ButtonListener() {
             @Override
             public void touched() {
-                world.getPlayer().setRight(true);
+                planet_screen.getWorld().getPlayer().setRight(true);
             }
 
             @Override
             public void released() {
-                world.getPlayer().setRight(false);
+                planet_screen.getWorld().getPlayer().setRight(false);
             }
         });
 
         jump_button.setButtonListener(new TextureButton.ButtonListener() {
             @Override
             public void touched() {
-                world.getPlayer().setJump(true);
+                planet_screen.getWorld().getPlayer().setJump(true);
             }
 
             @Override
             public void released() {
-                world.getPlayer().setJump(false);
+                planet_screen.getWorld().getPlayer().setJump(false);
             }
         });
     }

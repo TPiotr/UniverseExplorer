@@ -21,6 +21,8 @@ public class PlanetUniverseObject extends UniverseObject {
     public PlanetUniverseObject(int planet_index, Vector2 position, Universe universe, Game game) {
         super(position, universe, game);
 
+        this.planet_index = planet_index;
+
         wh = new Vector2(64, 64);
 
         if(planet_region == null) {

@@ -31,7 +31,7 @@ public class ExplorerGame extends explorer.game.framework.Game {
         game_screen = new PlanetScreen(this);
         addScreen(game_screen);
 
-        game_gui_screen = new PlanetGUIScreen(game_screen.getWorld(), this);
+        game_gui_screen = new PlanetGUIScreen(game_screen, this);
         addScreen(game_gui_screen);
         game_screen.setVisible(false);
 

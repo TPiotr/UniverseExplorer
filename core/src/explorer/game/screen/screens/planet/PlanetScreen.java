@@ -36,6 +36,18 @@ public class PlanetScreen extends Screen {
         GLProfiler.enable();
     }
 
+    public void createWorld(int planet_seed) {
+        System.out.println("Creating world: " + planet_seed);
+
+        world.dispose();
+
+        world = new World(game, planet_seed);
+        world.init();
+
+        game.getMainCamera().zoom = .7f;
+        game.getMainCamera().update();
+    }
+
     @Override
     public void screenSizeChanged(int new_w, int new_h) {
         super.screenSizeChanged(new_w, new_h);
@@ -45,6 +57,9 @@ public class PlanetScreen extends Screen {
 
     @Override
     public void tick(float delta) {
+        if(world.isGenerating())
+            setVisible(false);
+
         world.tick(delta);
     }
 

@@ -5,6 +5,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
+import com.sun.org.apache.regexp.internal.RE;
 
 import java.util.concurrent.Future;
 
@@ -55,6 +56,16 @@ public class UniverseChunk {
      */
     private Future<?> generating_future;
 
+    /**
+     * Width & height of render chunk
+     */
+    public static final int RENDER_CHUNK_SIZE = Universe.UNIVERSE_CHUNK_SIZE / 8;
+
+    /**
+     * Array that contains all render chunks instances of this chunk
+     */
+    private Array<RenderChunk> render_chunks;
+
     public UniverseChunk(Vector2 position, Universe universe, Game game) {
         this.universe = universe;
         this.position = position;
@@ -70,6 +81,32 @@ public class UniverseChunk {
 
         //init objects array
         objects = new Array<UniverseObject>();
+
+        //create render chunks
+        int chunks_count = Universe.UNIVERSE_CHUNK_SIZE / RENDER_CHUNK_SIZE;
+        render_chunks = new Array<RenderChunk>(true, chunks_count * chunks_count);
+
+        for(int i = 0; i < chunks_count; i++) {
+            for(int j = 0; j < chunks_count; j++) {
+                RenderChunk render_chunk = new RenderChunk(new Vector2(i * RENDER_CHUNK_SIZE, j * RENDER_CHUNK_SIZE), this);
+                render_chunks.add(render_chunk);
+            }
+        }
+    }
+
+    /**
+     * Get index of proper render chunk instance (to get instance use this index to get object from render_chunks array)
+     * Calculation based on given object position
+     * @param object object to which we want to get render chunk instance
+     * @return index of render chunk where given object is
+     */
+    private synchronized int getRenderChunkIndex(UniverseObject object) {
+        int x = (int) ((object.getPosition().x - getPosition().x) / RENDER_CHUNK_SIZE);
+        int y = (int) ((object.getPosition().y - getPosition().y) / RENDER_CHUNK_SIZE);
+
+        final int in_row = (Universe.UNIVERSE_CHUNK_SIZE / RENDER_CHUNK_SIZE);
+
+        return y + (x * in_row);
     }
 
     /**
@@ -103,13 +140,25 @@ public class UniverseChunk {
                         throw new InterruptedException();
                     }
 
-                    //copy objects
+                    //clear main objects array and render chunks arrays
                     getObjects().clear();
+
+                    for(int i = 0; i < render_chunks.size; i++)
+                        render_chunks.get(i).clear();
+
+                    if(Thread.interrupted()) {
+                        throw new InterruptedException();
+                    }
+
+                    //copy objects
                     for(int i = 0; i < data.objects.size; i++) {
                         UniverseObject o = data.objects.get(i);
                         o.setParentChunk(UniverseChunk.this);
 
                         getObjects().add(o);
+
+                        //add object to proper render chunk
+                        render_chunks.get(getRenderChunkIndex(o)).addObject(o);
                     }
 
                     if(Thread.interrupted()) {
@@ -148,8 +197,15 @@ public class UniverseChunk {
 
         //copy objects
         getObjects().clear();
+
+        for(int i = 0; i < render_chunks.size; i++)
+            render_chunks.get(i).copyObjects(copy_from.render_chunks.get(i));
+
         for(int i = 0; i < copy_from.getObjects().size; i++) {
             UniverseObject o = copy_from.getObjects().get(i);
+            if(o == null)
+                continue;
+
             o.setParentChunk(this);
 
             getObjects().add(o);
@@ -160,14 +216,15 @@ public class UniverseChunk {
     }
 
     public void tick(float delta) {
-        //just iterate through objects array and call tick()
-        for(int i = 0; i < objects.size; i++) {
-            UniverseObject o = objects.get(i);
+        screen_bounding_rectangle.set(game.getMainCamera().position.x - (game.getMainViewport().getWorldWidth() * game.getMainCamera().zoom) / 2, game.getMainCamera().position.y - (game.getMainViewport().getWorldHeight() * game.getMainCamera().zoom) / 2, game.getMainViewport().getWorldWidth() * game.getMainCamera().zoom, game.getMainViewport().getWorldHeight() * game.getMainCamera().zoom);
 
-            if(o == null)
-                continue;
+        //tick chunks objects
+        for(int i = 0; i < render_chunks.size; i++) {
+            RenderChunk render_chunk = render_chunks.get(i);
+            object_bounding_rectangle.set(render_chunk.getLocalPosition().x + getPosition().x, render_chunk.getLocalPosition().y + getPosition().y, render_chunk.getWH().x, render_chunk.getWH().y);
 
-            o.tick(delta);
+            if (screen_bounding_rectangle.overlaps(object_bounding_rectangle))
+                render_chunk.tick(delta);
         }
     }
 
@@ -176,17 +233,12 @@ public class UniverseChunk {
         screen_bounding_rectangle.set(game.getMainCamera().position.x - (game.getMainViewport().getWorldWidth() * game.getMainCamera().zoom) / 2, game.getMainCamera().position.y - (game.getMainViewport().getWorldHeight() * game.getMainCamera().zoom) / 2, game.getMainViewport().getWorldWidth() * game.getMainCamera().zoom, game.getMainViewport().getWorldHeight() * game.getMainCamera().zoom);
 
         //render chunk objects
+        for(int i = 0; i < render_chunks.size; i++) {
+            RenderChunk render_chunk = render_chunks.get(i);
+            object_bounding_rectangle.set(render_chunk.getLocalPosition().x + getPosition().x, render_chunk.getLocalPosition().y + getPosition().y, render_chunk.getWH().x, render_chunk.getWH().y);
 
-        for(int i = 0; i < objects.size; i++) {
-            UniverseObject o = objects.get(i);
-
-            if(o == null)
-                continue;
-
-            //cull
-            object_bounding_rectangle.set(o.getPosition().x, o.getPosition().y, o.getWH().x, o.getWH().y);
-            if(screen_bounding_rectangle.overlaps(object_bounding_rectangle))
-                o.render(batch);
+            if (screen_bounding_rectangle.overlaps(object_bounding_rectangle))
+                render_chunk.render(batch, screen_bounding_rectangle);
         }
     }
 

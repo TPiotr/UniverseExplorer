@@ -82,6 +82,11 @@ public class World extends StaticWorldObject {
     private boolean generating;
 
     /**
+     * Flat that determines if world is initializated
+     */
+    private boolean initializated;
+
+    /**
      * All blocks
      */
     private Blocks blocks;
@@ -170,6 +175,8 @@ public class World extends StaticWorldObject {
         physics_engine.addWorldObject(player);
 
         chunk_rect = new Rectangle();
+
+        initializated = true;
 
         /* DEBUG*/
         shape_renderer = new ShapeRenderer();
@@ -309,7 +316,7 @@ public class World extends StaticWorldObject {
     @Override
     public void tick(float delta) {
         //can't tick if world is generating
-        if(isGenerating())
+        if(isGenerating() || !isInitializated())
             return;
 
         /* CHUNKS FOLLOWING MECHANISM */
@@ -747,6 +754,9 @@ public class World extends StaticWorldObject {
 
     @Override
     public void render(SpriteBatch batch) {
+        if(!isInitializated() || isGenerating())
+            return;
+
         //first light map
         light_engine.render(batch);
 
@@ -842,6 +852,9 @@ public class World extends StaticWorldObject {
     public void dispose() {
         if(light_engine != null)
             light_engine.dispose();
+
+        if(combine_shader != null)
+            combine_shader.dispose();
     }
 
     /**
@@ -905,5 +918,13 @@ public class World extends StaticWorldObject {
      */
     public boolean isGenerating() {
         return generating;
+    }
+
+    /**
+     * Is world initalizated flag
+     * @return initalizated flag
+     */
+    public boolean isInitializated() {
+        return initializated;
     }
 }
