@@ -21,25 +21,45 @@ import explorer.universe.generator.UniverseChunkDataProvider;
 
 public class Universe implements ScreenComponent {
 
+    /**
+     * Universe chunk size
+     */
     public static final int UNIVERSE_CHUNK_SIZE = 16384;
 
+    /**
+     * Game instance
+     */
     private Game game;
 
+    /**
+     * Array that holds all universe chunks instances (9 in total)
+     */
     private UniverseChunk[][] chunks;
 
+    /**
+     * Data provider/universe generator instance
+     */
     private UniverseChunkDataProvider chunks_data_provider;
 
+    /**
+     * Variables used in chunks moving system
+     */
     private boolean last_can_move;
     private long last_time_chunk_changed;
     private long load_chunk_after = 0;
 
+    /**
+     * Debug shape renderer
+     */
     private ShapeRenderer shape_renderer = new ShapeRenderer();
 
     public Universe(Game game) {
         this.game = game;
 
+        //init data provider
         chunks_data_provider = new BasicUniverseGenerator();
 
+        //create chunks instances and load them
         chunks = new UniverseChunk[3][3];
         for(int i = 0; i < chunks.length; i++) {
             for(int j = 0; j < chunks[0].length; j++) {
@@ -48,6 +68,7 @@ public class Universe implements ScreenComponent {
             }
         }
 
+        //load part
         for(int i = 0; i < chunks.length; i++) {
             for(int j = 0; j < chunks[0].length; j++) {
                 chunks[i][j].move(0, 0);
@@ -98,7 +119,6 @@ public class Universe implements ScreenComponent {
                 loading_screen.setVisible(true);
 
                 System.out.println("(Universe) Showing chunks loading screen");
-
                 return;
             }
         }
@@ -316,6 +336,7 @@ public class Universe implements ScreenComponent {
 
     @Override
     public void render(SpriteBatch batch) {
+        //render chunks
         for(int i = 0; i < chunks.length; i++) {
             for(int j = 0; j < chunks[0].length; j++) {
                 chunks[i][j].render(batch);
@@ -341,10 +362,18 @@ public class Universe implements ScreenComponent {
         batch.begin();
     }
 
+    /**
+     * Get Universe chunks data provider (universe generator)
+     * @return
+     */
     public UniverseChunkDataProvider getChunksDataProvider() {
         return chunks_data_provider;
     }
-    
+
+    /**
+     * Get universe array that contains all chunks instances
+     * @return array with all universe chunks instances
+     */
     public UniverseChunk[][] getUniverseChunks() {
         return chunks;
     }
