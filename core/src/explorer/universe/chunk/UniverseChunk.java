@@ -158,7 +158,10 @@ public class UniverseChunk {
                         getObjects().add(o);
 
                         //add object to proper render chunk
-                        render_chunks.get(getRenderChunkIndex(o)).addObject(o);
+                        int index = getRenderChunkIndex(o);
+                        if(render_chunks.size > index) {
+                            render_chunks.get(getRenderChunkIndex(o)).addObject(o);
+                        }
                     }
 
                     if(Thread.interrupted()) {
@@ -172,6 +175,7 @@ public class UniverseChunk {
                     System.out.println("(Universe) Total loading time: " + TimeUtils.nanosToMillis(end_time - loading_start) + " milis");
                 } catch(Exception e) {
                     System.out.println("(Universe) Loading exception: " + e.getClass().getSimpleName());
+                    e.printStackTrace();
                 }
             }
         }, new Vector2(getPosition()), universe, game);
@@ -246,8 +250,18 @@ public class UniverseChunk {
      * Called when chunks moved so all objects have to be disposed or when just closing up game window
      */
     public void dispose() {
-        for(int i = 0; i < objects.size; i++)
-            objects.get(i).dispose();
+        synchronized (objects) {
+            for (int i = 0; i < objects.size; i++) {
+                if(i > objects.size - 1)
+                    break;
+
+                UniverseObject o = objects.get(i);
+                if(o == null)
+                    continue;
+
+                o.dispose();
+            }
+        }
     }
 
     /**

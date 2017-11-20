@@ -2,6 +2,7 @@ package explorer.game.desktop;
 
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.tools.texturepacker.TexturePacker;
 
 import explorer.game.ExplorerGame;
@@ -12,6 +13,12 @@ public class DesktopLauncher {
 		TexturePacker.Settings settings = new TexturePacker.Settings();
 		settings.maxWidth = 1024;
 		settings.maxHeight = 1024;
+
+		settings.filterMag = Texture.TextureFilter.Linear;
+		settings.filterMin = Texture.TextureFilter.Linear;
+
+		settings.bleed = true;
+		settings.bleedIterations = 4;
 
 		settings.limitMemory = false;
 		settings.fast = true;
@@ -25,7 +32,7 @@ public class DesktopLauncher {
 
 		config.width = 1280;
 		config.height = 720;
-		config.foregroundFPS = 0;
+		config.foregroundFPS = 60;
 		config.vSyncEnabled = false;
 
 		new LwjglApplication(new ExplorerGame(), config);

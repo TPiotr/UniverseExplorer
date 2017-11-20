@@ -1,6 +1,7 @@
 package explorer.universe.chunk;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
@@ -129,6 +130,8 @@ public class RenderChunk {
                 if(culling_rectangle.overlaps(screen_rectangle))
                     o.render(batch);
             }
+
+
         }
     }
 

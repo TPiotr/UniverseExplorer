@@ -81,5 +81,8 @@ public class HeightsGenerator {
         random.setSeed(x * 49632 + z * 325176 + seed);
         return random.nextFloat() * 2f - 1f;
     }
- 
+
+    public float getNoise01(int x, int z) {
+        return (getNoise(x, z) + 1f) / 2f;
+    }
 }

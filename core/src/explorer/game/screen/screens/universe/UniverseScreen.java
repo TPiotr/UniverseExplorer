@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
@@ -26,8 +27,15 @@ public class UniverseScreen extends Screen {
 
     private Universe universe;
 
+    //moving stuff
+    private Vector2 camera_target_pos = new Vector2();
+
+    //zooming to planet stuff
     private boolean zoom_in;
+
     private float target_zoom = .1f;
+    private final float max_zoom = 18f;
+
     private Vector2 target_pos = new Vector2();
     private PlanetUniverseObject clicked_planet;
 
@@ -49,38 +57,61 @@ public class UniverseScreen extends Screen {
         game.getMainCamera().zoom = 18;
         game.getMainCamera().update();
 
-        InputAdapter i = new InputAdapter() {
+        //universe user input stuff
+        GestureDetector.GestureAdapter gesture_adapter = new GestureDetector.GestureAdapter() {
+
+            float last_distance;
+
             @Override
-            public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+            public boolean zoom(float initialDistance, float distance) {
                 if(!isVisible())
                     return false;
 
-                Vector2 pos = new Vector2(screenX, screenY);
+                int dir = (distance - last_distance > 0) ? -1 : 1;
+                dir = (distance == last_distance) ? 0 : dir;
+
+                game.getMainCamera().zoom += distance * .00005f * dir * game.getMainCamera().zoom;
+
+                game.getMainCamera().zoom = MathUtils.clamp(game.getMainCamera().zoom, target_zoom * 5, max_zoom);
+                game.getMainCamera().update();
+
+                last_distance = distance;
+                return true;
+            }
+
+            @Override
+            public boolean tap(float x, float y, int count, int button) {
+                if(!isVisible())
+                    return false;
+
+                Vector2 pos = new Vector2(x, y);
                 game.getMainViewport().unproject(pos);
 
                 boolean planet = false;
 
-                //zoom to planet
-                for(int i = 0; i < universe.getUniverseChunks().length; i++) {
-                    for(int j = 0; j < universe.getUniverseChunks()[0].length; j++) {
-                        UniverseChunk chunk = universe.getUniverseChunks()[i][j];
-                        Rectangle chunk_rect = new Rectangle(chunk.getPosition().x, chunk.getPosition().y, chunk.getWH().x, chunk.getWH().y);
+                //try to find and zoom to planet after double tap
+                if(count == 2) {
+                    for (int i = 0; i < universe.getUniverseChunks().length; i++) {
+                        for (int j = 0; j < universe.getUniverseChunks()[0].length; j++) {
+                            UniverseChunk chunk = universe.getUniverseChunks()[i][j];
+                            Rectangle chunk_rect = new Rectangle(chunk.getPosition().x, chunk.getPosition().y, chunk.getWH().x, chunk.getWH().y);
 
-                        if(chunk_rect.contains(pos)) {
-                            Rectangle object_rect = new Rectangle();
-                            for(int k = 0; k < chunk.getObjects().size; k++) {
-                                UniverseObject o = chunk.getObjects().get(k);
+                            if (chunk_rect.contains(pos)) {
+                                Rectangle object_rect = new Rectangle();
+                                for (int k = 0; k < chunk.getObjects().size; k++) {
+                                    UniverseObject o = chunk.getObjects().get(k);
 
-                                if(o instanceof PlanetUniverseObject) {
-                                    object_rect.set(o.getPosition().x, o.getPosition().y, o.getWH().x, o.getWH().y);
-                                    if(object_rect.contains(pos)) {
-                                        planet = true;
+                                    if (o instanceof PlanetUniverseObject) {
+                                        object_rect.set(o.getPosition().x, o.getPosition().y, o.getWH().x, o.getWH().y);
+                                        if (object_rect.contains(pos)) {
+                                            planet = true;
 
-                                        zoom_in = true;
-                                        target_pos.set(o.getPosition()).add(o.getWH().x / 2f, o.getWH().y / 2f);
+                                            zoom_in = true;
+                                            target_pos.set(o.getPosition()).add(o.getWH().x / 2f, o.getWH().y / 2f);
 
-                                        clicked_planet = (PlanetUniverseObject) o;
-                                        //System.out.println("Planet index/seed: " + clicked_planet.getPlanetIndex());
+                                            clicked_planet = (PlanetUniverseObject) o;
+                                            System.out.println("Planet index/seed: " + clicked_planet.getPlanetIndex());
+                                        }
                                     }
                                 }
                             }
@@ -89,12 +120,22 @@ public class UniverseScreen extends Screen {
                 }
 
                 if(!planet) {
+                    //set camera position new target
                     zoom_in = false;
-                    game.getMainCamera().zoom = 18f;
-
-                    game.getMainCamera().position.set(pos, 0);
-                    game.getMainCamera().update();
+                    camera_target_pos.set(pos);
                 }
+
+                return true;
+            }
+        };
+        GestureDetector gesture_detector = new GestureDetector(gesture_adapter);
+        game.getInputEngine().addInputProcessor(gesture_detector);
+
+        InputAdapter i = new InputAdapter() {
+            @Override
+            public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+                if(!isVisible())
+                    return false;
 
                 return false;
             }
@@ -105,6 +146,7 @@ public class UniverseScreen extends Screen {
                     return false;
 
                 game.getMainCamera().zoom += .1f * game.getMainCamera().zoom * amount;
+                game.getMainCamera().zoom = MathUtils.clamp(game.getMainCamera().zoom, target_zoom * 5, max_zoom);
                 game.getMainCamera().update();
 
                 zoom_in = false;
@@ -123,7 +165,7 @@ public class UniverseScreen extends Screen {
             float mul = game.getMainCamera().zoom;
 
             game.getMainCamera().zoom = MathUtils.lerp(game.getMainCamera().zoom, target_zoom, delta * 3f);
-            game.getMainCamera().position.lerp(new Vector3(target_pos, 0), delta * .8f * mul);
+            game.getMainCamera().position.lerp(new Vector3(target_pos, 0), delta * 5f * mul);
 
             if(game.getMainCamera().zoom <= target_zoom + .05f) {
                 zoom_in = false;
@@ -135,6 +177,10 @@ public class UniverseScreen extends Screen {
                 setVisible(false);
             }
 
+            game.getMainCamera().update();
+        } else {
+            //update main camera pos
+            game.getMainCamera().position.lerp(new Vector3(camera_target_pos, 0), delta * 3.5f);
             game.getMainCamera().update();
         }
         universe.tick(delta);

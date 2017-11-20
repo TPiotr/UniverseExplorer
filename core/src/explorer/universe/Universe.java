@@ -46,7 +46,7 @@ public class Universe implements ScreenComponent {
      */
     private boolean last_can_move;
     private long last_time_chunk_changed;
-    private long load_chunk_after = 0;
+    private long load_chunk_after = 100;
 
     /**
      * Debug shape renderer
@@ -84,20 +84,15 @@ public class Universe implements ScreenComponent {
         int center_chunk_pos_x = (int) center_chunk.getPosition().x / UNIVERSE_CHUNK_SIZE;
         int center_chunk_pos_y = (int) center_chunk.getPosition().y / UNIVERSE_CHUNK_SIZE;
 
-        int camera_chunk_pos_x = (int) game.getMainCamera().position.x / UNIVERSE_CHUNK_SIZE;
-        int camera_chunk_pos_y = (int) game.getMainCamera().position.y / UNIVERSE_CHUNK_SIZE;
+        /** Math.floor makes possiblity that this works for moving in negative coords **/
+        int camera_chunk_pos_x = (int) Math.floor(game.getMainCamera().position.x / UNIVERSE_CHUNK_SIZE);
+        int camera_chunk_pos_y = (int) Math.floor(game.getMainCamera().position.y / UNIVERSE_CHUNK_SIZE);
 
         int move_factor_x = camera_chunk_pos_x - center_chunk_pos_x;
         int move_factor_y = camera_chunk_pos_y - center_chunk_pos_y;
 
-        //check if move will not cause going into negative position
+        //check if we have to move chunks
         boolean can_move = (move_factor_x != 0 || move_factor_y != 0);
-
-        if(chunks[0][0].getPosition().x + (move_factor_x * UNIVERSE_CHUNK_SIZE) < 0) {
-            can_move = false;
-        } else if(chunks[0][0].getPosition().y + (move_factor_y * UNIVERSE_CHUNK_SIZE) < 0) {
-            can_move = false;
-        }
 
         //time delayed chunks loading mechanism
         if(can_move && !last_can_move) {
@@ -125,6 +120,8 @@ public class Universe implements ScreenComponent {
 
         if(can_move && (System.currentTimeMillis() - last_time_chunk_changed > load_chunk_after)) {
             long time_start = System.currentTimeMillis();
+
+            System.out.println("Moving!");
 
             //if we can move check if we can copy some chunks to save processing time
             if(move_factor_x == -1 && move_factor_y == 0) {
@@ -342,6 +339,9 @@ public class Universe implements ScreenComponent {
                 chunks[i][j].render(batch);
             }
         }
+
+        if(true)
+            return;
 
         batch.end();
 
