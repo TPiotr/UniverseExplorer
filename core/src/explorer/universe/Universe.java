@@ -24,7 +24,7 @@ public class Universe implements ScreenComponent {
     /**
      * Universe chunk size
      */
-    public static final int UNIVERSE_CHUNK_SIZE = 16384;
+    public static final int UNIVERSE_CHUNK_SIZE = 24576;
 
     /**
      * Game instance

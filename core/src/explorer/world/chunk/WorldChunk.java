@@ -690,6 +690,14 @@ public class WorldChunk extends StaticWorldObject {
     }
 
     /**
+     * Get instance of this chunk loading future to get info about this process (is done, in progress, never started etc), may be null
+     * @return loading future instance
+     */
+    public Future<?> getLoadingFuture() {
+        return loading_future;
+    }
+
+    /**
      * Get array that contains all objects on that chunk
      * @return array of all objects
      */

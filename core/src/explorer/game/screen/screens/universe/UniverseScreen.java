@@ -34,7 +34,7 @@ public class UniverseScreen extends Screen {
     private boolean zoom_in;
 
     private float target_zoom = .1f;
-    private final float max_zoom = 18f;
+    private final float max_zoom = 35f;
 
     private Vector2 target_pos = new Vector2();
     private PlanetUniverseObject clicked_planet;
@@ -54,7 +54,7 @@ public class UniverseScreen extends Screen {
 
         universe = new Universe(game);
 
-        game.getMainCamera().zoom = 18;
+        game.getMainCamera().zoom = max_zoom;
         game.getMainCamera().update();
 
         //universe user input stuff
@@ -146,7 +146,7 @@ public class UniverseScreen extends Screen {
                     return false;
 
                 game.getMainCamera().zoom += .1f * game.getMainCamera().zoom * amount;
-                game.getMainCamera().zoom = MathUtils.clamp(game.getMainCamera().zoom, target_zoom * 5, max_zoom);
+                //game.getMainCamera().zoom = MathUtils.clamp(game.getMainCamera().zoom, target_zoom * 5, max_zoom);
                 game.getMainCamera().update();
 
                 zoom_in = false;

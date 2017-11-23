@@ -7,6 +7,8 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.sun.org.apache.regexp.internal.RE;
 
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import explorer.game.framework.Game;
@@ -119,6 +121,16 @@ public class UniverseChunk {
         if(generating_future != null && !generating_future.isDone()) {
             System.out.println("(Universe) Aborting loading task!");
             generating_future.cancel(true);
+
+            try {
+                generating_future.get();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            } catch(CancellationException e) {
+                e.printStackTrace();
+            }
         }
 
         final long loading_start = System.nanoTime();
@@ -173,6 +185,8 @@ public class UniverseChunk {
 
                     long end_time = System.nanoTime();
                     System.out.println("(Universe) Total loading time: " + TimeUtils.nanosToMillis(end_time - loading_start) + " milis");
+                } catch(InterruptedException e) {
+                    System.out.println("(Universe) Loading chunk stopped by interruption");
                 } catch(Exception e) {
                     System.out.println("(Universe) Loading exception: " + e.getClass().getSimpleName());
                     e.printStackTrace();
@@ -189,7 +203,7 @@ public class UniverseChunk {
      */
     public void moveAndCopy(int chunks_x, int chunks_y, UniverseChunk copy_from) {
         if(generating_future != null && !generating_future.isDone()) {
-            System.out.println("Aborting loading task!");
+            System.out.println("(Universe) Aborting loading task because chunk is going to be copied!");
             generating_future.cancel(true);
         }
 
@@ -262,6 +276,14 @@ public class UniverseChunk {
                 o.dispose();
             }
         }
+    }
+
+    /**
+     * Returns generating future
+     * @return generating future instance
+     */
+    public Future<?> getGeneratingFuture() {
+        return generating_future;
     }
 
     /**

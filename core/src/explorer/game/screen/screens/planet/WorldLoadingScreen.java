@@ -3,6 +3,8 @@ package explorer.game.screen.screens.planet;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
+import java.util.concurrent.Future;
+
 import explorer.game.framework.Game;
 import explorer.game.screen.Screen;
 import explorer.game.screen.screens.Screens;
@@ -47,6 +49,13 @@ public class WorldLoadingScreen extends Screen {
             for(int j = 0; j < game_screen.getWorld().getWorldChunks()[0].length; j++) {
                 if(!game_screen.getWorld().getWorldChunks()[i][j].isDirty())
                     not_dirty_count++;
+                else {
+                    //if dirty flag is false and loading future is null or isDone() returns true that means our chunk loading runnable is stopped and we have to run it again
+                    Future<?> generating_future = game_screen.getWorld().getWorldChunks()[i][j].getLoadingFuture();
+                    if(generating_future == null || generating_future.isDone()) {
+                        game_screen.getWorld().getWorldChunks()[i][j].move(0, 0);
+                    }
+                }
             }
         }
 
