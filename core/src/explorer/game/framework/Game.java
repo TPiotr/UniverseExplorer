@@ -109,7 +109,7 @@ public abstract class Game extends ApplicationAdapter {
 
 		batch.end();
 
-		Gdx.graphics.setTitle("FPS: " + Gdx.graphics.getFramesPerSecond() + " Render calls: " + ((explorer.game.framework.utils.RenderCallsCounterSpriteBatch) batch).getRenderCalls());
+		Gdx.graphics.setTitle("FPS: " + Gdx.graphics.getFramesPerSecond() + " Render calls: " + ((explorer.game.framework.utils.RenderCallsCounterSpriteBatch) batch).getRenderCalls() + " render method calls: " + ((explorer.game.framework.utils.RenderCallsCounterSpriteBatch) batch).getRenderMethodCalls());
 
 		((RenderCallsCounterSpriteBatch) batch).resetCounter();
 	}

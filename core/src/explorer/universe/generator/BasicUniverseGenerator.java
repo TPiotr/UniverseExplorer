@@ -1,20 +1,13 @@
 package explorer.universe.generator;
 
-import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.RandomXS128;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.IntArray;
-import com.badlogic.gdx.utils.OrderedSet;
 
-import java.util.Set;
 import java.util.concurrent.Future;
 
 import explorer.game.framework.Game;
 import explorer.game.framework.utils.FastNoise;
-import explorer.game.framework.utils.PerlinNoise;
 import explorer.universe.Universe;
-import explorer.universe.object.PlanetUniverseObject;
-import explorer.world.planet.generator.HeightsGenerator;
+import explorer.universe.object.StarUniverseObject;
 
 /**
  * Created by RYZEN on 14.11.2017.
@@ -36,7 +29,7 @@ public class BasicUniverseGenerator extends UniverseChunkDataProvider {
     }
 
     private float noise(float x, float y) {
-        return noise.GetNoise(x, y) + 1f / 2f;
+        return (noise.GetNoise(x, y) + 1f) / 2f;
     }
 
     private float getPointNoise(float x, float y) {
@@ -89,7 +82,7 @@ public class BasicUniverseGenerator extends UniverseChunkDataProvider {
 
                     int index = (x >= y) ? x * y + x + y : x + y * y;
 
-                    PlanetUniverseObject planet = new PlanetUniverseObject(index, new Vector2(x, y), universe, game);
+                    StarUniverseObject planet = new StarUniverseObject(index, new Vector2(x, y), universe, game);
                     data.objects.add(planet);
                 }*/
 
@@ -111,14 +104,13 @@ public class BasicUniverseGenerator extends UniverseChunkDataProvider {
 
                         float noise = noise1.GetNoise(x, y);
 
-                        if(point_noise > .8f && point_noise < .81f && noise > .1f) {
-                            PlanetUniverseObject planet = new PlanetUniverseObject(index, new Vector2(x, y), universe, game);
+                        if(point_noise > .8f && point_noise < .81f && noise > .3f) {
+                            StarUniverseObject planet = new StarUniverseObject(index, new Vector2(x, y), universe, game);
                             data.objects.add(planet);
                         }
                     }
                 }
 
-                System.out.println("Objects count: " + data.objects.size);
                 callback.loaded(data);
             }
         };

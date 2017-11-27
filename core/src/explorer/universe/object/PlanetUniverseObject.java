@@ -1,83 +1,67 @@
 package explorer.universe.object;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 
 import explorer.game.framework.Game;
+import explorer.game.framework.utils.FastNoise;
 import explorer.universe.Universe;
-import explorer.world.planet.generator.HeightsGenerator;
 
 /**
- * Created by RYZEN on 18.11.2017.
+ * Created by RYZEN on 23.11.2017.
  */
 
 public class PlanetUniverseObject extends UniverseObject {
 
+    private final static FastNoise noise = new FastNoise(-9);
+
     private static TextureRegion planet_region;
-    private static TextureRegion light_region;
-    private static HeightsGenerator heights_generator;
 
-    private int planet_index;
+    private float scale = 1f;
+    private int rotation = 0;
 
-    private float scale;
-    private float rotation;
+    //radius/orbit
+    private float radius;
+    private float angle;
+    private float full_orbit_time;
 
-    private float min_scale_add;
-    private float max_scale_add;
+    private float time_offset;
 
-    private float speed;
+    private StarUniverseObject parent_star;
 
-    private Color color;
-
-    public PlanetUniverseObject(int planet_index, Vector2 position, Universe universe, Game game) {
+    public PlanetUniverseObject(Vector2 position, Universe universe, StarUniverseObject parent_star, float radius, float full_orbit_time, Game game) {
         super(position, universe, game);
 
-        this.planet_index = planet_index;
+        this.radius = radius;
+        this.full_orbit_time = full_orbit_time;
 
-        wh = new Vector2(64, 64);
+        this.parent_star = parent_star;
 
-        if(planet_region == null) {
-            planet_region = game.getAssetsManager().getTextureRegion("star");
-            light_region = game.getAssetsManager().getTextureRegion("blocks/light");
+        wh = new Vector2(32, 32);
 
-            heights_generator = new HeightsGenerator(75, 1, .5f, 1);
-        }
+        time_offset = noise.GetNoise(position.x, position.y) * 100;
 
-        rotation = MathUtils.random(0, 360);
-        scale = 1f;
+        if(planet_region == null)
+            planet_region = game.getAssetsManager().getTextureRegion("white_texture");
 
-        min_scale_add = .1f;
-        max_scale_add = MathUtils.random(.1f, 1f);
-
-        speed = MathUtils.random(1f, 3f);
-
-        int x = (int) position.x;
-        int y = (int) position.y;
-        color = new Color(heights_generator.getNoise01(x, y) / 1.5f, heights_generator.getNoise01(x, y) / 2f, heights_generator.getNoise01(x, y), 1f);
     }
 
-    private float time;
     @Override
     public void tick(float delta) {
-        float scale_add = min_scale_add + (MathUtils.cos(time += delta * speed) * max_scale_add);
-        scale = 2f + scale_add;
+        //calc pos
+        float circle_x = (parent_star.getPosition().x + parent_star.getWH().x / 2f) + radius * MathUtils.cos(angle);
+        float circle_y = (parent_star.getPosition().y + parent_star.getWH().y / 2f) + radius * MathUtils.sin(angle);
+
+        getPosition().set(circle_x, circle_y);
+
+        angle = (((universe.getUniverseTime() + time_offset) % full_orbit_time) / full_orbit_time) * 360f;
     }
 
     @Override
     public void render(SpriteBatch batch) {
-
-        float last_scale = scale;
-        scale *= 1.5f;
-        batch.setColor(color);
-        //batch.setBlendFunction(GL20.GL_SRC_COLOR, GL20.GL_ONE);
-        batch.draw(light_region, getPosition().x, getPosition().y, getWH().x * .5f, getWH().y * .5f, getWH().x, getWH().y, scale, scale, rotation);
-        //batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-        scale = last_scale;
-
         batch.setColor(Color.WHITE);
         batch.draw(planet_region, getPosition().x, getPosition().y, getWH().x * .5f, getWH().y * .5f, getWH().x, getWH().y, scale, scale, rotation);
     }
@@ -85,9 +69,5 @@ public class PlanetUniverseObject extends UniverseObject {
     @Override
     public void dispose() {
 
-    }
-
-    public int getPlanetIndex() {
-        return planet_index;
     }
 }

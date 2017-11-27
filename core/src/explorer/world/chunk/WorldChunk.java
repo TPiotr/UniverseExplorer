@@ -288,8 +288,8 @@ public class WorldChunk extends StaticWorldObject {
             System.out.println("Aborting loading task!");
             loading_future.cancel(true);
 
-            if(!physics_body_helper.hasBody())
-                physics_body_helper.createBody();
+            //if(!physics_body_helper.hasBody())
+            //    physics_body_helper.createBody();
         }
 
         //first update this chunk position

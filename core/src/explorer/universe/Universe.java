@@ -53,6 +53,11 @@ public class Universe implements ScreenComponent {
      */
     private ShapeRenderer shape_renderer = new ShapeRenderer();
 
+    /**
+     * Variable used for sync in f.e. planets orbiting
+     */
+    private float universe_time;
+
     public Universe(Game game) {
         this.game = game;
 
@@ -78,6 +83,8 @@ public class Universe implements ScreenComponent {
 
     @Override
     public void tick(float delta) {
+        universe_time += delta;
+
          /* CHUNKS FOLLOWING MECHANISM */
         UniverseChunk center_chunk = chunks[1][1];
 
@@ -376,5 +383,13 @@ public class Universe implements ScreenComponent {
      */
     public UniverseChunk[][] getUniverseChunks() {
         return chunks;
+    }
+
+    /**
+     * Get local universe time
+     * @return local universe time
+     */
+    public float getUniverseTime() {
+        return universe_time;
     }
 }

@@ -8,6 +8,7 @@ import com.badlogic.gdx.utils.Array;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -146,6 +147,19 @@ public class FileChunkDataProvider extends ChunkDataProvider {
             input.close();
 
             return true;
+        } catch(EOFException e) {
+            System.out.println("Failed to read whole chunk file (EOF exception, unexpected end of ZLIB input stream)");
+
+            //wait some time because this exception was thrown probably because
+            //system wasn't able to provide access to file at that time so wait and try to load chunk file again
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e1) {
+                e1.printStackTrace();
+                return false;
+            }
+
+            return false;
         } catch(IOException e) {
             e.printStackTrace();
             return false;

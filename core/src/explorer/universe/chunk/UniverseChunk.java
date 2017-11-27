@@ -129,7 +129,8 @@ public class UniverseChunk {
             } catch (ExecutionException e) {
                 e.printStackTrace();
             } catch(CancellationException e) {
-                e.printStackTrace();
+                //normal thing because when .cancel() before started to work calling .get() will throw this exception so its okay 
+                //e.printStackTrace();
             }
         }
 

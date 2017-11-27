@@ -16,7 +16,7 @@ import explorer.game.screen.screens.Screens;
 import explorer.game.screen.screens.planet.PlanetScreen;
 import explorer.universe.Universe;
 import explorer.universe.chunk.UniverseChunk;
-import explorer.universe.object.PlanetUniverseObject;
+import explorer.universe.object.StarUniverseObject;
 import explorer.universe.object.UniverseObject;
 
 /**
@@ -37,7 +37,7 @@ public class UniverseScreen extends Screen {
     private final float max_zoom = 35f;
 
     private Vector2 target_pos = new Vector2();
-    private PlanetUniverseObject clicked_planet;
+    private StarUniverseObject clicked_planet;
 
     private BitmapFont font;
 
@@ -101,7 +101,7 @@ public class UniverseScreen extends Screen {
                                 for (int k = 0; k < chunk.getObjects().size; k++) {
                                     UniverseObject o = chunk.getObjects().get(k);
 
-                                    if (o instanceof PlanetUniverseObject) {
+                                    if (o instanceof StarUniverseObject) {
                                         object_rect.set(o.getPosition().x, o.getPosition().y, o.getWH().x, o.getWH().y);
                                         if (object_rect.contains(pos)) {
                                             planet = true;
@@ -109,7 +109,7 @@ public class UniverseScreen extends Screen {
                                             zoom_in = true;
                                             target_pos.set(o.getPosition()).add(o.getWH().x / 2f, o.getWH().y / 2f);
 
-                                            clicked_planet = (PlanetUniverseObject) o;
+                                            clicked_planet = (StarUniverseObject) o;
                                             System.out.println("Planet index/seed: " + clicked_planet.getPlanetIndex());
                                         }
                                     }
