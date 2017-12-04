@@ -1,49 +1,55 @@
 
 main_atlas.png
-size: 1024,1024
+size: 2048,2048
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+blocks/grass1_mask
+  rotate: false
+  xy: 2, 2
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1
+
+main_atlas2.png
+size: 2048,2048
 format: RGBA8888
 filter: Linear,Linear
 repeat: none
 background/sky_day
   rotate: false
-  xy: 2, 422
+  xy: 2, 314
   size: 512, 512
   orig: 512, 512
   offset: 0, 0
   index: -1
 badlogic
   rotate: false
-  xy: 516, 678
+  xy: 2, 56
   size: 256, 256
   orig: 256, 256
   offset: 0, 0
   index: -1
 blocks/dirt
   rotate: false
-  xy: 2, 56
-  size: 256, 256
-  orig: 256, 256
-  offset: 0, 0
-  index: -1
-blocks/stone
-  rotate: false
-  xy: 2, 56
-  size: 256, 256
-  orig: 256, 256
-  offset: 0, 0
-  index: -1
-blocks/grass1_mask
-  rotate: false
-  xy: 516, 420
+  xy: 516, 570
   size: 256, 256
   orig: 256, 256
   offset: 0, 0
   index: -1
 blocks/light
   rotate: false
-  xy: 260, 56
+  xy: 1028, 1488
   size: 256, 256
   orig: 256, 256
+  offset: 0, 0
+  index: -1
+blocks/stone
+  rotate: false
+  xy: 2, 828
+  size: 1024, 1024
+  orig: 1024, 1024
   offset: 0, 0
   index: -1
 player/base_arm
@@ -55,35 +61,35 @@ player/base_arm
   index: -1
 player/base_head
   rotate: false
-  xy: 774, 867
+  xy: 1306, 1785
   size: 62, 67
   orig: 62, 67
   offset: 0, 0
   index: -1
 player/base_legs
   rotate: false
-  xy: 2, 314
+  xy: 1028, 1746
   size: 276, 106
   orig: 276, 106
   offset: 0, 0
   index: -1
 player/base_torso
   rotate: false
-  xy: 280, 339
+  xy: 260, 231
   size: 34, 81
   orig: 34, 81
   offset: 0, 0
   index: -1
 star
   rotate: false
-  xy: 774, 849
+  xy: 516, 552
   size: 16, 16
   orig: 16, 16
   offset: 0, 0
   index: -1
 white_texture
   rotate: false
-  xy: 838, 918
+  xy: 774, 810
   size: 16, 16
   orig: 16, 16
   offset: 0, 0

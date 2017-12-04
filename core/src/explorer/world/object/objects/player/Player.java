@@ -101,7 +101,7 @@ public class Player extends DynamicWorldObject {
 
             @Override
             public boolean scrolled(int amount) {
-                game.getMainCamera().zoom += amount * .1f;
+                game.getMainCamera().zoom += amount * .1f * game.getMainCamera().zoom;
                 game.getMainCamera().update();
                 System.out.println(game.getMainCamera().zoom);
 

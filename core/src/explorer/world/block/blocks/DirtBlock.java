@@ -34,7 +34,7 @@ public class DirtBlock extends PlanetBoundBlock {
         block_color.set(properties.MIN_COLOR).lerp(properties.MAX_COLOR, alpha);
 
         //load textures
-        TextureRegion[][] textures = game.getAssetsManager().getTextureRegion("blocks/stone").split(64, 64);
+        TextureRegion[][] textures = game.getAssetsManager().getTextureRegion("blocks/stone").split(256, 256);
 
        tile_positions.put(Block.COLLIDE_NONE, textures[0][0]);
        tile_positions.put(Block.COLLIDE_ALL_SIDES, textures[1][2]);

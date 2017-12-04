@@ -41,7 +41,7 @@ public class World extends StaticWorldObject {
      * World properties
      */
     public static final int CHUNK_SIZE = 64;
-    public static final int BLOCK_SIZE = 16;
+    public static final int BLOCK_SIZE = 32;
 
     public static final int CHUNK_WORLD_SIZE = CHUNK_SIZE * BLOCK_SIZE;
 

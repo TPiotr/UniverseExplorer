@@ -53,7 +53,7 @@ public class GrassBlock extends CustomRenderingBlock {
 
     private void loadTextures() {
         //load textures
-        TextureRegion[][] textures = game.getAssetsManager().getTextureRegion("blocks/stone").split(64, 64);
+        TextureRegion[][] textures = game.getAssetsManager().getTextureRegion("blocks/stone").split(256, 256);
 
         tile_positions.put(Block.COLLIDE_NONE, textures[0][0]);
         tile_positions.put(Block.COLLIDE_ALL_SIDES, textures[1][2]);
@@ -76,7 +76,7 @@ public class GrassBlock extends CustomRenderingBlock {
         //
         grass_regions = new HashMap<Short, TextureRegion>();
 
-        TextureRegion[][] grass_textures = game.getAssetsManager().getTextureRegion("blocks/grass1_mask").split(64, 64);
+        TextureRegion[][] grass_textures = game.getAssetsManager().getTextureRegion("blocks/grass1_mask").split(256, 256);
 
         grass_regions.put(Block.COLLIDE_NONE, grass_textures[0][0]);
         grass_regions.put(Block.COLLIDE_ALL_SIDES, grass_textures[1][2]);
