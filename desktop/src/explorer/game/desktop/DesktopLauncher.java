@@ -11,8 +11,8 @@ public class DesktopLauncher {
 	public static void main (String[] arg) {
 		//pack textures into atlas
 		TexturePacker.Settings settings = new TexturePacker.Settings();
-		settings.maxWidth = 1024;
-		settings.maxHeight = 1024;
+		settings.maxWidth = 2048;
+		settings.maxHeight = 2048;
 
 		settings.filterMag = Texture.TextureFilter.Linear;
 		settings.filterMin = Texture.TextureFilter.Linear;

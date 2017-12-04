@@ -6,84 +6,84 @@ filter: Linear,Linear
 repeat: none
 background/sky_day
   rotate: false
-  xy: 2, 455
+  xy: 2, 422
   size: 512, 512
   orig: 512, 512
   offset: 0, 0
   index: -1
 badlogic
   rotate: false
-  xy: 516, 711
+  xy: 516, 678
   size: 256, 256
   orig: 256, 256
   offset: 0, 0
   index: -1
 blocks/dirt
   rotate: false
-  xy: 2, 89
-  size: 256, 256
-  orig: 256, 256
-  offset: 0, 0
-  index: -1
-blocks/grass1_mask
-  rotate: false
-  xy: 516, 453
-  size: 256, 256
-  orig: 256, 256
-  offset: 0, 0
-  index: -1
-blocks/light
-  rotate: false
-  xy: 260, 89
+  xy: 2, 56
   size: 256, 256
   orig: 256, 256
   offset: 0, 0
   index: -1
 blocks/stone
   rotate: false
-  xy: 518, 195
+  xy: 2, 56
+  size: 256, 256
+  orig: 256, 256
+  offset: 0, 0
+  index: -1
+blocks/grass1_mask
+  rotate: false
+  xy: 516, 420
+  size: 256, 256
+  orig: 256, 256
+  offset: 0, 0
+  index: -1
+blocks/light
+  rotate: false
+  xy: 260, 56
   size: 256, 256
   orig: 256, 256
   offset: 0, 0
   index: -1
 player/base_arm
   rotate: false
-  xy: 280, 401
+  xy: 2, 2
   size: 55, 52
   orig: 55, 52
   offset: 0, 0
   index: -1
 player/base_head
   rotate: false
-  xy: 2, 20
+  xy: 774, 867
   size: 62, 67
   orig: 62, 67
   offset: 0, 0
   index: -1
 player/base_legs
   rotate: false
-  xy: 2, 347
+  xy: 2, 314
   size: 276, 106
   orig: 276, 106
   offset: 0, 0
   index: -1
 player/base_torso
   rotate: false
-  xy: 774, 886
+  xy: 280, 339
   size: 34, 81
   orig: 34, 81
   offset: 0, 0
   index: -1
 star
   rotate: false
-  xy: 518, 177
+  xy: 774, 849
   size: 16, 16
   orig: 16, 16
   offset: 0, 0
   index: -1
 white_texture
   rotate: false
-  xy: 2, 2
+  xy: 838, 918
   size: 16, 16
   orig: 16, 16
   offset: 0, 0
