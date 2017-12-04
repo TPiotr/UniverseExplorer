@@ -29,8 +29,8 @@ public class PlanetScreen extends Screen {
         NAME = Screens.PLANET_SCREEN_NAME;
 
         //int seed = Integer.parseInt(JOptionPane.showInputDialog(null, "Seed (random integer number):"));
-
         world = new World(game, 122);
+
         font = new BitmapFont();
 
         GLProfiler.enable();

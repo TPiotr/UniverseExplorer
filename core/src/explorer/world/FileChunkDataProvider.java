@@ -5,6 +5,7 @@ import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.TimeUtils;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -29,7 +30,7 @@ public class FileChunkDataProvider extends ChunkDataProvider {
 
     private String world_dir;
 
-    public FileChunkDataProvider(String world_dir) {
+    public void setWorldDir(String world_dir) {
         this.world_dir = world_dir;
     }
 
@@ -59,6 +60,8 @@ public class FileChunkDataProvider extends ChunkDataProvider {
         Runnable r = new Runnable() {
             @Override
             public void run() {
+                long file_loading_start = System.currentTimeMillis();
+
                 ChunkData data = new ChunkData();
                 FileHandle handle = Gdx.files.local(path);
 
@@ -71,6 +74,9 @@ public class FileChunkDataProvider extends ChunkDataProvider {
                         }
                     }
 
+                    data.chunk_loaded_position = new Vector2(chunk_position);
+                    data.chunk_loaded_position.x %= world.getPlanetProperties().PLANET_SIZE * World.CHUNK_WORLD_SIZE;
+
                     callback.loaded(data);
                     return;
                 }
@@ -79,6 +85,8 @@ public class FileChunkDataProvider extends ChunkDataProvider {
                 while(!loadData(data, handle, chunk_position, world, game)) {
                     data.objects.clear();
                 }
+
+                System.out.println("Reading file time: " + TimeUtils.timeSinceMillis(file_loading_start));
 
                 callback.loaded(data);
             }
@@ -205,8 +213,6 @@ public class FileChunkDataProvider extends ChunkDataProvider {
 
         final String path = getPathToChunkFile(world_dir, new Vector2(x * World.CHUNK_WORLD_SIZE, y * World.CHUNK_WORLD_SIZE));
 
-        System.out.println("Save request: " + path);
-
         //because I want to save in background we have to copy chunk data here
         final int[][] foreground_blocks = new int[World.CHUNK_SIZE][World.CHUNK_SIZE];
         final int[][] background_blocks = new int[World.CHUNK_SIZE][World.CHUNK_SIZE];
@@ -221,6 +227,8 @@ public class FileChunkDataProvider extends ChunkDataProvider {
         //copy chunk objects and chunk position
         final Array<WorldObject> objects = new Array<WorldObject>(chunk.getObjects());
         final Vector2 chunk_position = new Vector2(chunk_pos);
+
+        System.out.println("Save request: " + path);
 
         Runnable r = new Runnable() {
             @Override

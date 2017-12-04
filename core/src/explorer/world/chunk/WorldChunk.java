@@ -2,11 +2,9 @@ package explorer.world.chunk;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.DelayedRemovalArray;
 import com.badlogic.gdx.utils.TimeUtils;
 
 import java.util.concurrent.Future;
@@ -20,7 +18,6 @@ import explorer.world.block.CustomRenderingBlock;
 import explorer.world.object.DynamicWorldObject;
 import explorer.world.object.StaticWorldObject;
 import explorer.world.object.WorldObject;
-import explorer.world.physics.PhysicsBodyChunkHelper;
 
 /**
  * Created by RYZEN on 07.10.2017.
@@ -44,11 +41,6 @@ public class WorldChunk extends StaticWorldObject {
      * All objects on that chunk
      */
     private Array<WorldObject> objects;
-
-    /**
-     * Helper class that handles creating/destroying physics body for chunks
-     */
-    private PhysicsBodyChunkHelper physics_body_helper;
 
     /**
      * Flag that determines if chunk after going unloaded needs to be saved to file again
@@ -84,9 +76,6 @@ public class WorldChunk extends StaticWorldObject {
 
         getWH().set(World.CHUNK_WORLD_SIZE, World.CHUNK_WORLD_SIZE);
 
-        //init helper
-        physics_body_helper = new PhysicsBodyChunkHelper(this, world, game);
-
         //init rects
         chunk_bounds_rectangle = new Rectangle();
         object_bounds_rectangle = new Rectangle();
@@ -113,6 +102,9 @@ public class WorldChunk extends StaticWorldObject {
     public synchronized boolean addObject(WorldObject object) {
         synchronized (objects) {
             objects.add(object);
+
+            world.getPhysicsEngine().addWorldObject(object);
+            object.setParentChunk(this);
 
             //because new object appeared this chunk have to be saved in a file
             need_save = true;
@@ -141,10 +133,6 @@ public class WorldChunk extends StaticWorldObject {
         //mark as dirty
         is_dirty = true;
 
-        //clear all colliders from physics engine,
-        //we don't have to call it because createChunkPhysicsBody() call this method itself
-        //world.getPhysicsEngine().getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(this);
-
         //next get data for "new chunk"
         ChunkDataProvider provider = world.getChunksDataProvider();
 
@@ -167,7 +155,7 @@ public class WorldChunk extends StaticWorldObject {
                     this_pos.x %= world.getPlanetProperties().PLANET_SIZE * World.CHUNK_WORLD_SIZE;
 
                     if(!loaded_position.equals(this_pos)) {
-                        System.out.println("Loaded wrong chunk file (position check failed)!" + "(acc pos: " + this_pos + " loaded pos: " + loaded_position + ")");
+                        System.err.println("Loaded wrong chunk file (position check failed)!" + "(acc pos: " + this_pos + " loaded pos: " + loaded_position + ")");
 
                         //call chunk to load proper chunk now
                         move(0, 0);
@@ -247,10 +235,6 @@ public class WorldChunk extends StaticWorldObject {
                     //set creating physics stuff flag
                     started_creating_physics_body = true;
 
-                    //calculate physics body for chunk
-                    //world.getPhysicsEngine().getPhysicsEngineChunksHelper().createChunkPhysicsBody(WorldChunk.this);
-                    physics_body_helper.createBody();
-
                     if(Thread.interrupted()) {
                         throw new InterruptedException();
                     }
@@ -270,7 +254,6 @@ public class WorldChunk extends StaticWorldObject {
                     //if creating physics stuff flag is true and task was aborted we have to clean loaded mess up
                     if(started_creating_physics_body) {
                         world.getPhysicsEngine().removeWorldObjects(objects);
-                        physics_body_helper.destroyBody();
                     }
                 }
             }
@@ -313,10 +296,6 @@ public class WorldChunk extends StaticWorldObject {
             o.setParentChunk(this);
             objects.add(o);
         }
-
-        //copy colliders
-        //world.getPhysicsEngine().getPhysicsEngineChunksHelper().reassignColliders(copy_from, this);
-        physics_body_helper.copyBody(copy_from.getPhysicsBodyHelper());
 
         need_save = copy_from.isSaveRequest();
 
@@ -383,11 +362,6 @@ public class WorldChunk extends StaticWorldObject {
         //update ground lights
         world.getLightEngine().getGroundLineRenderer().removeChunkBoundLights(this);
         calculateGroundLight();
-
-        //update chunk physics body
-        //world.getPhysicsEngine().getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(this);
-        //world.getPhysicsEngine().getPhysicsEngineChunksHelper().createChunkPhysicsBody(this);
-        physics_body_helper.createBody();
 
         //because chunk was changed we need to save it to a file again
         need_save = true;
@@ -525,7 +499,7 @@ public class WorldChunk extends StaticWorldObject {
                                 //so remove object from this chunk and assign to proper new one
                                 objects.removeValue(o, true);
 
-                                chunk.addObject(o);
+                                chunk.objects.add(o);
                                 o.setParentChunk(chunk);
 
                                 need_save = true;
@@ -710,14 +684,6 @@ public class WorldChunk extends StaticWorldObject {
      */
     public TileHolder[][] getBlocks() {
         return blocks;
-    }
-
-    /**
-     * Get instance of chunk physics body handler
-     * @return physics world chunk body helper, handles all creating/destroying physics chunk body
-     */
-    public PhysicsBodyChunkHelper getPhysicsBodyHelper() {
-        return physics_body_helper;
     }
 
     /**

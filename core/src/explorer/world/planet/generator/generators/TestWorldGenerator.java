@@ -54,6 +54,13 @@ public class TestWorldGenerator extends WorldGenerator {
         heights_generator = new HeightsGenerator(AMPLITUDE, OCTAVES, ROUGHNESS, properties.PLANET_SEED);
     }
 
+    private int getHeight(int x, int chunk_pos_x) {
+        final int height_offset = 100;
+        int y = (int) heights_generator.generateHeight(x + (chunk_pos_x * World.CHUNK_SIZE), 0) + height_offset;
+
+        return y;
+    }
+
     @Override
     public synchronized ChunkDataProvider.ChunkData getChunkData(Vector2 chunk_position) {
         ChunkDataProvider.ChunkData out = new ChunkDataProvider.ChunkData();
@@ -65,16 +72,15 @@ public class TestWorldGenerator extends WorldGenerator {
         chunk_pos_x %= planet_width;
 
         for (int i = 0; i < out.foreground_blocks.length; i++) {
-            final int height_offset = 100;
-            int y = (int) heights_generator.generateHeight(i + (chunk_pos_x * World.CHUNK_SIZE), 0) + height_offset;
+            int y = getHeight(i, chunk_pos_x);
 
             //last chunk interpolating to first mechanism
 
             //first check if acc generating chunk is last one
             if(chunk_pos_y * World.CHUNK_SIZE <= y && (chunk_pos_y + 1) * World.CHUNK_SIZE > y && chunk_pos_x == world.getPlanetProperties().PLANET_SIZE - 1) {
                 //System.out.println("last");
-                int first_y = (int) heights_generator.generateHeight(chunk_pos_x * World.CHUNK_SIZE, 0) + height_offset;
-                int first_chunk_first_y = (int) heights_generator.generateHeight(0, 0) + height_offset;
+                int first_y = getHeight(0, chunk_pos_x);//(int) heights_generator.generateHeight(chunk_pos_x * World.CHUNK_SIZE, 0) + height_offset;
+                int first_chunk_first_y = getHeight(0, 0);//(int) heights_generator.generateHeight(0, 0) + height_offset;
 
                 //using linear interpolation make nice connection effect
                 float percentage = (float) i / (float) World.CHUNK_SIZE;
@@ -156,5 +162,15 @@ public class TestWorldGenerator extends WorldGenerator {
     @Override
     public int getMaxHeight() {
         return 5;
+    }
+
+    @Override
+    public Vector2 getPlayerSpawn() {
+        Vector2 out = new Vector2();
+
+        int y = getHeight(0, 0);
+        out.set(0, y * World.BLOCK_SIZE);
+
+        return out;
     }
 }

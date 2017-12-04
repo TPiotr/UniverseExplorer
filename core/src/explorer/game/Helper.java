@@ -27,7 +27,7 @@ public class Helper {
         shader.end();
 
         if(!shader.isCompiled()) {
-            System.err.println("Shader not compiled! (some problem occured) closing app "+shader_name);
+            System.err.println("Shader not compiled! (some problem occured) closing app " + shader_name);
             Gdx.app.exit();
         }
         return shader;

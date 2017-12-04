@@ -30,4 +30,10 @@ public abstract class WorldGenerator {
      * @return max height of world that can be generated using this generator
      */
     public abstract int getMaxHeight();
+
+    /**
+     * Get player spawn coordiantes in normal world coords
+     * @return instace of vector that contains information about player spawn on given planet
+     */
+    public abstract Vector2 getPlayerSpawn();
 }

@@ -22,6 +22,11 @@ public abstract class DynamicWorldObject extends WorldObject {
      */
     protected Vector2 velocity;
 
+    /**
+     * Flag that determines if this dynamic object colliders with other dynamic ones (other dynamic had to set this flag to true too)
+     */
+    protected boolean collide_with_other_dynamics;
+
     public DynamicWorldObject(Vector2 position, World world, Game game) {
         super(position, world, game);
 
@@ -42,5 +47,13 @@ public abstract class DynamicWorldObject extends WorldObject {
      */
     public PhysicsShape getPhysicsShape() {
         return physics_shape;
+    }
+
+    /**
+     * Getter for a flag that describes if this dynamic object collide with other dynamic objects that have this flag set to true too
+     * @return
+     */
+    public boolean isCollidingWithOtherDynamicObjects() {
+        return collide_with_other_dynamics;
     }
 }

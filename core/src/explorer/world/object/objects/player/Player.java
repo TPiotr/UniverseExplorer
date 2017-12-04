@@ -11,6 +11,7 @@ import explorer.game.framework.Game;
 import explorer.world.World;
 import explorer.world.chunk.WorldChunk;
 import explorer.world.object.DynamicWorldObject;
+import explorer.world.object.objects.TestDynamicObject;
 import explorer.world.physics.shapes.RectanglePhysicsShape;
 
 /**
@@ -21,10 +22,11 @@ public class Player extends DynamicWorldObject {
 
     private PlayerRenderer player_renderer;
 
-    private boolean gravity = false;
-
     private boolean left, right, jump;
     private final float PLAYER_SPEED = 300f;
+
+    //finding parent chunk vars
+    private Rectangle chunk_rect;
 
     public Player(Vector2 position, World w, final Game game) {
         super(position, w, game);
@@ -36,6 +38,8 @@ public class Player extends DynamicWorldObject {
 
         getWH().set(player_renderer.body_root.getWH());
         this.physics_shape = new RectanglePhysicsShape(new Vector2(), new Vector2(getWH()), this);
+
+        chunk_rect = new Rectangle();
 
         //because player is always on center of in ram map
         setParentChunk(w.getWorldChunks()[1][1]);
@@ -49,7 +53,7 @@ public class Player extends DynamicWorldObject {
 
             @Override
             public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-                Vector2 touch = new Vector2(screenX, screenY);
+                final Vector2 touch = new Vector2(screenX, screenY);
                 game.getMainViewport().unproject(touch);
 
                 if(button == 0) {
@@ -71,6 +75,7 @@ public class Player extends DynamicWorldObject {
                             }
                         }
                     }
+
                 } else if(button == 2) {
                     for(int i = 0; i < world.getWorldChunks().length; i++) {
                         for(int j = 0; j < world.getWorldChunks()[0].length; j++) {
@@ -84,6 +89,12 @@ public class Player extends DynamicWorldObject {
                         }
                     }
                 }
+
+                return false;
+            }
+
+            @Override
+            public boolean touchUp(int screenX, int screenY, int pointer, int button) {
 
                 return false;
             }
@@ -109,11 +120,6 @@ public class Player extends DynamicWorldObject {
             }
 
             public boolean keyDown(int keycode) {
-                if(keycode == Input.Keys.V) {
-                    gravity = !gravity;
-                    getVelocity().set(0, 0);
-                }
-
                 if(keycode == Input.Keys.A) {
                     left = true;
                 } else if(keycode == Input.Keys.D) {
@@ -156,8 +162,17 @@ public class Player extends DynamicWorldObject {
 
     @Override
     public void tick(float delta) {
-        if(gravity) {
-            getPosition().add(getVelocity().scl(delta));
+        //find parent chunk (because chunk[1][1] is now always players parent chunk because of delayed loading chunks system)
+        for(int i = 0; i < world.getWorldChunks().length; i++) {
+            for(int j = 0; j < world.getWorldChunks()[0].length; j++) {
+                WorldChunk chunk = world.getWorldChunks()[i][j];
+                chunk_rect.set(chunk.getPosition().x, chunk.getPosition().y, chunk.getWH().x, chunk.getWH().y);
+
+                if(chunk_rect.contains(getPosition().x + getWH().x / 2f, getPosition().y + getWH().y / 2f)) {
+                    setParentChunk(chunk);
+                    break;
+                }
+            }
         }
 
         if(left) {

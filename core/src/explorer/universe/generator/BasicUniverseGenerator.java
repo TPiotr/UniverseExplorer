@@ -104,7 +104,7 @@ public class BasicUniverseGenerator extends UniverseChunkDataProvider {
 
                         float noise = noise1.GetNoise(x, y);
 
-                        if(point_noise > .8f && point_noise < .81f && noise > .3f) {
+                        if(point_noise > .8f && point_noise < .81f && noise > .5f) {
                             StarUniverseObject planet = new StarUniverseObject(index, new Vector2(x, y), universe, game);
                             data.objects.add(planet);
                         }

@@ -11,6 +11,8 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.TimeUtils;
 
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import explorer.game.framework.Game;
@@ -99,7 +101,7 @@ public class World extends StaticWorldObject {
     /**
      * Chunk data provider
      */
-    private ChunkDataProvider data_provider;
+    protected ChunkDataProvider data_provider;
 
     /**
      * World light engine
@@ -123,6 +125,8 @@ public class World extends StaticWorldObject {
     public World(Game game, int planet_seed) {
         super(new Vector2(0, 0), null, game);
         world = this;
+
+        data_provider = new FileChunkDataProvider();
 
         this.planet_seed = planet_seed;
     }
@@ -150,7 +154,7 @@ public class World extends StaticWorldObject {
         blocks = new Blocks(this, game);
 
         //create chunk data provider
-        data_provider = new FileChunkDataProvider(getWorldDirectory(planet_seed));
+        ((FileChunkDataProvider) data_provider).setWorldDir(getWorldDirectory(planet_seed));
 
         //generate world if there is need for it
         generateWorldIfHaveTo();
@@ -171,7 +175,7 @@ public class World extends StaticWorldObject {
         }
 
         //create player
-        player = new Player(new Vector2(1000, 2000), this, game);
+        player = new Player(new Vector2(getPlanetProperties().PLANET_TYPE.PLANET_GENERATOR.getPlayerSpawn()), this, game);
         physics_engine.addWorldObject(player);
 
         chunk_rect = new Rectangle();
@@ -196,7 +200,7 @@ public class World extends StaticWorldObject {
     /**
      * Generate this planet and save to file if this planet wasnt generated before
      */
-    private void generateWorldIfHaveTo() {
+    protected void generateWorldIfHaveTo() {
         //first check if this planet folder exists
         final String world_dir = getWorldDirectory(getPlanetProperties().PLANET_SEED);
 
@@ -381,13 +385,6 @@ public class World extends StaticWorldObject {
                 chunks[2][1].dispose();
                 chunks[2][2].dispose();
 
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[2][0]);
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[2][1]);
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[2][2]);
-                chunks[2][0].getPhysicsBodyHelper().destroyBody();
-                chunks[2][1].getPhysicsBodyHelper().destroyBody();
-                chunks[2][2].getPhysicsBodyHelper().destroyBody();
-
                 chunks[2][0].moveAndCopy(move_factor_x, move_factor_y, chunks[1][0]);
                 chunks[2][1].moveAndCopy(move_factor_x, move_factor_y, chunks[1][1]);
                 chunks[2][2].moveAndCopy(move_factor_x, move_factor_y, chunks[1][2]);
@@ -411,13 +408,6 @@ public class World extends StaticWorldObject {
                 chunks[0][0].dispose();
                 chunks[0][1].dispose();
                 chunks[0][2].dispose();
-
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[0][0]);
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[0][1]);
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[0][2]);
-                chunks[0][0].getPhysicsBodyHelper().destroyBody();
-                chunks[0][1].getPhysicsBodyHelper().destroyBody();
-                chunks[0][2].getPhysicsBodyHelper().destroyBody();
 
                 chunks[0][0].moveAndCopy(move_factor_x, move_factor_y, chunks[1][0]);
                 chunks[0][1].moveAndCopy(move_factor_x, move_factor_y, chunks[1][1]);
@@ -443,13 +433,6 @@ public class World extends StaticWorldObject {
                 chunks[1][0].dispose();
                 chunks[2][0].dispose();
 
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[0][0]);
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[1][0]);
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[2][0]);
-                chunks[0][0].getPhysicsBodyHelper().destroyBody();
-                chunks[1][0].getPhysicsBodyHelper().destroyBody();
-                chunks[2][0].getPhysicsBodyHelper().destroyBody();
-
                 chunks[0][0].moveAndCopy(move_factor_x, move_factor_y, chunks[0][1]);
                 chunks[1][0].moveAndCopy(move_factor_x, move_factor_y, chunks[1][1]);
                 chunks[2][0].moveAndCopy(move_factor_x, move_factor_y, chunks[2][1]);
@@ -473,13 +456,6 @@ public class World extends StaticWorldObject {
                 chunks[0][2].dispose();
                 chunks[1][2].dispose();
                 chunks[2][2].dispose();
-
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[0][2]);
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[1][2]);
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[2][2]);
-                chunks[0][2].getPhysicsBodyHelper().destroyBody();
-                chunks[1][2].getPhysicsBodyHelper().destroyBody();
-                chunks[2][2].getPhysicsBodyHelper().destroyBody();
 
                 chunks[0][2].moveAndCopy(move_factor_x, move_factor_y, chunks[0][1]);
                 chunks[1][2].moveAndCopy(move_factor_x, move_factor_y, chunks[1][1]);
@@ -512,17 +488,6 @@ public class World extends StaticWorldObject {
                 chunks[2][0].dispose();
                 chunks[0][1].dispose();
                 chunks[0][2].dispose();
-
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[0][0]);
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[1][0]);
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[2][0]);
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[0][1]);
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[0][2]);
-                chunks[0][0].getPhysicsBodyHelper().destroyBody();
-                chunks[1][0].getPhysicsBodyHelper().destroyBody();
-                chunks[2][0].getPhysicsBodyHelper().destroyBody();
-                chunks[0][1].getPhysicsBodyHelper().destroyBody();
-                chunks[0][2].getPhysicsBodyHelper().destroyBody();
 
                 //copy
                 chunks[0][0].moveAndCopy(move_factor_x, move_factor_y, chunks[1][1]);
@@ -558,17 +523,6 @@ public class World extends StaticWorldObject {
                 chunks[2][1].dispose();
                 chunks[2][2].dispose();
 
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[0][0]);
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[1][0]);
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[2][0]);
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[2][1]);
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[2][2]);
-                chunks[0][0].getPhysicsBodyHelper().destroyBody();
-                chunks[1][0].getPhysicsBodyHelper().destroyBody();
-                chunks[2][0].getPhysicsBodyHelper().destroyBody();
-                chunks[2][1].getPhysicsBodyHelper().destroyBody();
-                chunks[2][2].getPhysicsBodyHelper().destroyBody();
-
                 //copy
                 chunks[1][0].moveAndCopy(move_factor_x, move_factor_y, chunks[0][1]);
                 chunks[2][0].moveAndCopy(move_factor_x, move_factor_y, chunks[1][1]);
@@ -601,17 +555,6 @@ public class World extends StaticWorldObject {
                 chunks[0][2].dispose();
                 chunks[1][2].dispose();
                 chunks[2][2].dispose();
-
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[0][0]);
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[0][1]);
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[0][2]);
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[1][2]);
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[2][2]);
-                chunks[0][0].getPhysicsBodyHelper().destroyBody();
-                chunks[0][1].getPhysicsBodyHelper().destroyBody();
-                chunks[0][2].getPhysicsBodyHelper().destroyBody();
-                chunks[1][2].getPhysicsBodyHelper().destroyBody();
-                chunks[2][2].getPhysicsBodyHelper().destroyBody();
 
                 //copy
                 chunks[0][2].moveAndCopy(move_factor_x, move_factor_y, chunks[1][1]);
@@ -646,17 +589,6 @@ public class World extends StaticWorldObject {
                 chunks[0][2].dispose();
                 chunks[1][2].dispose();
 
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[2][0]);
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[2][1]);
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[2][2]);
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[0][2]);
-                //physics_engine.getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[1][2]);
-                chunks[2][0].getPhysicsBodyHelper().destroyBody();
-                chunks[2][1].getPhysicsBodyHelper().destroyBody();
-                chunks[2][2].getPhysicsBodyHelper().destroyBody();
-                chunks[0][2].getPhysicsBodyHelper().destroyBody();
-                chunks[1][2].getPhysicsBodyHelper().destroyBody();
-
                 //copy
                 chunks[1][2].moveAndCopy(move_factor_x, move_factor_y, chunks[0][1]);
                 chunks[2][2].moveAndCopy(move_factor_x, move_factor_y, chunks[1][1]);
@@ -681,8 +613,6 @@ public class World extends StaticWorldObject {
                     for (int j = 0; j < chunks[0].length; j++) {
                         //destroy chunks and its physics bodies because everything needs to be recalculated
                         chunks[i][j].dispose();
-                        //getPhysicsEngine().getPhysicsEngineChunksHelper().destroyChunkPhysicsBody(chunks[i][j]);
-                        chunks[i][j].getPhysicsBodyHelper().destroyBody();
 
                         if (chunks[i][j].isSaveRequest())
                             getChunksDataProvider().saveChunkData(null, chunks[i][j], chunks[i][j].getPosition(), this, game);

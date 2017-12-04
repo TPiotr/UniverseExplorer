@@ -2,6 +2,7 @@ package explorer.world.physics;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectMap;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.Vector;
 
 import explorer.game.framework.Game;
+import explorer.game.framework.utils.MathHelper;
 import explorer.world.World;
 import explorer.world.block.Block;
 import explorer.world.chunk.TileHolder;
@@ -22,6 +24,8 @@ import explorer.world.object.DynamicWorldObject;
 import explorer.world.object.StaticWorldObject;
 import explorer.world.object.WorldObject;
 import explorer.world.physics.shapes.PhysicsShape;
+
+import static explorer.world.chunk.TileHolderTools.inWorldBounds;
 
 public class PhysicsEngine {
 
@@ -47,7 +51,7 @@ public class PhysicsEngine {
 	//by this value we mean how far away dynamic objects can be to be affected by physics
 	public static final float DYNAMIC_WORK_RANGE = 500f;
 	
-	//delta managment stuff
+	//delta managment stuff to avoid bug when because of bug game will in fact teleport us in directon of last velocity
 	private float[] deltas;
 	private float avg_delta = 10f; 
 	private float max_delta;
@@ -156,24 +160,23 @@ public class PhysicsEngine {
 
 		/* PROPER PHYSICS CALCULATIONS */
 
+		physicsCalculations(delta);
+	}
+
+	/**
+	 * Function that do the whole physics job in therms of resolving collisions etc.
+	 * @param delta delta time
+	 */
+	private void physicsCalculations(float delta) {
 		//with that implementation dynamic objects don't collide with other dynamics
 		for(Iterator<DynamicWorldObject> i = dynamic_objects.iterator(); i.hasNext();) {
 			DynamicWorldObject dynamic_object = i.next();
 			reusable_static_objects_array.clear();
-			
+
 			if(Vector2.dst(dynamic_object.getPosition().x, dynamic_object.getPosition().y,
 					game.getMainCamera().position.x, game.getMainCamera().position.y) < DYNAMIC_WORK_RANGE) {
-				
-				//get static objects from static objects map
-				if(static_objects_map.get(getMapIndex(dynamic_object.getPosition().x)) != null) {
-					reusable_static_objects_array.addAll(static_objects_map.get(getMapIndex(dynamic_object.getPosition().x)));
-				}
-				if(static_objects_map.get(getMapIndex(dynamic_object.getPosition().x) + 1) != null) { 
-					reusable_static_objects_array.addAll(static_objects_map.get(getMapIndex(dynamic_object.getPosition().x) + 1));
-				}
-				if(static_objects_map.get(getMapIndex(dynamic_object.getPosition().x) - 1) != null) { 
-					reusable_static_objects_array.addAll(static_objects_map.get(getMapIndex(dynamic_object.getPosition().x) - 1));
-				}
+
+				/* RESOLVING STUCK PROBLEM */
 
 				//here check if center of object overlaps with some block if so lift object up to resolve collision with block
 				int block_x_object_center = (int) ((dynamic_object.getPosition().x + (dynamic_object.getWH().x / 2f)) - dynamic_object.getParentChunk().getPosition().x) / World.BLOCK_SIZE;
@@ -192,10 +195,74 @@ public class PhysicsEngine {
 					}
 				}
 
+				/* COLLISION PART WITH BLOCKS ONLY */
+
+				//vars used in whole process of physics calculation
 				Vector2 object_velocity = dynamic_object.getVelocity();
-				
+
 				object_velocity.add(0, GRAVITY * delta);
 				object_velocity.scl(delta);
+
+				//how it works:
+				//get blocks around dynamic object and iterate through them to check collision like with normal rectangulary static world objects
+
+				//vars used in collision with chunk blocks
+				int offset_add_x = (int) Math.max((dynamic_object.getWH().x / World.BLOCK_SIZE) * 1.5f, 4);
+				int offset_add_y = (int) Math.max((dynamic_object.getWH().y / World.BLOCK_SIZE) * 1.5f, 2);
+
+				int blocks_start_x = (int) (((dynamic_object.getPosition().x - (dynamic_object.getWH().x / 2)) - dynamic_object.getParentChunk().getPosition().x) / World.BLOCK_SIZE + 1) - (offset_add_x / 2);
+				int blocks_start_y = (int) (((dynamic_object.getPosition().y) - dynamic_object.getParentChunk().getPosition().y) / World.BLOCK_SIZE + 1) - (offset_add_y / 2);
+
+				int blocks_width = (int) Math.max((dynamic_object.getWH().x / World.BLOCK_SIZE), 1) + (offset_add_x);
+				int blocks_height = (int) Math.max((dynamic_object.getWH().y / World.BLOCK_SIZE), 1) + (offset_add_y);
+
+				for(int bx = 0; bx < blocks_width; bx++) {
+					for(int by = 0; by < blocks_height; by++) {
+						int block_x = blocks_start_x + bx;
+						int block_y = blocks_start_y + by;
+
+						Block block = getBlock(block_x, block_y, dynamic_object.getParentChunk());
+
+						if(block == null || !block.isCollidable())
+							continue;
+
+						//x axis
+						if(MathHelper.overlaps2Rectangles(dynamic_object.getPosition().x + dynamic_object.getVelocity().x, dynamic_object.getPosition().y, dynamic_object.getWH().x, dynamic_object.getWH().y,
+								(block_x * World.BLOCK_SIZE) + dynamic_object.getParentChunk().getPosition().x, (block_y * World.BLOCK_SIZE) + dynamic_object.getParentChunk().getPosition().y, World.BLOCK_SIZE, World.BLOCK_SIZE)) {
+							object_velocity.x = 0;
+						}
+
+						//y axis
+						if(MathHelper.overlaps2Rectangles(dynamic_object.getPosition().x, dynamic_object.getPosition().y + dynamic_object.getVelocity().y, dynamic_object.getWH().x, dynamic_object.getWH().y,
+								(block_x * World.BLOCK_SIZE) + dynamic_object.getParentChunk().getPosition().x, (block_y * World.BLOCK_SIZE) + dynamic_object.getParentChunk().getPosition().y, World.BLOCK_SIZE, World.BLOCK_SIZE)) {
+							if(resolved) {
+								//special case because we want to get dynamic object back to to the ground level so we resolve collision always on top of collider
+								//pos of dynamic doesnt matter there
+								dynamic_object.getPosition().y = (block_y * World.BLOCK_SIZE) + dynamic_object.getParentChunk().getPosition().y + World.BLOCK_SIZE;
+							} else if(dynamic_object.getPosition().y > (block_y * World.BLOCK_SIZE) + dynamic_object.getParentChunk().getPosition().y + (World.BLOCK_SIZE / 2f)) {
+								//dynamic object is under static
+								dynamic_object.getPosition().y = (block_y * World.BLOCK_SIZE) + dynamic_object.getParentChunk().getPosition().y + World.BLOCK_SIZE;
+							} else {
+								//dynamic object is over static
+								dynamic_object.getPosition().y = (block_y * World.BLOCK_SIZE) + dynamic_object.getParentChunk().getPosition().y - dynamic_object.getWH().y;
+							}
+							object_velocity.y = 0;
+						}
+					}
+				}
+
+				/* WORLD OBJECTS COLLISION STUFF */
+
+				//get static objects from static objects map
+				if(static_objects_map.get(getMapIndex(dynamic_object.getPosition().x)) != null) {
+					reusable_static_objects_array.addAll(static_objects_map.get(getMapIndex(dynamic_object.getPosition().x)));
+				}
+				if(static_objects_map.get(getMapIndex(dynamic_object.getPosition().x) + 1) != null) {
+					reusable_static_objects_array.addAll(static_objects_map.get(getMapIndex(dynamic_object.getPosition().x) + 1));
+				}
+				if(static_objects_map.get(getMapIndex(dynamic_object.getPosition().x) - 1) != null) {
+					reusable_static_objects_array.addAll(static_objects_map.get(getMapIndex(dynamic_object.getPosition().x) - 1));
+				}
 
 				//check x axis
 				for(Iterator<StaticWorldObject> ii = reusable_static_objects_array.iterator(); ii.hasNext();) {
@@ -204,7 +271,7 @@ public class PhysicsEngine {
 
 					if(static_object.getPhysicsShape().overlaps(dynamic_object, dynamic_object.getPhysicsShape(), 0, 0, dynamic_object.getVelocity().x, 0)) {   //dynamic_temp_rect.overlaps(temp_rect2)) {
 						object_velocity.x = 0;
-							
+
 						if(tick_number == 0) {
 							//sensors stuff
 							if(static_object instanceof SensorObject) {
@@ -214,7 +281,7 @@ public class PhysicsEngine {
 								((SensorObject) dynamic_object).collide(static_object);
 							}
 						}
-							
+
 						break;
 					}
 				}
@@ -236,7 +303,7 @@ public class PhysicsEngine {
 							dynamic_object.getPosition().y = static_object.getPosition().y - dynamic_object.getWH().y;
 						}
 						object_velocity.y = 0;
-							
+
 						if(tick_number == 0) {
 							//sensors stuff
 							if(static_object instanceof SensorObject) {
@@ -250,48 +317,78 @@ public class PhysicsEngine {
 						break;
 					}
 				}
-				
+
+				//try to collide with other dynamics if thi and other dynamic had proper flag
+				if(dynamic_object.isCollidingWithOtherDynamicObjects()) {
+
+					for(int k = 0; k < dynamic_objects.size; k++) {
+						DynamicWorldObject other_dynamic = dynamic_objects.get(k);
+
+						//at first other dynamic had to have this flag set to true too
+						if(other_dynamic.isCollidingWithOtherDynamicObjects() && !(other_dynamic == dynamic_object)) {
+							//now distance cull
+
+							float this_dynamic_radius = Math.max(dynamic_object.getWH().x, dynamic_object.getWH().y) / 2f;
+							float other_dynamic_radius = Math.max(other_dynamic.getWH().x, other_dynamic.getWH().y) / 2f;
+
+							float dst_x = Math.abs((dynamic_object.getPosition().x + this_dynamic_radius) - (other_dynamic.getPosition().x + other_dynamic_radius));
+							float dst_y = Math.abs((dynamic_object.getPosition().y + this_dynamic_radius) - (other_dynamic.getPosition().y + other_dynamic_radius));
+
+							//if(dst_x < (this_dynamic_radius + other_dynamic_radius) && dst_y < (this_dynamic_radius + other_dynamic_radius)) {
+							//if we are here calculate collision
+
+							//check x axis
+							if(other_dynamic.getPhysicsShape().overlaps(dynamic_object, dynamic_object.getPhysicsShape(), 0, 0, dynamic_object.getVelocity().x, 0)) {   //dynamic_temp_rect.overlaps(temp_rect2)) {
+								object_velocity.x = 0;
+
+								if(tick_number == 0) {
+									//sensors stuff
+									if(other_dynamic instanceof SensorObject) {
+										((SensorObject) other_dynamic).collide(dynamic_object);
+									}
+									if(dynamic_object instanceof SensorObject) {
+										((SensorObject) dynamic_object).collide(other_dynamic);
+									}
+								}
+
+								//break;
+							}
+
+							//check y axis
+							if(dynamic_object.getPhysicsShape().overlaps(other_dynamic, other_dynamic.getPhysicsShape(), 0, dynamic_object.getVelocity().y, 0, 0)) {
+								if (dynamic_object.getPosition().y + object_velocity.y > other_dynamic.getPosition().y + (other_dynamic.getWH().y / 2f)) {
+									//dynamic object is under
+									dynamic_object.getPosition().y = other_dynamic.getPosition().y + other_dynamic.getWH().y;
+								} else {
+									//dynamic object is over
+									dynamic_object.getPosition().y = other_dynamic.getPosition().y - dynamic_object.getWH().y;
+								}
+								object_velocity.y = 0;
+
+								if (tick_number == 0) {
+									//sensors stuff
+									if (other_dynamic instanceof SensorObject) {
+										((SensorObject) other_dynamic).collide(dynamic_object);
+									}
+									if (dynamic_object instanceof SensorObject) {
+										((SensorObject) dynamic_object).collide(other_dynamic);
+									}
+								}
+							}
+							//}
+						}
+					}
+				}
+
 				dynamic_object.getPosition().add(object_velocity);
-				
+
 				object_velocity.scl(1f / delta);
-				
+
 				//with that we can simulate smth. like friction
 				object_velocity.x *= .1f;//*= (object_velocity.x - (object_velocity.x * PLAYER_DAMPING)) * delta;
 			}
 		}
 
-		//stuck situations resolving
-		/*for(Iterator<WorldObject> i = dynamic_objects.iterator(); i.hasNext();) {
-			WorldObject dynamic_object = i.next();
-
-			if(Vector2.dst(dynamic_object.getPosition().x, dynamic_object.getPosition().y,
-					world.getParentScreen().getScreenCamera().position.x, world.getParentScreen().getScreenCamera().position.y) < DYNAMIC_WORK_RANGE) {
-				reusable_static_objects_array.clear();
-
-				//get static objects from static objects map
-				if (static_objects_map.get(getMapIndex(dynamic_object)) != null) {
-					reusable_static_objects_array.addAll(static_objects_map.get(getMapIndex(dynamic_object)));
-				}
-				if (static_objects_map.get(getMapIndex(dynamic_object) + 1) != null) {
-					reusable_static_objects_array.addAll(static_objects_map.get(getMapIndex(dynamic_object) + 1));
-				}
-				if (static_objects_map.get(getMapIndex(dynamic_object) - 1) != null) {
-					reusable_static_objects_array.addAll(static_objects_map.get(getMapIndex(dynamic_object) - 1));
-				}
-
-				for(int j = 0; j < reusable_static_objects_array.size; j++) {
-					WorldObject static_object = reusable_static_objects_array.get(j);
-
-					if(static_object.getPhysicsBody().overlaps(dynamic_object.getPhysicsBody())) {
-						System.out.println("(PhysicsEngine) resolving stuck!");
-						dynamic_object.getVelocity().y = 0;
-						dynamic_object.getPosition().y += static_object.getPhysicsBody().height + 1;
-					}
-				}
-
-			}
-		}*/
-		
 		//check if sensors collide with dynamic objects
 		if(tick_number == 0) {
 			for(int ii = 0; ii < sensors.size; ii++) {
@@ -316,6 +413,84 @@ public class PhysicsEngine {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Get block from given coords at given world chunk
+	 * This function holds situation when x,y < 0 or x,y > World.CHUNK_SIZE
+	 * then it gets blocks data from given chunk neighbour if it exists
+	 * @param x
+	 * @param y
+	 * @param parent_chunk
+	 * @return
+	 */
+	private Block getBlock(int x, int y, WorldChunk parent_chunk) {
+		//if true we have situation where we have to grab data from other chunk than given
+		if(!WorldChunk.inChunkBounds(x, y)) {
+			//first find from which chunk we have to get data
+
+			//calc this chunk in array position
+			int zero_chunk_pos_x = (int) world.getWorldChunks()[0][0].getPosition().x / World.CHUNK_WORLD_SIZE;
+			int zero_chunk_pos_y = (int) world.getWorldChunks()[0][0].getPosition().y / World.CHUNK_WORLD_SIZE;
+
+			int this_chunk_x = ((int) parent_chunk.getPosition().x / World.CHUNK_WORLD_SIZE) - zero_chunk_pos_x;
+			int this_chunk_y = ((int) parent_chunk.getPosition().y / World.CHUNK_WORLD_SIZE) - zero_chunk_pos_y;
+
+			if(x < 0) {
+				x = World.CHUNK_SIZE + x;
+
+				if(!inWorldBounds(this_chunk_x - 1, this_chunk_y, world))
+					return null;
+
+				if(!WorldChunk.inChunkBounds(x, y))
+					return null;
+
+				//left
+				WorldChunk other_chunk = world.getWorldChunks()[this_chunk_x - 1][this_chunk_y];
+				return other_chunk.getBlocks()[x][y].getForegroundBlock();
+			} else if(x >= World.CHUNK_SIZE) {
+				//right
+				x -= World.CHUNK_SIZE;
+
+				if (!inWorldBounds(this_chunk_x + 1, this_chunk_y, world)) {
+					return null;
+				}
+
+				if(!WorldChunk.inChunkBounds(x, y))
+					return null;
+
+				WorldChunk other_chunk = world.getWorldChunks()[this_chunk_x + 1][this_chunk_y];
+				return other_chunk.getBlocks()[x][y].getForegroundBlock();
+			} else if(y < 0) {
+				//down
+				y = World.CHUNK_SIZE + y;
+
+				if (!inWorldBounds(this_chunk_x, this_chunk_y - 1, world)) {
+					return null;
+				}
+
+				if(!WorldChunk.inChunkBounds(x, y))
+					return null;
+
+				WorldChunk other_chunk = world.getWorldChunks()[this_chunk_x][this_chunk_y - 1];
+				return other_chunk.getBlocks()[x][y].getForegroundBlock();
+			} else if(y >= World.CHUNK_SIZE) {
+				//up
+				y -= World.CHUNK_SIZE;
+
+				if (!inWorldBounds(this_chunk_x, this_chunk_y + 1, world)) {
+					return null;
+				}
+
+				if(!WorldChunk.inChunkBounds(x, y))
+					return null;
+
+				WorldChunk other_chunk = world.getWorldChunks()[this_chunk_x][this_chunk_y + 1];
+				return other_chunk.getBlocks()[x][y].getForegroundBlock();
+			}
+		}
+
+		return parent_chunk.getBlocks()[x][y].getForegroundBlock();
 	}
 
 	/**
@@ -352,6 +527,37 @@ public class PhysicsEngine {
 		for(int i = 0; i < dynamic_objects.size; i++) {
 			DynamicWorldObject o = dynamic_objects.get(i);
 			renderer.rect(o.getPosition().x, o.getPosition().y, o.getWH().x, o.getWH().y);
+		}
+
+		renderer.setColor(Color.CYAN);
+
+		//render blocks collision bounding rects
+		for(int i = 0; i < dynamic_objects.size; i++) {
+			DynamicWorldObject dynamic_object = dynamic_objects.get(i);
+
+			int offset_add_x = (int) Math.max((dynamic_object.getWH().x / World.BLOCK_SIZE) * 1.5f, 4);
+			int offset_add_y = (int) Math.max((dynamic_object.getWH().y / World.BLOCK_SIZE) * 1.5f, 2);
+
+			int blocks_start_x = (int) (((dynamic_object.getPosition().x - (dynamic_object.getWH().x / 2)) - dynamic_object.getParentChunk().getPosition().x) / World.BLOCK_SIZE + 1) - (offset_add_x / 2);
+			int blocks_start_y = (int) (((dynamic_object.getPosition().y) - dynamic_object.getParentChunk().getPosition().y) / World.BLOCK_SIZE + 1) - (offset_add_y / 2);
+
+			int blocks_width = (int) Math.max((dynamic_object.getWH().x / World.BLOCK_SIZE), 1) + (offset_add_x);
+			int blocks_height = (int) Math.max((dynamic_object.getWH().y / World.BLOCK_SIZE), 1) + (offset_add_y);
+
+			for (int bx = 0; bx < blocks_width; bx++) {
+				for (int by = 0; by < blocks_height; by++) {
+					int block_x = blocks_start_x + bx;
+					int block_y = blocks_start_y + by;
+
+					Block block = getBlock(block_x, block_y, dynamic_object.getParentChunk());
+
+					if (block == null || !block.isCollidable())
+						continue;
+
+					//System.out.println("BX: "+block_x + " BY: " + block_y);
+					renderer.rect((block_x * World.BLOCK_SIZE) + dynamic_object.getParentChunk().getPosition().x, (block_y * World.BLOCK_SIZE) + dynamic_object.getParentChunk().getPosition().y, World.BLOCK_SIZE, World.BLOCK_SIZE);
+				}
+			}
 		}
 
 		renderer.setColor(Color.WHITE);

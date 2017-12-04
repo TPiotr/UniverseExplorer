@@ -74,7 +74,6 @@ public class StarUniverseObject extends UniverseObject {
         planets = new Array<PlanetUniverseObject>();
 
         int planets_num = (int) (((noise.GetNoise(position.x, position.y) + 1f) / 2f) * 10f);
-        System.out.println(planets_num);
         for(int i = 0; i < planets_num; i++) {
             float radius = ((noise.GetNoise(position.x * i, position.y) + 1f) / 2f) * 500f;
             float full_time_orbit = ((noise.GetNoise(position.x - (i * 100), position.y) + 1f) / 2f) * 400f + 200;

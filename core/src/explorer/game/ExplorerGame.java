@@ -44,8 +44,10 @@ public class ExplorerGame extends explorer.game.framework.Game {
         world_generating_screen.setVisible(false);
         addScreen(world_generating_screen);
 
-        //call init of world after all screens init stuff
-        //game_screen.getWorld().init();
+        //go directly to some planet
+        //game_screen.setVisible(true);
+        //universe_screen.setVisible(false);
+        //game_screen.createWorld(11);
     }
 
 

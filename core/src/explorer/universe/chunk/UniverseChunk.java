@@ -5,7 +5,6 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
-import com.sun.org.apache.regexp.internal.RE;
 
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
