@@ -73,6 +73,8 @@ public class TestWorldGenerator extends WorldGenerator {
 
         for (int i = 0; i < out.foreground_blocks.length; i++) {
             int y = getHeight(i, chunk_pos_x);
+            int last_y = getHeight(i - 1, chunk_pos_x);
+            int next_y = getHeight(i + 1, chunk_pos_x);
 
             //last chunk interpolating to first mechanism
 
@@ -88,12 +90,20 @@ public class TestWorldGenerator extends WorldGenerator {
             }
 
             for (int j = 0; j < out.foreground_blocks[0].length; j++) {
-                if ((j + (chunk_pos_y * World.CHUNK_SIZE)) > y)
+                int this_y = (j + (chunk_pos_y * World.CHUNK_SIZE));
+
+                if (this_y > y) {
                     out.foreground_blocks[i][j] = world.getBlocks().AIR.getBlockID();
-                else if ((j + (chunk_pos_y * World.CHUNK_SIZE)) == y)
+                } else if (this_y == y) {
                     out.foreground_blocks[i][j] = world.getBlocks().GRASS.getBlockID();
-                else
+                } else {
                     out.foreground_blocks[i][j] = world.getBlocks().DIRT.getBlockID();
+
+                    //this part of code makes that grass is everywhere on ground line
+                    if((this_y > last_y || this_y > next_y) && this_y < y) {
+                        out.foreground_blocks[i][j] = world.getBlocks().GRASS.getBlockID();
+                    }
+                }
 
                 out.background_blocks[i][j] = out.foreground_blocks[i][j];
 

@@ -1,19 +1,6 @@
 
 main_atlas.png
-size: 2048,2048
-format: RGBA8888
-filter: Linear,Linear
-repeat: none
-blocks/grass1_mask
-  rotate: false
-  xy: 2, 2
-  size: 1024, 1024
-  orig: 1024, 1024
-  offset: 0, 0
-  index: -1
-
-main_atlas2.png
-size: 2048,2048
+size: 4096,2048
 format: RGBA8888
 filter: Linear,Linear
 repeat: none
@@ -38,16 +25,23 @@ blocks/dirt
   orig: 256, 256
   offset: 0, 0
   index: -1
+blocks/grass1_mask
+  rotate: false
+  xy: 2, 828
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1
 blocks/light
   rotate: false
-  xy: 1028, 1488
+  xy: 2054, 1488
   size: 256, 256
   orig: 256, 256
   offset: 0, 0
   index: -1
 blocks/stone
   rotate: false
-  xy: 2, 828
+  xy: 1028, 828
   size: 1024, 1024
   orig: 1024, 1024
   offset: 0, 0
@@ -61,14 +55,14 @@ player/base_arm
   index: -1
 player/base_head
   rotate: false
-  xy: 1306, 1785
+  xy: 2332, 1785
   size: 62, 67
   orig: 62, 67
   offset: 0, 0
   index: -1
 player/base_legs
   rotate: false
-  xy: 1028, 1746
+  xy: 2054, 1746
   size: 276, 106
   orig: 276, 106
   offset: 0, 0
