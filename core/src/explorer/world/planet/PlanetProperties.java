@@ -37,6 +37,11 @@ public class PlanetProperties {
     public Random random;
 
     /**
+     * Variables used in f.e. loading blocks color, usefull variable in range 0.0 - 1.0 which helps everything synchronized in terms of generating process
+     */
+    public float PLANET_FACTOR;
+
+    /**
      * Generate planet properties only by seed
      * @param world world instance
      * @param game game instance
@@ -57,6 +62,8 @@ public class PlanetProperties {
      * @param game game instance
      */
     private void generate(World world, Game game) {
+        PLANET_FACTOR = random.nextFloat();
+
         int size = random.nextInt(3);
         PLANET_SIZE = 10 * (size + 1);
         System.out.println("Planet size: " + PLANET_SIZE);

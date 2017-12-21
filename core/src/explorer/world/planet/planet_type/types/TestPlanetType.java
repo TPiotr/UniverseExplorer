@@ -18,6 +18,7 @@ public class TestPlanetType extends PlanetType {
     private class EmptyObjectsProperties extends ObjectsProperties {
 
     }
+
     public TestPlanetType(PlanetProperties properties, World world, Game game) {
         OBJECTS_PROPERTIES = new EmptyObjectsProperties();
 

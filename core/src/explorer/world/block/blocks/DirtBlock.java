@@ -7,6 +7,7 @@ import java.util.HashMap;
 import explorer.game.framework.Game;
 import explorer.world.World;
 import explorer.world.block.Block;
+import explorer.world.block.ColorPack;
 import explorer.world.block.PlanetBoundBlock;
 import explorer.world.planet.planet_type.BlocksProperties;
 
@@ -15,6 +16,8 @@ import explorer.world.planet.planet_type.BlocksProperties;
  */
 
 public class DirtBlock extends PlanetBoundBlock {
+
+    private ColorPack color_pack;
 
     /**
      * @param game game instance for assets loading
@@ -27,14 +30,15 @@ public class DirtBlock extends PlanetBoundBlock {
 
         this.tile_positions = new HashMap<Short, TextureRegion>();
 
-        //generate dirt color by planet seed
-        float alpha = world.getPlanetProperties().random.nextFloat();
+        //get dirt color from its color pack texture
+        color_pack = new ColorPack();
 
-        BlocksProperties.BlockProperties properties = world.getPlanetProperties().PLANET_TYPE.BLOCKS_PROPERTIES.getBlockProperties(getClass());
-        block_color.set(properties.MIN_COLOR).lerp(properties.MAX_COLOR, alpha);
+        String colorpack_region_name = world.getPlanetProperties().PLANET_TYPE.BLOCKS_PROPERTIES.getBlockProperties(DirtBlock.class).COLOR_PACK_REGION_NAME;
+        block_color.set(color_pack.load(world.getPlanetProperties().PLANET_FACTOR, game.getAssetsManager().getTextureRegion(colorpack_region_name)));
 
         //load textures
-        TextureRegion[][] textures = game.getAssetsManager().getTextureRegion("blocks/stone").split(256, 256);
+        final int BLOCK_PIXEL_SIZE = 16;
+        TextureRegion[][] textures = game.getAssetsManager().getTextureRegion("blocks/dirt_spritesheet").split(BLOCK_PIXEL_SIZE, BLOCK_PIXEL_SIZE);
 
        tile_positions.put(Block.COLLIDE_NONE, textures[0][0]);
        tile_positions.put(Block.COLLIDE_ALL_SIDES, textures[1][2]);

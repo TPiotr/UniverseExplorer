@@ -4,6 +4,8 @@ import com.badlogic.gdx.graphics.Color;
 
 import java.util.HashMap;
 
+import explorer.game.framework.Game;
+
 /**
  * Created by RYZEN on 13.10.2017.
  */
@@ -13,19 +15,14 @@ public class BlocksProperties {
     public static class BlockProperties {
 
         /**
-         * Max color of block
+         * Path to texture region that contains all possible colors of block (texture is x width by 1 height)
          */
-        public Color MAX_COLOR;
+        public String COLOR_PACK_REGION_NAME;
 
-        /**
-         * Min color of block
-         */
-        public Color MIN_COLOR;
-
-        public BlockProperties(Color max_color, Color min_color) {
-            this.MAX_COLOR = max_color;
-            this.MIN_COLOR = min_color;
+        public BlockProperties(String color_pack_region_name) {
+            this.COLOR_PACK_REGION_NAME = color_pack_region_name;
         }
+
     }
 
     /**

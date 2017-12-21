@@ -10,6 +10,7 @@ import explorer.game.framework.Game;
 import explorer.world.World;
 import explorer.world.block.Block;
 import explorer.world.block.Blocks;
+import explorer.world.block.ColorPack;
 import explorer.world.block.CustomRenderingBlock;
 import explorer.world.planet.planet_type.BlocksProperties;
 
@@ -20,9 +21,11 @@ import explorer.world.planet.planet_type.BlocksProperties;
 public class GrassBlock extends CustomRenderingBlock {
 
     private Color dirt_block_color;
-
     private Color grass_color;
+
     private HashMap<Short, TextureRegion> grass_regions;
+
+    private ColorPack grass_color_pack;
 
     /**
      * @param game game instance for assets loading
@@ -38,22 +41,22 @@ public class GrassBlock extends CustomRenderingBlock {
         //get dirt color
         dirt_block_color = new Color(blocks.DIRT.getBlockColor());
 
-        //generate grass color
-        float alpha = world.getPlanetProperties().random.nextFloat();
-        System.out.println(alpha);
-        BlocksProperties.BlockProperties properties = world.getPlanetProperties().PLANET_TYPE.BLOCKS_PROPERTIES.getBlockProperties(getClass());
+        //get grass color from its texture that contains all possible colors
+        grass_color_pack = new ColorPack();
 
-        grass_color = new Color();
-        grass_color.set(properties.MIN_COLOR).lerp(properties.MAX_COLOR, alpha);
+        String grass_colorpack_region_name = world.getPlanetProperties().PLANET_TYPE.BLOCKS_PROPERTIES.getBlockProperties(GrassBlock.class).COLOR_PACK_REGION_NAME;
+        grass_color = new Color(grass_color_pack.load(world.getPlanetProperties().PLANET_FACTOR, game.getAssetsManager().getTextureRegion(grass_colorpack_region_name)));
 
-        System.out.println("grass color R: "+grass_color.r + " G: "+grass_color.g + " B: "+grass_color.b);
+        //System.out.println("grass color R: " + grass_color.r + " G: " + grass_color.g + " B: " + grass_color.b);
 
         loadTextures();
     }
 
     private void loadTextures() {
         //load textures
-        TextureRegion[][] textures = game.getAssetsManager().getTextureRegion("blocks/stone").split(256, 256);
+        final int BLOCK_PIXEL_SIZE = 16;
+
+        TextureRegion[][] textures = game.getAssetsManager().getTextureRegion("blocks/dirt_spritesheet").split(BLOCK_PIXEL_SIZE, BLOCK_PIXEL_SIZE);
 
         tile_positions.put(Block.COLLIDE_NONE, textures[0][0]);
         tile_positions.put(Block.COLLIDE_ALL_SIDES, textures[1][2]);
@@ -76,7 +79,7 @@ public class GrassBlock extends CustomRenderingBlock {
         //
         grass_regions = new HashMap<Short, TextureRegion>();
 
-        TextureRegion[][] grass_textures = game.getAssetsManager().getTextureRegion("blocks/grass1_mask").split(256, 256);
+        TextureRegion[][] grass_textures = game.getAssetsManager().getTextureRegion("blocks/grass_mask_spritesheet").split(BLOCK_PIXEL_SIZE, BLOCK_PIXEL_SIZE);
 
         grass_regions.put(Block.COLLIDE_NONE, grass_textures[0][0]);
         grass_regions.put(Block.COLLIDE_ALL_SIDES, grass_textures[1][2]);

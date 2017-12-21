@@ -65,7 +65,7 @@ public class FileChunkDataProvider extends ChunkDataProvider {
                 ChunkData data = new ChunkData();
                 FileHandle handle = Gdx.files.local(path);
 
-                //if file for this chunk doesen't exist yet return empty chunk with all blocks as air
+                //if file for this chunk doesn't exist yet return empty chunk with all blocks as air
                 if(!handle.exists()) {
                     for(int i = 0; i < World.CHUNK_SIZE; i++) {
                         for (int j = 0; j < World.CHUNK_SIZE; j++) {
@@ -86,7 +86,7 @@ public class FileChunkDataProvider extends ChunkDataProvider {
                     data.objects.clear();
                 }
 
-                System.out.println("Reading file time: " + TimeUtils.timeSinceMillis(file_loading_start));
+                System.out.println("Reading file time: " + TimeUtils.timeSinceMillis(file_loading_start) + "ms");
 
                 callback.loaded(data);
             }

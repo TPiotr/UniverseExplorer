@@ -4,6 +4,7 @@ import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.tools.texturepacker.TexturePacker;
+import com.badlogic.gdx.tools.texturepacker.TexturePackerFileProcessor;
 
 import explorer.game.ExplorerGame;
 
@@ -14,8 +15,8 @@ public class DesktopLauncher {
 		settings.maxWidth = 4096;
 		settings.maxHeight = 4096;
 
-		settings.filterMag = Texture.TextureFilter.Linear;
-		settings.filterMin = Texture.TextureFilter.Linear;
+		settings.filterMag = Texture.TextureFilter.Nearest;
+		settings.filterMin = Texture.TextureFilter.Nearest;
 
 		settings.bleed = true;
 		settings.bleedIterations = 4;
@@ -23,9 +24,9 @@ public class DesktopLauncher {
 		settings.limitMemory = false;
 		settings.fast = true;
 
-		settings.combineSubdirectories = true;
+		settings.combineSubdirectories = false;
 
-		TexturePacker.process(settings, "assets_to_pack", "atlas", "main_atlas");
+		TexturePacker.processIfModified(settings, "assets_to_pack", "atlas", "main_atlas");
 
 		//run game like normally
 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();

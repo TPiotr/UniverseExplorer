@@ -136,9 +136,6 @@ public class WorldChunk extends StaticWorldObject {
         //next get data for "new chunk"
         ChunkDataProvider provider = world.getChunksDataProvider();
 
-        //pos for compare after loading completed
-        final Vector2 start_loading_pos = new Vector2(getPosition());
-
         loading_future = provider.getChunkData(new ChunkDataProvider.DataLoaded() {
             @Override
             public void loaded(ChunkDataProvider.ChunkData data) {
@@ -228,10 +225,6 @@ public class WorldChunk extends StaticWorldObject {
                     //add chunk objects to physics engine
                     world.getPhysicsEngine().addWorldObjects(objects);
 
-                    if(Thread.interrupted()) {
-                        throw new InterruptedException();
-                    }
-
                     //set creating physics stuff flag
                     started_creating_physics_body = true;
 
@@ -270,9 +263,6 @@ public class WorldChunk extends StaticWorldObject {
         if(loading_future != null && !loading_future.isDone()) {
             System.out.println("Aborting loading task!");
             loading_future.cancel(true);
-
-            //if(!physics_body_helper.hasBody())
-            //    physics_body_helper.createBody();
         }
 
         //first update this chunk position
@@ -537,8 +527,8 @@ public class WorldChunk extends StaticWorldObject {
         int chunk_x_camera = (int) (game.getMainCamera().position.x - getPosition().x) / World.BLOCK_SIZE;
         int chunk_y_camera = (int) (game.getMainCamera().position.y - getPosition().y) / World.BLOCK_SIZE;
 
-        int screen_width_blocks = (int) Math.ceil(game.getMainViewport().getScreenWidth() * game.getMainCamera().zoom / World.BLOCK_SIZE);
-        int screen_height_blocks = (int) Math.ceil(game.getMainViewport().getScreenHeight() * game.getMainCamera().zoom / World.BLOCK_SIZE);
+        int screen_width_blocks = (int) Math.ceil(game.getMainViewport().getScreenWidth() * game.getMainCamera().zoom / World.BLOCK_SIZE) + 1;
+        int screen_height_blocks = (int) Math.ceil(game.getMainViewport().getScreenHeight() * game.getMainCamera().zoom / World.BLOCK_SIZE) + 1;
 
         //update culling rectangle
         screen_bounding_rectangle.set(game.getMainCamera().position.x - (game.getMainViewport().getWorldWidth() * game.getMainCamera().zoom) / 2, game.getMainCamera().position.y - (game.getMainViewport().getWorldHeight() * game.getMainCamera().zoom) / 2, game.getMainViewport().getWorldWidth() * game.getMainCamera().zoom, game.getMainViewport().getWorldHeight() * game.getMainCamera().zoom);
@@ -547,12 +537,10 @@ public class WorldChunk extends StaticWorldObject {
         int AIR_ID = world.getBlocks().AIR.getBlockID();
 
         if(chunk_x_camera + (screen_width_blocks / 2) < 0 || chunk_y_camera + (screen_height_blocks / 2) < 0) {
-            //System.out.println("skipping chunk rendering v1");
             return;
 
         }
         if(chunk_x_camera - (screen_width_blocks / 2) > World.CHUNK_SIZE || chunk_y_camera - (screen_height_blocks / 2) > World.CHUNK_SIZE) {
-            //System.out.println("skipping chunk rendering v2");
             return;
         }
 
