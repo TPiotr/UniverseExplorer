@@ -69,7 +69,7 @@ public class PapekBlock extends PlanetBoundBlock {
         //ta zmienna określa rozmiar tekstury w pikselach czyli zmieniasz na taka jaka masz zrobione
         final int BLOCK_PIXEL_SIZE = 16;
 
-        //Ta linijka kodu ładuje teksture która ma w sobie te 16 podtekstur i dzieli je na osobne dzięki czemu można je rysować na ekranie, dlatego BLOCK_PIXEL_SIZE musi być dobrą liczba inaczje tekstury będą skopane
+        //Ta linijka kodu ładuje teksture która ma w sobie te 16 podtekstur (wszystkie możliwe połączenie bloków ta tekstura ktore mi wysyłałeś) i dzieli je na osobne dzięki czemu można je rysować na ekranie, dlatego BLOCK_PIXEL_SIZE musi być dobrą liczba inaczje tekstury będą skopane
         TextureRegion[][] textures = game.getAssetsManager().getTextureRegion("blocks/dirt_spritesheet").split(BLOCK_PIXEL_SIZE, BLOCK_PIXEL_SIZE);
 
         //Te wszystkie linijki kodu to tak naprawde określanie dla każdej możliwej pozycji bloku odpowiedniej tekstury
