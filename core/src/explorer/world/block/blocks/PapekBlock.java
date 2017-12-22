@@ -91,6 +91,12 @@ public class PapekBlock extends PlanetBoundBlock {
         tile_positions.put(Block.COLLIDE_UP_DOWN, textures[3][3]);
         tile_positions.put(Block.COLLIDE_UP_RIGHT, textures[2][1]);
         tile_positions.put(Block.COLLIDE_UP_RIGHT_DOWN, textures[1][1]);
+
+        //I teraz najważniejsze aby blok był w stanie być uzywany przez silnik gry
+        //Spójrz na klasę Blocks (explorer/world/block i tutaj jest)
+        //Jak widzisz instancja kazdego bloku musi się tam znajdować inaczej nie będzei działa zapobiega to tworzeniu wielu instancji jedngeo bloku co było by baaaardzo nie wyjdaje
+        //bo tworzenie takie bloku o tutaj o dziwo nie jest takie szybkie jak moze sie wydawac (color pack np dlugo bd sie ładował bo czyta kolory pikseli z tekstury co miałe dla wydajności nie jest)
+        //Ten blok tutaj oczywiscie nie jest dodany do tamtej listy bo to tylko ładnie opisany blok DirtBlock zobacz jak własnie DirtBlock jest tam dodany
     }
 }
 
