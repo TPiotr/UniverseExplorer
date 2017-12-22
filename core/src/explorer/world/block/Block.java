@@ -13,7 +13,7 @@ import explorer.game.framework.Game;
 public class Block {
 
     /**
-     * This enum determines how block is connected (graphicaly) with other blocks
+     * This enum determines how block is connected (graphically) with other blocks
      */
     public static enum BlockGroup {
         CONNECT_WITH_EVERYTHING, CONNECT_WITH_NOTHING, CONNECT_WITH_SAME_BLOCK;
@@ -67,6 +67,17 @@ public class Block {
     protected boolean collidable = true;
 
     /**
+     * Flag that determines if background block on this foreground block position should be rendered if this block texture used to be rendered is not COLLIDE_ALL_SIDES
+     * F.e when we have block that f.e texture COLLIDE_LEFT_RIGHT have some pixels with alpha = 0
+     */
+    protected boolean need_background_block_rendered_if_not_fully_surrounded = false;
+
+    /**
+     * Flag that determines if background block must be rendered if this block is a foreground one
+     */
+    protected boolean need_background_block_rendered = false;
+
+    /**
      * @param game game instance for assets loading
      */
     public Block(Game game) {
@@ -95,6 +106,22 @@ public class Block {
      */
     public TextureRegion getTextureRegion(short texture_id) {
         return tile_positions.get(texture_id);
+    }
+
+    /**
+     * Returns flag that determines if background block on position of this foreground block should be rendered if this used to rendering block texture is not COLLIDE_ALL_SIDES
+     * @return flag that determines if background block on position of this foreground block should be rendered if this used to rendering block texture is not COLLIDE_ALL_SIDES
+     */
+    public boolean needBackgroundBlockRenderedIfNotFullySurrounded() {
+        return need_background_block_rendered_if_not_fully_surrounded;
+    }
+
+    /**
+     * Returns flag that determines if background block must be rendered is this is a foreground block
+     * @return true if background block must be rendered is this is a foreground block
+     */
+    public boolean needBackgroundBlockRendered() {
+        return need_background_block_rendered;
     }
 
     /**

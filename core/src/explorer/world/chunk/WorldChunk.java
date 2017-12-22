@@ -1,5 +1,6 @@
 package explorer.world.chunk;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
@@ -26,6 +27,16 @@ import explorer.world.object.WorldObject;
 public class WorldChunk extends StaticWorldObject {
 
     public static final boolean YIELD = true;
+
+    /**
+     * Offset of color when block is rendering as background (use it like normal_color.minus(BACKGROUND_COLOR_OFFSET))
+     */
+    public static final Color BACKGROUND_COLOR_OFFSET = new Color(.2f, .2f, .2f, 0f);
+
+    /**
+     * Temp color instance used in rendering background to not make multipe instance every frame
+     */
+    private static Color temp_color = new Color();
 
     /**
      * World instance
@@ -520,9 +531,12 @@ public class WorldChunk extends StaticWorldObject {
     }
 
     public int blocks_rendered;
+    public int background_blocks_rendered;
+
     @Override
     public void render(SpriteBatch batch) {
         blocks_rendered = 0;
+        background_blocks_rendered = 0;
 
         int chunk_x_camera = (int) (game.getMainCamera().position.x - getPosition().x) / World.BLOCK_SIZE;
         int chunk_y_camera = (int) (game.getMainCamera().position.y - getPosition().y) / World.BLOCK_SIZE;
@@ -552,13 +566,77 @@ public class WorldChunk extends StaticWorldObject {
 
                 TileHolder holder = blocks[i + chunk_x_camera][j + chunk_y_camera];
 
-                if(holder.getForegroundBlock().getBlockID() != AIR_ID || holder.getBackgroundBlock().getBlockID() == AIR_ID)
+                if(holder.getBackgroundBlock().getBlockID() == AIR_ID)
                     continue;
+
+                //first check if this background block don't have flag set to true that forces its rendering independently on others blocks
+                if(!holder.getBackgroundBlock().needBackgroundBlockRendered()) {
+
+                    //in this moment we know that this background tile is not an air block
+                    if (holder.getForegroundBlock().needBackgroundBlockRenderedIfNotFullySurrounded() && holder.getForegroundBlock().getBlockID() != AIR_ID) {
+                        boolean render = false;
+
+                        //in this piece of code check if holder needs background block rendered if is not fully surrounded by other blocks with what it can connect
+                        //check if block over or under or on left or on right don't have foreground block (have but AIR) and background block is not air
+                        //if true render this background block to prevent empty pixels on screen where should be block texture (it happends if some pixel on block texture alpha is 0)
+
+                        //check for block on right
+                        if (inChunkBounds(i + chunk_x_camera + 1, j + chunk_y_camera)) {
+                            TileHolder holder_right = blocks[i + chunk_x_camera + 1][j + chunk_y_camera];
+
+                            if (holder_right.getForegroundBlock().getBlockID() == AIR_ID && holder_right.getBackgroundBlock().getBlockID() != AIR_ID) {
+                                render = true;
+                            }
+                        }
+
+                        //if still don't want to render check block on left
+                        if (!render) {
+                            if (inChunkBounds(i + chunk_x_camera - 1, j + chunk_y_camera)) {
+                                TileHolder holder_left = blocks[i + chunk_x_camera - 1][j + chunk_y_camera];
+
+                                if (holder_left.getForegroundBlock().getBlockID() == AIR_ID && holder_left.getBackgroundBlock().getBlockID() != AIR_ID) {
+                                    render = true;
+                                }
+                            }
+                        }
+
+                        //if still don't want to render check block over
+                        if (!render) {
+                            if (inChunkBounds(i + chunk_x_camera, j + chunk_y_camera + 1)) {
+                                TileHolder holder_up = blocks[i + chunk_x_camera][j + chunk_y_camera + 1];
+
+                                if (holder_up.getForegroundBlock().getBlockID() == AIR_ID && holder_up.getBackgroundBlock().getBlockID() != AIR_ID) {
+                                    render = true;
+                                }
+                            }
+                        }
+
+                        //if still don't want to render check block under
+                        if (!render) {
+                            if (inChunkBounds(i + chunk_x_camera, j + chunk_y_camera - 1)) {
+                                TileHolder holder_down = blocks[i + chunk_x_camera][j + chunk_y_camera - 1];
+
+                                if (holder_down.getForegroundBlock().getBlockID() == AIR_ID && holder_down.getBackgroundBlock().getBlockID() != AIR_ID) {
+                                    render = true;
+                                }
+                            }
+                        }
+
+                        //if don't have to render skip this background block
+                        if (!render)
+                            continue;
+
+                    }
+                    //here if block don't have needBackgroundBlockIfNotFullySurrounded flag set to true and foreground block is not air we are sure that we don't have to render this background block
+                    else if (!holder.getForegroundBlock().needBackgroundBlockRenderedIfNotFullySurrounded() && holder.getForegroundBlock().getBlockID() != AIR_ID) {
+                        continue;
+                    }
+                }
 
                 Block block = holder.getBackgroundBlock();
                 if(block instanceof CustomColorBlock) {
                     CustomColorBlock cblock = (CustomColorBlock) block;
-                    batch.setColor(cblock.getBlockColor().r, cblock.getBlockColor().g, cblock.getBlockColor().b, cblock.getBlockColor().a);
+                    batch.setColor(temp_color.set(cblock.getBlockColor()).sub(BACKGROUND_COLOR_OFFSET));
                 }
 
                 if(!(block instanceof CustomRenderingBlock)) {
@@ -567,13 +645,17 @@ public class WorldChunk extends StaticWorldObject {
                         batch.draw(block_region, getPosition().x + World.BLOCK_SIZE * (i + chunk_x_camera), getPosition().y + World.BLOCK_SIZE * (j + chunk_y_camera), World.BLOCK_SIZE, World.BLOCK_SIZE);
                     }
                 } else {
-                    ((CustomRenderingBlock) block).render(batch, holder.getBackgroundBlockTextureID(), getPosition().x + World.BLOCK_SIZE * (i + chunk_x_camera), getPosition().y + World.BLOCK_SIZE * (j + chunk_y_camera), World.BLOCK_SIZE, World.BLOCK_SIZE, false);
+                    ((CustomRenderingBlock) block).render(batch, holder.getBackgroundBlockTextureID(), getPosition().x + World.BLOCK_SIZE * (i + chunk_x_camera), getPosition().y + World.BLOCK_SIZE * (j + chunk_y_camera), World.BLOCK_SIZE, World.BLOCK_SIZE, true);
                 }
 
                 blocks_rendered++;
-                batch.setColor(1f, 1f, 1f, 1f);
+                background_blocks_rendered++;
+
+                batch.setColor(temp_color.set(1, 1, 1, 1).sub(BACKGROUND_COLOR_OFFSET));
             }
         }
+
+        System.out.println("Background blocks rendered count: " + background_blocks_rendered);
 
         //in between render chunk objects
         for(int i = 0; i < objects.size; i++) {

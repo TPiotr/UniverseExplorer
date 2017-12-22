@@ -30,6 +30,7 @@ public class Player extends DynamicWorldObject {
     private Rectangle chunk_rect;
 
     private Block selected_block;
+    private boolean background_placing;
 
     public Player(Vector2 position, World w, final Game game) {
         super(position, w, game);
@@ -76,8 +77,8 @@ public class Player extends DynamicWorldObject {
                                 int local_x = (int) (touch.x - chunk_rect.getX()) / World.BLOCK_SIZE;
                                 int local_y = (int) (touch.y - chunk_rect.getY()) / World.BLOCK_SIZE;
 
-                                chunk.setBlock(local_x, local_y, selected_block.getBlockID(), false);
-                                chunk.setBlock(local_x, local_y, selected_block.getBlockID(), true);
+                                //chunk.setBlock(local_x, local_y, selected_block.getBlockID(), false);
+                                chunk.setBlock(local_x, local_y, selected_block.getBlockID(), background_placing);
                             }
                         }
                     }
@@ -211,6 +212,10 @@ public class Player extends DynamicWorldObject {
 
     public void setSelectedBlock(Block block) {
         this.selected_block = block;
+    }
+
+    public void setBackgroundPlacing(boolean bool) {
+        this.background_placing = bool;
     }
 
     @Override

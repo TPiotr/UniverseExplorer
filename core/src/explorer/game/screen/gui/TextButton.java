@@ -47,6 +47,7 @@ public class TextButton extends ClickableGUIComponent {
         super(component_game_viewport, game);
 
         this.position = position;
+        this.wh = new Vector2();
 
         this.font = font;
         this.text = text;
@@ -54,6 +55,7 @@ public class TextButton extends ClickableGUIComponent {
         this.font_color = new Color(Color.WHITE);
 
         calculateWH();
+        createClickableInputAdapter(true);
     }
 
     private void calculateWH() {
@@ -73,7 +75,7 @@ public class TextButton extends ClickableGUIComponent {
             return;
 
         batch.setColor(font_color);
-        font.draw(batch, text, getPosition().x, getPosition().y);
+        font.draw(batch, text, getPosition().x, getPosition().y + getWH().y);
         batch.setColor(Color.WHITE);
     }
 

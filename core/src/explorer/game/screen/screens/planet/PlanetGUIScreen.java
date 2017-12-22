@@ -3,6 +3,7 @@ package explorer.game.screen.screens.planet;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
@@ -29,7 +30,7 @@ public class PlanetGUIScreen extends Screen {
 
     /**
      * Little GUI component that allows player to select what block to place
-     * It reads data from Blocks database so it don;t have to be updated
+     * It reads data from Blocks database so it don't have to be updated
      */
     private class BlockPlacingSelector implements ScreenComponent {
 
@@ -45,6 +46,9 @@ public class PlanetGUIScreen extends Screen {
 
         private TextureRegion white_texture;
 
+        private TextButton background_checkbox;
+        private boolean background_placing = false;
+
         public BlockPlacingSelector(final Vector2 position, final PlanetScreen planet_screen) {
             this.position = position;
 
@@ -53,6 +57,23 @@ public class PlanetGUIScreen extends Screen {
 
             //placeholder texture for invisible blocks like air
             white_texture = game.getAssetsManager().getTextureRegion("white_texture");
+
+            //create background checkbox
+            background_checkbox = new TextButton(new BitmapFont(), "Foreground", new Vector2(position.x - 80, position.y + 180), game.getGUIViewport(), game);
+            background_checkbox.setButtonListener(new TextureButton.ButtonListener() {
+                @Override
+                public void touched() {
+                    background_placing = !background_placing;
+                    background_checkbox.setText((background_placing) ? "Background" : "Foreground");
+
+                    planet_screen.getWorld().getPlayer().setBackgroundPlacing(background_placing);
+                }
+
+                @Override
+                public void released() {
+
+                }
+            });
 
             InputAdapter input = new InputAdapter() {
                 @Override
@@ -89,11 +110,14 @@ public class PlanetGUIScreen extends Screen {
         }
 
         public void setVisible(boolean visible) {
+            background_checkbox.setVisible(visible);
             this.visible = visible;
         }
 
         @Override
-        public void tick(float delta) {}
+        public void tick(float delta) {
+            background_checkbox.tick(delta);
+        }
 
         @Override
         public void render(SpriteBatch batch) {
@@ -130,6 +154,8 @@ public class PlanetGUIScreen extends Screen {
 
                 i++;
             }
+
+            background_checkbox.render(batch);
         }
     }
 

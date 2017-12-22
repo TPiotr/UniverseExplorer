@@ -28,6 +28,8 @@ public class DirtBlock extends PlanetBoundBlock {
         this.block_id = 2;
         this.block_group = BlockGroup.CONNECT_WITH_SAME_BLOCK;
 
+        this.need_background_block_rendered_if_not_fully_surrounded = true;
+
         this.tile_positions = new HashMap<Short, TextureRegion>();
 
         //get dirt color from its color pack texture

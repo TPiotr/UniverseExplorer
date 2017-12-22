@@ -12,6 +12,7 @@ import explorer.world.block.Block;
 import explorer.world.block.Blocks;
 import explorer.world.block.ColorPack;
 import explorer.world.block.CustomRenderingBlock;
+import explorer.world.chunk.WorldChunk;
 import explorer.world.planet.planet_type.BlocksProperties;
 
 /**
@@ -22,6 +23,9 @@ public class GrassBlock extends CustomRenderingBlock {
 
     private Color dirt_block_color;
     private Color grass_color;
+
+    //temp color instance used in rendering to store color value
+    private Color temp_color;
 
     private HashMap<Short, TextureRegion> grass_regions;
 
@@ -36,10 +40,14 @@ public class GrassBlock extends CustomRenderingBlock {
         this.block_id = 3;
         this.block_group = BlockGroup.CONNECT_WITH_SAME_BLOCK;
 
+        this.need_background_block_rendered_if_not_fully_surrounded = true;
+
         this.tile_positions = new HashMap<Short, TextureRegion>();
 
         //get dirt color
         dirt_block_color = new Color(blocks.DIRT.getBlockColor());
+
+        temp_color = new Color();
 
         //get grass color from its texture that contains all possible colors
         grass_color_pack = new ColorPack();
@@ -102,10 +110,18 @@ public class GrassBlock extends CustomRenderingBlock {
 
     @Override
     public void render(SpriteBatch batch, short connection_info, float x, float y, float w, float h, boolean background) {
-        batch.setColor(dirt_block_color);
+
+        if(!background)
+            batch.setColor(dirt_block_color);
+        else
+            batch.setColor(temp_color.set(dirt_block_color).sub(WorldChunk.BACKGROUND_COLOR_OFFSET));
+
         batch.draw(getTextureRegion(connection_info), x, y, w, h);
 
-        batch.setColor(grass_color);
+        if(!background)
+            batch.setColor(grass_color);
+        else
+            batch.setColor(temp_color.set(grass_color).sub(WorldChunk.BACKGROUND_COLOR_OFFSET));
         batch.draw(grass_regions.get(connection_info), x, y, w, h);
     }
 }
