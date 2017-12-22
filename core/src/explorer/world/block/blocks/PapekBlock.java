@@ -50,6 +50,17 @@ public class PapekBlock extends PlanetBoundBlock {
         this.block_id = 2;
         this.block_group = BlockGroup.CONNECT_WITH_SAME_BLOCK;
 
+        //parametr określający czy blok jest przeszkoda dla fizyki czy tylko ozdobą
+        this.collidable = true;
+
+        //parametr dzięki którmu blok tła znajdujący się na pozycji tej samej co blok przedni oraz gdy blok przedni będzie tym tutaj blokiem to blok tyli będzie się renderował
+        //chodzi o to że masz np blok pochodnia i nie zajmuje on wszystkich pikseli i są puste piksels (których alpha = 0) żeby nie było prześwitów na tło trzeba wyrenderwoać blok tła co własnie robi ta flaga gdy = true)
+        this.need_background_block_rendered = false;
+
+        //tutaj trochę juz trudniej wytłumaczyć chodzi o to że blok tła będzie się renderował gdy sposób tego połączenia nie będzie tekstura że łączy się ze wszystkimi stronami pozwala naprawić problem gdzie są pute piksele i widać tło
+        //trzeba to ustawić na true gdy któryś z 16 tekstur danego bloku posiada gdzieś piksel z alpha = 0 aby uniknąć prześwitania tła
+        this.need_background_block_rendered_if_not_fully_surrounded = false;
+
         //Tutaj mamy hash mapę (czyli jest to taka tablica posiadajaca zestawy 2 rzeczy klucza i wartość, działa tak że za pomocą klucza jesteśmy w stanie uzyskać wartość)
         this.tile_positions = new HashMap<Short, TextureRegion>();
 
