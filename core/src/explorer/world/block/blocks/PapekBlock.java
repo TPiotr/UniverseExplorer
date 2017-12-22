@@ -58,7 +58,7 @@ public class PapekBlock extends PlanetBoundBlock {
 
         //Tutaj bierzemy jaka tekstura jest tym kolor pakiem, tak długi kod ponieważ kazdy typ planety bedzie miał inny typ takiej tekstury więc to rozwiąznie jest
         //uniwersalne i modyfikujemy tylko wartośći po stronie PlanetType i możemy mieć typów planet na ile nam RAM pozwoli
-        String colorpack_region_name = world.getPlanetProperties().PLANET_TYPE.BLOCKS_PROPERTIES.getBlockProperties(DirtBlock.class).COLOR_PACK_REGION_NAME; // czyli wartość uzyskana tutaj to będzie "blocks/dirt_colorpack"
+        String colorpack_region_name = world.getPlanetProperties().PLANET_TYPE.BLOCKS_PROPERTIES.getBlockProperties(DirtBlock.class).COLOR_PACK_REGION_NAME; // czyli wartość uzyskana tutaj to będzie "blocks/dirt_colorpack" wartość ta ustawiona jest w typie planety zobacz klase TestBlockProperties (world/planet/planet_type/types/TestBlocksProperties)
 
         //Tutaj za pomoca wyzej znalezionej scieżki do tekstury od kolor paka w końcu ładujemy naszego kolor paka z dysku
         //Ta zmienna PLANET_FACTOR określa który kolor wybrać jest to unikalana losowa licza dla każdej planety (losowa ale stała więc spoko zawsze będzie taka sama dla danej planety)
