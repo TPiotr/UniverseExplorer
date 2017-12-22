@@ -103,6 +103,9 @@ public class TextButton extends ClickableGUIComponent {
      */
     public void setText(String text) {
         this.text = text;
+
+        //we have to calculate new wh vector
+        calculateWH();
     }
 
     /**

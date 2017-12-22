@@ -46,4 +46,8 @@ public class Blocks {
         Block out = all_blocks_instances.get(ID);
         return (out == null) ? AIR : out;
     }
+
+    public ConcurrentHashMap<Integer, Block> getAllBlocksHashmap() {
+        return all_blocks_instances;
+    }
 }

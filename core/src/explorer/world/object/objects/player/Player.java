@@ -9,6 +9,7 @@ import com.badlogic.gdx.math.Vector3;
 
 import explorer.game.framework.Game;
 import explorer.world.World;
+import explorer.world.block.Block;
 import explorer.world.chunk.WorldChunk;
 import explorer.world.object.DynamicWorldObject;
 import explorer.world.object.objects.TestDynamicObject;
@@ -27,6 +28,8 @@ public class Player extends DynamicWorldObject {
 
     //finding parent chunk vars
     private Rectangle chunk_rect;
+
+    private Block selected_block;
 
     public Player(Vector2 position, World w, final Game game) {
         super(position, w, game);
@@ -60,6 +63,9 @@ public class Player extends DynamicWorldObject {
                     getPosition().set(touch);
                     getVelocity().set(0, 0);
                 } else if(button == 1) {
+                    if(selected_block == null)
+                        return false;
+
                     for(int i = 0; i < world.getWorldChunks().length; i++) {
                         for(int j = 0; j < world.getWorldChunks()[0].length; j++) {
                             WorldChunk chunk = world.getWorldChunks()[i][j];
@@ -70,8 +76,8 @@ public class Player extends DynamicWorldObject {
                                 int local_x = (int) (touch.x - chunk_rect.getX()) / World.BLOCK_SIZE;
                                 int local_y = (int) (touch.y - chunk_rect.getY()) / World.BLOCK_SIZE;
 
-                                chunk.setBlock(local_x, local_y, world.getBlocks().AIR.getBlockID(), false);
-                                chunk.setBlock(local_x, local_y, world.getBlocks().AIR.getBlockID(), true);
+                                chunk.setBlock(local_x, local_y, selected_block.getBlockID(), false);
+                                chunk.setBlock(local_x, local_y, selected_block.getBlockID(), true);
                             }
                         }
                     }
@@ -201,6 +207,10 @@ public class Player extends DynamicWorldObject {
     }
     public void setJump(boolean jump) {
         this.jump = jump;
+    }
+
+    public void setSelectedBlock(Block block) {
+        this.selected_block = block;
     }
 
     @Override
