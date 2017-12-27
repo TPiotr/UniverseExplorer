@@ -13,6 +13,7 @@ import explorer.world.block.Block;
 import explorer.world.chunk.WorldChunk;
 import explorer.world.object.DynamicWorldObject;
 import explorer.world.object.objects.TestDynamicObject;
+import explorer.world.object.objects.TorchObject;
 import explorer.world.physics.shapes.RectanglePhysicsShape;
 
 /**
@@ -64,6 +65,9 @@ public class Player extends DynamicWorldObject {
                     getPosition().set(touch);
                     getVelocity().set(0, 0);
                 } else if(button == 1) {
+                    //TorchObject new_object = new TorchObject(new Vector2((int) (touch.x / World.BLOCK_SIZE) * World.BLOCK_SIZE, (int) (touch.y / World.BLOCK_SIZE) * World.BLOCK_SIZE), world, game);
+                    //world.addObject(new_object);
+
                     if(selected_block == null)
                         return false;
 

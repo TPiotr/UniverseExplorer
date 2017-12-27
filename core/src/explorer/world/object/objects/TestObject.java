@@ -1,5 +1,6 @@
 package explorer.world.object.objects;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -36,6 +37,7 @@ public class TestObject extends StaticWorldObject {
 
     @Override
     public void render(SpriteBatch batch) {
+        batch.setColor(Color.WHITE);
         batch.draw(texture, getPosition().x, getPosition().y, getWH().x, getWH().y);
     }
 

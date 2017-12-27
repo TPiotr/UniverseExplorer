@@ -31,7 +31,7 @@ allprojects {
         maven { url "https://oss.sonatype.org/content/repositories/releases/" }
 
         //for kryonet
-        //maven { url "http://clojars.org/repo/"}
+        maven { url "http://clojars.org/repo/"}
     }
 }
 
@@ -93,8 +93,9 @@ project(":core") {
         compile "com.kotcrab.vis:vis-ui:1.3.0"
         compile "net.dermetfan.libgdx-utils:libgdx-utils:0.13.4"
 
-        //compile "com.esotericsoftware:kryo:4.0.1"
-        //compile "kryonet:kryonet:2.21"
+        //kryonet
+        compile "com.esotericsoftware:kryo:4.0.1"
+        compile "kryonet:kryonet:2.21"
     }
 }
 

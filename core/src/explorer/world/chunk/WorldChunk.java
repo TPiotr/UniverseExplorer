@@ -531,12 +531,10 @@ public class WorldChunk extends StaticWorldObject {
     }
 
     public int blocks_rendered;
-    public int background_blocks_rendered;
 
     @Override
     public void render(SpriteBatch batch) {
         blocks_rendered = 0;
-        background_blocks_rendered = 0;
 
         int chunk_x_camera = (int) (game.getMainCamera().position.x - getPosition().x) / World.BLOCK_SIZE;
         int chunk_y_camera = (int) (game.getMainCamera().position.y - getPosition().y) / World.BLOCK_SIZE;
@@ -649,13 +647,10 @@ public class WorldChunk extends StaticWorldObject {
                 }
 
                 blocks_rendered++;
-                background_blocks_rendered++;
 
                 batch.setColor(temp_color.set(1, 1, 1, 1).sub(BACKGROUND_COLOR_OFFSET));
             }
         }
-
-        System.out.println("Background blocks rendered count: " + background_blocks_rendered);
 
         //in between render chunk objects
         for(int i = 0; i < objects.size; i++) {

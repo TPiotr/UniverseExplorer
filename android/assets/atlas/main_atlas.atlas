@@ -81,6 +81,19 @@ blocks/light
   index: -1
 
 main_atlas4.png
+size: 32,32
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+objects/torch_texture
+  rotate: false
+  xy: 2, 2
+  size: 18, 14
+  orig: 18, 14
+  offset: 0, 0
+  index: -1
+
+main_atlas5.png
 size: 4096,2048
 format: RGBA8888
 filter: Nearest,Nearest
@@ -107,7 +120,7 @@ old/stone
   offset: 0, 0
   index: -1
 
-main_atlas5.png
+main_atlas6.png
 size: 512,128
 format: RGBA8888
 filter: Nearest,Nearest

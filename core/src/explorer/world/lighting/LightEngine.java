@@ -209,8 +209,6 @@ public class LightEngine {
     private boolean renderObjectPointLight(WorldObject chunk_object, WorldChunk chunk, SpriteBatch batch) {
         int block_x = (int) ((chunk_object.getPosition().x + chunk_object.getWH().x / 2) - chunk.getPosition().x) / World.BLOCK_SIZE;
         int block_y = (int) ((chunk_object.getPosition().y + chunk_object.getWH().y / 2) - chunk.getPosition().y) / World.BLOCK_SIZE;
-        //int block_x = (int) (chunk_object.getPosition().x) / World.BLOCK_SIZE;
-        //int block_y = (int) (chunk_object.getPosition().y) / World.BLOCK_SIZE;
 
         if(WorldChunk.inChunkBounds(block_x, block_y)) {
             if(chunk.getBlocks()[block_x][block_y].getForegroundBlock().getBlockID() != world.getBlocks().AIR.getBlockID()

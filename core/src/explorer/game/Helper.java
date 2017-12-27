@@ -1,6 +1,8 @@
 package explorer.game;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 
 /**
@@ -32,5 +34,26 @@ public class Helper {
         }
         return shader;
     }
+
+    /**
+     * Helper function saves time because we don't have to write these couple lines of code
+     * @param tile_x width of one animation frame
+     * @param tile_y height of one animation frame
+     * @param speed time between frames in seconds
+     * @param sprite_sheet texture region that contains all frames for animation
+     * @return new animation instance made from given parameters with PlayMode.LOOP as default
+     */
+    public static Animation<TextureRegion> makeAnimation(int tile_x, int tile_y, float speed, TextureRegion sprite_sheet) {
+        TextureRegion[][] frames_spritesheet = sprite_sheet.split(tile_x, tile_y);
+        TextureRegion[] frames = new TextureRegion[frames_spritesheet[0].length];
+
+        for(int i = 0; i < frames_spritesheet[0].length; i++)
+            frames[i] = frames_spritesheet[0][i];
+
+        Animation<TextureRegion> out = new Animation<TextureRegion>(speed, frames);
+        out.setPlayMode(Animation.PlayMode.LOOP);
+        return out;
+    }
+
 
 }
