@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.profiling.GLProfiler;
 
+import explorer.game.framework.AssetsManager;
 import explorer.game.framework.Game;
 import explorer.game.screen.Screen;
 import explorer.game.screen.screens.Screens;
@@ -28,24 +29,29 @@ public class PlanetScreen extends Screen {
 
         NAME = Screens.PLANET_SCREEN_NAME;
 
-        //int seed = Integer.parseInt(JOptionPane.showInputDialog(null, "Seed (random integer number):"));
         world = new World(game, 122);
 
-        font = new BitmapFont();
+        font = AssetsManager.font;
 
         GLProfiler.enable();
     }
 
-    public void createWorld(int planet_seed) {
-        System.out.println("Creating world: " + planet_seed);
+    public void createWorld(final int planet_seed) {
+        Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("Creating world: " + planet_seed);
 
-        world.dispose();
+                world.dispose();
 
-        world = new World(game, planet_seed);
-        world.init();
+                world = new World(game, planet_seed);
+                world.init();
 
-        game.getMainCamera().zoom = .7f;
-        game.getMainCamera().update();
+                game.getMainCamera().zoom = .7f;
+                game.getMainCamera().update();
+            }
+        };
+        Gdx.app.postRunnable(r);
     }
 
     @Override
@@ -65,6 +71,9 @@ public class PlanetScreen extends Screen {
 
     @Override
     public void render(SpriteBatch batch) {
+        if(world == null || !world.isInitializated())
+            return;
+
         batch.setProjectionMatrix(game.getMainCamera().combined);
 
         world.render(batch);
@@ -77,6 +86,7 @@ public class PlanetScreen extends Screen {
         font.draw(batch, "Current tasks: " + game.getThreadPool().getActuallyTasksRunningCount(), -620, 290);
 
         font.draw(batch, "Chunk x: " + ((world.getPlayer().getPosition().x / World.CHUNK_WORLD_SIZE) % world.getPlanetProperties().PLANET_SIZE), -620, 270);
+        font.draw(batch, "Chunk x: " + ((world.getPlayer().getPosition().x / World.CHUNK_WORLD_SIZE)), -450, 270);
 
         font.draw(batch, "Phys. obj. count: " + world.getPhysicsEngine().getAllObjectsCount(), -620, 250);
         //font.draw(batch, "Chunks colliders count: " + world.getPhysicsEngine().getPhysicsEngineChunksHelper().getChunkCollidersCount(), -620, 230);
@@ -93,7 +103,7 @@ public class PlanetScreen extends Screen {
 
     public void setVisible(boolean visible) {
         super.setVisible(visible);
-        game.getScreen(Screens.PLANET_GUI_SCREEN_NAME, PlanetGUIScreen.class).setVisible(visible);
+        game.getScreen(Screens.PLANET_GUI_SCREEN_NAME).setVisible(visible);
     }
 
     @Override

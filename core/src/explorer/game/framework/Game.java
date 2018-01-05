@@ -4,18 +4,20 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.g2d.CpuSpriteBatch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
+import java.net.InetAddress;
 import java.util.HashMap;
 
 import explorer.game.framework.utils.RenderCallsCounterSpriteBatch;
 import explorer.game.screen.Screen;
+import explorer.game.screen.screens.Screens;
+import explorer.game.screen.screens.planet.PlanetScreen;
+import explorer.network.client.GameClient;
+import explorer.network.server.GameServer;
 
 public abstract class Game extends ApplicationAdapter {
 
@@ -32,6 +34,16 @@ public abstract class Game extends ApplicationAdapter {
 
 	//array that holds all screens
 	private HashMap<String, Screen> screens;
+
+	//networking
+	public static boolean IS_HOST;
+	public static boolean IS_CLIENT;
+	public static boolean IS_CONNECTED;
+
+	private GameClient game_client;
+	private GameServer game_server;
+
+	private String username = "default";
 
 	@Override
 	public void create () {
@@ -66,14 +78,45 @@ public abstract class Game extends ApplicationAdapter {
 		//init screens array
 		screens = new HashMap<String, Screen>();
 
+		//init network
+		initNetwork();
+
 		//at last init game
 		initGame();
+	}
+
+	private void initNetwork() {
+		game_client = new GameClient(this);
+		game_server = new GameServer();
 	}
 
 	/**
 	 * Init game function called after basic engine stuff is initializated
 	 */
 	protected abstract void initGame();
+
+	/**
+	 * Call this to connect to server with given ip
+	 * @param ip ip address of server to which we want to connect
+	 */
+	public void connectToServer(InetAddress ip, GameClient.ConnectedToServerCallback connected_callback) {
+		game_client.connect(ip, connected_callback);
+
+		IS_HOST = false;
+		IS_CONNECTED = false;
+		IS_CLIENT = true;
+	}
+
+	/**
+	 * Host local server
+	 */
+	public void hostServer(GameServer.GameServerCreatedCallback created_callback) {
+		game_server.start(created_callback, getScreen(Screens.PLANET_SCREEN_NAME, PlanetScreen.class), this);
+
+		IS_HOST = true;
+		IS_CONNECTED = true;
+		IS_CLIENT = false;
+	}
 
 	@Override
 	public void resize(int width, int height) {
@@ -110,7 +153,8 @@ public abstract class Game extends ApplicationAdapter {
 
 		batch.end();
 
-		Gdx.graphics.setTitle("FPS: " + Gdx.graphics.getFramesPerSecond() + " Render calls: " + ((explorer.game.framework.utils.RenderCallsCounterSpriteBatch) batch).getRenderCalls() + " render method calls: " + ((explorer.game.framework.utils.RenderCallsCounterSpriteBatch) batch).getRenderMethodCalls());
+		Gdx.graphics.setTitle("FPS: " + Gdx.graphics.getFramesPerSecond() + " Render calls: " + ((explorer.game.framework.utils.RenderCallsCounterSpriteBatch) batch).getRenderCalls() + " render method calls: " + ((explorer.game.framework.utils.RenderCallsCounterSpriteBatch) batch).getRenderMethodCalls()
+		 + ((IS_CLIENT) ? " Ping: " + getGameClient().getClient().getReturnTripTime() : ""));
 
 		((RenderCallsCounterSpriteBatch) batch).resetCounter();
 	}
@@ -122,6 +166,10 @@ public abstract class Game extends ApplicationAdapter {
 
 		getThreadPool().dispose();
 		getAssetsManager().dispose();
+
+		//dispose network stuff
+		getGameClient().dispose();
+		getGameServer().dispose();
 	}
 
 	/**
@@ -214,5 +262,29 @@ public abstract class Game extends ApplicationAdapter {
 	 */
 	public InputEngine getInputEngine() {
 		return input_engine;
+	}
+
+	/**
+	 * Getter for game client instance
+	 * @return instance of game client class
+	 */
+	public GameClient getGameClient() {
+		return game_client;
+	}
+
+	/**
+	 * Getter for game server instance
+	 * @return instance of game server class
+	 */
+	public GameServer getGameServer() {
+		return game_server;
+	}
+
+	/**
+	 * Get username of this game instance
+	 * @return this game instance username
+	 */
+	public String getUsername() {
+		return username;
 	}
 }

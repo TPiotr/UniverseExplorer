@@ -1,5 +1,7 @@
 package explorer.game;
 
+import explorer.game.screen.screens.menu.ClientServerChooseScreen;
+import explorer.game.screen.screens.menu.MainMenuScreen;
 import explorer.game.screen.screens.planet.PlanetGUIScreen;
 import explorer.game.screen.screens.planet.PlanetScreen;
 import explorer.game.screen.screens.universe.UniverseLoadingScreen;
@@ -21,8 +23,19 @@ public class ExplorerGame extends explorer.game.framework.Game {
         //make game render thread as one with max priority to avoid lags from threads working in background
         Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 
+        //menu
+        MainMenuScreen main_menu_screen = new MainMenuScreen(this);
+        main_menu_screen.setVisible(true);
+        addScreen(main_menu_screen);
+
+        ClientServerChooseScreen main_menu_client_server_choose_screen = new ClientServerChooseScreen(this);
+        main_menu_client_server_choose_screen.setVisible(false);
+        addScreen(main_menu_client_server_choose_screen);
+
+        //game screens
+
         UniverseScreen universe_screen = new UniverseScreen(this);
-        universe_screen.setVisible(true);
+        universe_screen.setVisible(false);
         addScreen(universe_screen);
 
         UniverseLoadingScreen universe_loading_screen = new UniverseLoadingScreen(this);
@@ -45,9 +58,9 @@ public class ExplorerGame extends explorer.game.framework.Game {
         addScreen(world_generating_screen);
 
         //go directly to some planet
-        game_screen.setVisible(true);
-        universe_screen.setVisible(false);
-        game_screen.createWorld(11);
+        //game_screen.setVisible(true);
+        //universe_screen.setVisible(false);
+        //game_screen.createWorld(11);
     }
 
 

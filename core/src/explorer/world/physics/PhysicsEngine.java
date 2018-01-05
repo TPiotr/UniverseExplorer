@@ -80,7 +80,12 @@ public class PhysicsEngine {
 	}
 
 	public void tick(float in_delta) {
-		/* DELTA MANAGAMENT STUFF */
+		/* DELTA MANAGEMENT STUFF */
+
+		//why this? this code helps to avoid bug when some bug occur and our delta will be very big for example 10 (because game was lagged for f.e. 10 secs)
+		//using directly that big delta will cause bug when every dynamic object with velocity > 0 will teleport probably far away compared to previous location
+		//so calculate avg delta from last 10 deltas if in_delta is bigger than avg and some threshold it means that some lag occured
+		//this problem resolve will not make any problems when entering f.e. laggy area because avg delta is calculating in real time
 
 		tick_number++;
 		float delta = in_delta;
@@ -172,6 +177,11 @@ public class PhysicsEngine {
 		for(Iterator<DynamicWorldObject> i = dynamic_objects.iterator(); i.hasNext();) {
 			DynamicWorldObject dynamic_object = i.next();
 			reusable_static_objects_array.clear();
+
+			//if physics calculations are disabled just skip this objects calculations
+			if(!dynamic_object.isPhysicsEnabled()) {
+				continue;
+			}
 
 			if(Vector2.dst(dynamic_object.getPosition().x, dynamic_object.getPosition().y,
 					game.getMainCamera().position.x, game.getMainCamera().position.y) < DYNAMIC_WORK_RANGE) {
@@ -323,6 +333,11 @@ public class PhysicsEngine {
 
 					for(int k = 0; k < dynamic_objects.size; k++) {
 						DynamicWorldObject other_dynamic = dynamic_objects.get(k);
+
+						//if physics calculations are disabled to some other dynamic object just skip its collision calculations
+						if(!other_dynamic.isPhysicsEnabled()) {
+							continue;
+						}
 
 						//at first other dynamic had to have this flag set to true too
 						if(other_dynamic.isCollidingWithOtherDynamicObjects() && !(other_dynamic == dynamic_object)) {

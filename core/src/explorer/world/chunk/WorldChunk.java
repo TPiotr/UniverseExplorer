@@ -11,6 +11,7 @@ import com.badlogic.gdx.utils.TimeUtils;
 import java.util.concurrent.Future;
 
 import explorer.game.framework.Game;
+import explorer.network.NetworkClasses;
 import explorer.world.ChunkDataProvider;
 import explorer.world.World;
 import explorer.world.block.Block;
@@ -119,6 +120,11 @@ public class WorldChunk extends StaticWorldObject {
 
             //because new object appeared this chunk have to be saved in a file
             need_save = true;
+
+            //assign to new object an ID
+            if(object.OBJECT_ID == -1) {
+                object.OBJECT_ID = IDAssigner.next();
+            }
 
             return true;
         }
@@ -310,8 +316,9 @@ public class WorldChunk extends StaticWorldObject {
      * @param y y in local cords
      * @param new_id new block id
      * @param background if true background block will be set to new one
+     * @param notify_network true if packet with information about block set will be send to other clients to notify them (if game is host or client)
      */
-    public void setBlock(int x, int y, int new_id, boolean background) {
+    public void setBlock(int x, int y, int new_id, boolean background, boolean notify_network) {
         if(!background) {
             blocks[x][y].setForegroundBlock(world.getBlocks().getBlock(new_id));
         } else {
@@ -363,6 +370,35 @@ public class WorldChunk extends StaticWorldObject {
         //update ground lights
         world.getLightEngine().getGroundLineRenderer().removeChunkBoundLights(this);
         calculateGroundLight();
+
+        //send this information to other players if needed
+        if(notify_network) {
+            if(Game.IS_HOST) {
+                NetworkClasses.BlockChangedPacket block_changed_packet = new NetworkClasses.BlockChangedPacket();
+                block_changed_packet.background = background;
+                block_changed_packet.block_x = x;
+                block_changed_packet.block_y = y;
+                block_changed_packet.new_block_id = new_id;
+
+                block_changed_packet.chunk_x = getGlobalChunkXIndex();
+                block_changed_packet.chunk_y = getGlobalChunkYIndex();
+
+                //because we are the server we can send this info directly to other players
+                game.getGameServer().getServer().sendToAllTCP(block_changed_packet);
+            } else if(Game.IS_CLIENT) {
+                NetworkClasses.BlockChangedPacket block_changed_packet = new NetworkClasses.BlockChangedPacket();
+                block_changed_packet.background = background;
+                block_changed_packet.block_x = x;
+                block_changed_packet.block_y = y;
+                block_changed_packet.new_block_id = new_id;
+
+                block_changed_packet.chunk_x = getGlobalChunkXIndex();
+                block_changed_packet.chunk_y = getGlobalChunkYIndex();
+
+                //send this info to server
+                game.getGameClient().getClient().sendTCP(block_changed_packet);
+            }
+        }
 
         //because chunk was changed we need to save it to a file again
         need_save = true;
@@ -710,6 +746,27 @@ public class WorldChunk extends StaticWorldObject {
         getPosition().add(move_vector);
 
         calculateGroundLight();
+    }
+
+    /**
+     * Get global chunk index on x axis (so this value is in range 0 - PLANET_SIZE and deals with looping worlds)
+     * @return global chunk index on x axis (1.0 in this coords system means 1 whole chunk width)
+     */
+    public int getGlobalChunkXIndex() {
+        int x = (int) getPosition().x / World.CHUNK_WORLD_SIZE;
+
+        int planet_width = world.getPlanetProperties().PLANET_SIZE;
+        x %= planet_width;
+
+        return x;
+    }
+
+    /**
+     * Get global chunk index on y axis in fact can go to infinity
+     * @return global chunk index on y axis (1.0 in this coords system means 1 whole chunk height)
+     */
+    public int getGlobalChunkYIndex() {
+        return (int) getPosition().y / World.CHUNK_WORLD_SIZE;
     }
 
     /**

@@ -3,11 +3,16 @@ package explorer.world.object.objects.player;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.esotericsoftware.kryonet.Server;
 
 import explorer.game.framework.Game;
+import explorer.network.NetworkClasses;
+import explorer.network.client.ServerPlayer;
+import explorer.network.server.GameServer;
 import explorer.world.World;
 import explorer.world.block.Block;
 import explorer.world.chunk.WorldChunk;
@@ -27,17 +32,24 @@ public class Player extends DynamicWorldObject {
     private boolean left, right, jump;
     private final float PLAYER_SPEED = 300f;
 
+    //clone vars
+    private boolean is_clone;
+    private ServerPlayer representing_player;
+
+    //interpolating vars
+    private Vector2 recived_position, last_recived_position;
+    private long recive_time, probably_next_recive_time;
+
     //finding parent chunk vars
     private Rectangle chunk_rect;
 
     private Block selected_block;
     private boolean background_placing;
 
-    public Player(Vector2 position, World w, final Game game) {
+    public Player(Vector2 position, World w, boolean clone, final Game game) {
         super(position, w, game);
 
-        game.getMainCamera().position.set(position.x, position.y, 0);
-        game.getMainCamera().update();
+        this.is_clone = clone;
 
         player_renderer = new PlayerRenderer(this, w, game);
 
@@ -46,11 +58,43 @@ public class Player extends DynamicWorldObject {
 
         chunk_rect = new Rectangle();
 
+        recived_position = new Vector2();
+        last_recived_position = new Vector2();
+
+        setPhysicsEnabled(!is_clone);
+
+        if(is_clone)
+            return;
+
         //because player is always on center of in ram map
         setParentChunk(w.getWorldChunks()[1][1]);
 
+        game.getMainCamera().position.set(position.x, position.y, 0);
+        game.getMainCamera().update();
+
         //debug
         makeDebugInput();
+    }
+
+    /**
+     * This function is only called if player is an clone
+     * @param packet packet that come from network from client which this cloned player is normal player to update his state
+     */
+    public void processPacket(Object packet) {
+        if(packet instanceof NetworkClasses.PlayerPositionUpdatePacket) {
+            NetworkClasses.PlayerPositionUpdatePacket pos_update = (NetworkClasses.PlayerPositionUpdatePacket) packet;
+
+            last_recived_position.set(recived_position);
+            recived_position.set(pos_update.x, pos_update.y);
+
+            final float teleport_after_distance = 200;
+            if(Vector2.dst(recived_position.x, recived_position.y, getPosition().x, getPosition().y) > teleport_after_distance) {
+                getPosition().set(recived_position);
+            }
+
+            recive_time = System.currentTimeMillis();
+            probably_next_recive_time = recive_time + time_step; //+ ((Game.IS_CLIENT) ? game.getGameClient().getClient().getReturnTripTime() : 0); //test it first because on local ping is near 0
+        }
     }
 
     private void makeDebugInput() {
@@ -81,8 +125,8 @@ public class Player extends DynamicWorldObject {
                                 int local_x = (int) (touch.x - chunk_rect.getX()) / World.BLOCK_SIZE;
                                 int local_y = (int) (touch.y - chunk_rect.getY()) / World.BLOCK_SIZE;
 
-                                //chunk.setBlock(local_x, local_y, selected_block.getBlockID(), false);
-                                chunk.setBlock(local_x, local_y, selected_block.getBlockID(), background_placing);
+                                //we have to notify network if game is using network(game checks it itself)
+                                chunk.setBlock(local_x, local_y, selected_block.getBlockID(), background_placing, true);
                             }
                         }
                     }
@@ -166,10 +210,18 @@ public class Player extends DynamicWorldObject {
     public void move(Vector2 move_vector) {
         super.move(move_vector);
 
+        if(is_clone)
+            return;
+
         game.getMainCamera().position.add(move_vector.x, move_vector.y, 0);
         game.getMainCamera().update();
         getPosition().add(move_vector.x, move_vector.y);
     }
+
+    //pos update stuff
+    private final float UPS = 10; // 10[Hz] times per second position info is send to server and then to clients
+    private final long time_step = (long) ((1f / UPS) * 1000f); //transform to milis
+    private long last_time_send;
 
     @Override
     public void tick(float delta) {
@@ -186,6 +238,16 @@ public class Player extends DynamicWorldObject {
             }
         }
 
+        player_renderer.tick(delta);
+
+        if(is_clone) {
+            //interpolate position to achieve smooth movement effect
+            float progress = 1.0f - (float) (probably_next_recive_time - System.currentTimeMillis()) / time_step;
+            getPosition().set(last_recived_position).lerp(recived_position, progress);
+
+            return;
+        }
+
         if(left) {
             getVelocity().x = -PLAYER_SPEED;
         } else if(right) {
@@ -198,10 +260,24 @@ public class Player extends DynamicWorldObject {
             }
         }
 
+        //send player position update packet
+        if((Game.IS_HOST || Game.IS_CLIENT) && System.currentTimeMillis() - last_time_send > time_step) {
+            NetworkClasses.PlayerPositionUpdatePacket position_update_packet = new NetworkClasses.PlayerPositionUpdatePacket();
+            position_update_packet.player_connection_id = (Game.IS_HOST) ? GameServer.SERVER_CONNECTION_ID : game.getGameClient().getClient().getID();
+            position_update_packet.x = getPosition().x;
+            position_update_packet.y = getPosition().y;
+
+            if(Game.IS_HOST) {
+                game.getGameServer().getServer().sendToAllUDP(position_update_packet);
+            } else {
+                game.getGameClient().getClient().sendUDP(position_update_packet);
+            }
+
+            last_time_send = System.currentTimeMillis();
+        }
+
         game.getMainCamera().position.lerp(new Vector3(getPosition().x, getPosition().y + (getWH().y / 2f), 0), delta * 10f);
         game.getMainCamera().update();
-
-        player_renderer.tick(delta);
     }
 
     public void setLeft(boolean left) {
@@ -220,6 +296,18 @@ public class Player extends DynamicWorldObject {
 
     public void setBackgroundPlacing(boolean bool) {
         this.background_placing = bool;
+    }
+
+    public void setRepresentingPlayer(ServerPlayer player) {
+        representing_player = player;
+    }
+
+    public ServerPlayer getRepresentingPlayer() {
+        return representing_player;
+    }
+
+    public boolean isClone() {
+        return is_clone;
     }
 
     @Override

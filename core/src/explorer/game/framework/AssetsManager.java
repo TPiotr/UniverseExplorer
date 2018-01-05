@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter;
 import com.badlogic.gdx.utils.Array;
 
+import java.awt.TextField;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -24,6 +25,11 @@ public class AssetsManager {
 
 	//atlases
 	private HashMap<String, TextureAtlas> atlases;
+
+	/**
+	 * Helpful for debug bitmap font with default font;
+	 */
+	public static BitmapFont font;
 
 	//create custom class fontkey for fonts loading process
 	private class FontKey {
@@ -94,6 +100,9 @@ public class AssetsManager {
 
 		default_min_filter = TextureFilter.Nearest;
 		default_mag_filter = TextureFilter.Nearest;
+
+		font = getFont("fonts/pixel_font.ttf", 10, TextureFilter.Nearest, TextureFilter.Nearest, Color.WHITE);
+
 	}
 	
 	//func called in opengl thread to load some textures and pass them to another thread

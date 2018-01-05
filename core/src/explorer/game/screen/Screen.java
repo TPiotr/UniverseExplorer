@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.Array;
 
 import explorer.game.framework.Game;
+import explorer.game.screen.gui.GUIComponent;
 
 /**
  * Basic screen class for gui framework
@@ -115,6 +116,13 @@ public abstract class Screen {
      */
     public void setVisible(boolean visible) {
         this.visible = visible;
+
+        for(ScreenComponent comp : screen_components) {
+            if(comp instanceof GUIComponent) {
+                ((GUIComponent) comp).setVisible(visible);
+            }
+        }
+
     }
 
     /**

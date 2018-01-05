@@ -6,6 +6,9 @@ package explorer.game.screen.screens;
 
 public class Screens {
 
+    public static final String MAIN_MENU_SCREEN_NAME = "MAIN_MENU_SCREEN";
+    public static final String MAIN_MENU_CLIENT_SERVER_CHOOSE_SCREEN_NAME = "MAIN_MENU_CLIENT_SERVER_CHOOSE_SCREEN";
+
     public static final String PLANET_SCREEN_NAME = "GAME_SCREEN";
     public static final String WORLD_LOADING_SCREEN_NAME = "WORLD_LOADING_SCREEN";
     public static final String WORLD_GENERATING_SCREEN_NAME = "WORLD_GENERATING_SCREEN";

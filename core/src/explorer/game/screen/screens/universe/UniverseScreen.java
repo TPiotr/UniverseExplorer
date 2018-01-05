@@ -14,6 +14,7 @@ import explorer.game.framework.Game;
 import explorer.game.screen.Screen;
 import explorer.game.screen.screens.Screens;
 import explorer.game.screen.screens.planet.PlanetScreen;
+import explorer.network.NetworkClasses;
 import explorer.universe.Universe;
 import explorer.universe.chunk.UniverseChunk;
 import explorer.universe.object.StarUniverseObject;
@@ -170,11 +171,55 @@ public class UniverseScreen extends Screen {
             if(game.getMainCamera().zoom <= target_zoom + .05f) {
                 zoom_in = false;
 
-                PlanetScreen planet_screen = game.getScreen(Screens.PLANET_SCREEN_NAME, PlanetScreen.class);
+                if(Game.IS_HOST || Game.IS_CLIENT) {
+                    if (Game.IS_CLIENT) {
+                        //send request to go to this planet
+                        NetworkClasses.GoToPlanetRequestPacket goto_planet_request = new NetworkClasses.GoToPlanetRequestPacket();
+                        goto_planet_request.connection_id = game.getGameClient().getClient().getID();
+                        goto_planet_request.planet_index = clicked_planet.getPlanetIndex();
+
+                        game.getGameClient().getClient().sendTCP(goto_planet_request);
+                    } else if(Game.IS_HOST) {
+                        //if host want to go to some planet we just force other player to go with him because he is host
+                        Runnable r = new Runnable() {
+                            @Override
+                            public void run() {
+                                //wait a second until client will receive this packet because we can get ChunkDataRequestPacket when we don't event world instance from client
+                                try {
+                                    Thread.sleep(1000);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+
+                                NetworkClasses.GoToPlanetPacket goto_planet_request = new NetworkClasses.GoToPlanetPacket();
+                                goto_planet_request.planet_index = clicked_planet.getPlanetIndex();
+
+                                game.getGameServer().getServer().sendToAllTCP(goto_planet_request);
+                            }
+                        };
+                        new Thread(r).start();
+
+                        //load planet
+                        PlanetScreen planet_screen = game.getScreen(Screens.PLANET_SCREEN_NAME, PlanetScreen.class);
+                        planet_screen.createWorld(clicked_planet.getPlanetIndex());
+
+                        planet_screen.setVisible(true);
+                        setVisible(false);
+                    }
+                } else {
+                    //singleplayer part
+                    PlanetScreen planet_screen = game.getScreen(Screens.PLANET_SCREEN_NAME, PlanetScreen.class);
+                    planet_screen.createWorld(clicked_planet.getPlanetIndex());
+
+                    planet_screen.setVisible(true);
+                    setVisible(false);
+                }
+
+                /*PlanetScreen planet_screen = game.getScreen(Screens.PLANET_SCREEN_NAME, PlanetScreen.class);
                 planet_screen.createWorld(clicked_planet.getPlanetIndex());
 
                 planet_screen.setVisible(true);
-                setVisible(false);
+                setVisible(false);*/
             }
 
             game.getMainCamera().update();

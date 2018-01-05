@@ -3,6 +3,8 @@ package explorer.world.object;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 
+import java.util.HashMap;
+
 import explorer.game.framework.Game;
 import explorer.world.World;
 import explorer.world.chunk.WorldChunk;
@@ -13,7 +15,41 @@ import explorer.world.chunk.WorldChunk;
 
 public abstract class WorldObject {
 
+    /**
+     * Very simple class that just gives unique id per next() method call
+     */
+    public static class IDAssigner {
+
+        private static int acc_id = 0;
+
+        /**
+         * Get new unique id
+         * @return new unique id
+         */
+        public static synchronized int next() {
+            return acc_id++;
+        }
+
+        /**
+         * AccValue of acc_id var so in fact this is the last generated id
+         * @return
+         */
+        public static synchronized int accValue() {
+            return acc_id;
+        }
+
+        public static synchronized void set(int new_val) {
+            acc_id = new_val;
+        }
+    }
+
     protected Game game;
+
+    /**
+     * Unique id per object, same on every client object instance
+     * -1 means that id for this object wasn't assigned yet
+     */
+    public int OBJECT_ID = -1;
 
     /**
      * Vec2's to store position and WH(width&height)
@@ -35,9 +71,14 @@ public abstract class WorldObject {
     protected boolean saveable = true;
 
     /**
-     * Chunk on which object actaully stay
+     * Chunk on which object is actually staying
      */
     protected WorldChunk parent_chunk;
+
+    /**
+     * Custom properties of this object, could be null!
+     */
+    protected HashMap<String, String> object_properties;
 
     /**
      * The most basic constructor that every saveable object have to have!
@@ -131,5 +172,21 @@ public abstract class WorldObject {
      */
     public void setParentChunk(WorldChunk parent_chunk) {
         this.parent_chunk = parent_chunk;
+    }
+
+    /**
+     * Getter for hashmap that contains custom properties of this object, used in save/load/send system to save/load object state
+     * @return hashmap containing custom properties for this instance of object, could be null!
+     */
+    public HashMap<String, String> getObjectProperties() {
+        return object_properties;
+    }
+
+    /**
+     * Set hashmap properties instance to new one given in parameter
+     * @param properties new hashmap contains new properties for this object
+     */
+    public void setObjectProperties(HashMap<String, String> properties) {
+        this.object_properties = properties;
     }
 }

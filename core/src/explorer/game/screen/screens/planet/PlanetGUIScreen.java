@@ -8,7 +8,11 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.esotericsoftware.kryonet.Server;
 
+import org.omg.CORBA.ServerRequest;
+
+import explorer.game.framework.AssetsManager;
 import explorer.game.framework.Game;
 import explorer.game.framework.utils.MathHelper;
 import explorer.game.screen.Screen;
@@ -17,6 +21,7 @@ import explorer.game.screen.gui.TextButton;
 import explorer.game.screen.gui.TextureButton;
 import explorer.game.screen.screens.Screens;
 import explorer.game.screen.screens.planet.PlanetScreen;
+import explorer.network.client.ServerPlayer;
 import explorer.world.World;
 import explorer.world.block.Block;
 import explorer.world.block.CustomColorBlock;
@@ -59,7 +64,7 @@ public class PlanetGUIScreen extends Screen {
             white_texture = game.getAssetsManager().getTextureRegion("white_texture");
 
             //create background checkbox
-            background_checkbox = new TextButton(new BitmapFont(), "Foreground", new Vector2(position.x - 80, position.y + 180), game.getGUIViewport(), game);
+            background_checkbox = new TextButton(AssetsManager.font, "Foreground", new Vector2(position.x - 80, position.y + 180), game.getGUIViewport(), game);
             background_checkbox.setButtonListener(new TextureButton.ButtonListener() {
                 @Override
                 public void touched() {
@@ -163,6 +168,8 @@ public class PlanetGUIScreen extends Screen {
 
     private BlockPlacingSelector blocks_selector;
 
+    private BitmapFont debug_font;
+
     /**
      * Construct new screen instance
      *
@@ -170,6 +177,8 @@ public class PlanetGUIScreen extends Screen {
      */
     public PlanetGUIScreen(final PlanetScreen planet_screen, Game game) {
         super(game);
+
+        debug_font = game.getAssetsManager().getFont("fonts/pixel_font.ttf", 15);
 
         NAME = Screens.PLANET_GUI_SCREEN_NAME;
 
@@ -244,11 +253,23 @@ public class PlanetGUIScreen extends Screen {
 
     @Override
     public void render(SpriteBatch batch) {
-        if(!isVisible())
+        if (!isVisible())
             return;
 
         batch.setProjectionMatrix(game.getGUICamera().combined);
         renderComponents(batch);
+
+        if (Game.IS_HOST || Game.IS_CLIENT) {
+            renderPlayers((Game.IS_HOST) ? game.getGameServer().getPlayers() : game.getGameClient().getPlayers(), batch);
+        }
+    }
+
+    private void renderPlayers(Array<ServerPlayer> players, SpriteBatch batch) {
+        debug_font.draw(batch, "Players list:", 180, 350);
+        for (int i = 0; i < players.size; i++) {
+            ServerPlayer player = players.get(i);
+            debug_font.draw(batch, player.username + " (" + player.connection_id + (player.is_host ? ", host)" : ")"), 180, 320 - (i * 30));
+        }
     }
 
     @Override

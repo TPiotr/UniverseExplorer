@@ -18,6 +18,11 @@ public abstract class DynamicWorldObject extends WorldObject {
     protected PhysicsShape physics_shape;
 
     /**
+     * Flag determining if physics calculations for this object are enabled so when this = false will behave like WorldObject
+     */
+    protected boolean physics_enabled = true;
+
+    /**
      * Velocity of object
      */
     protected Vector2 velocity;
@@ -51,9 +56,25 @@ public abstract class DynamicWorldObject extends WorldObject {
 
     /**
      * Getter for a flag that describes if this dynamic object collide with other dynamic objects that have this flag set to true too
-     * @return
+     * @return flag that describes if this dynamic object collide with other dynamic objects that have this flag set to true too
      */
     public boolean isCollidingWithOtherDynamicObjects() {
         return collide_with_other_dynamics;
+    }
+
+    /**
+     * Getter for a flag that determine if physics calculations are done for this object in PhysicsEngine so return is pshysics enabled/disabled
+     * @return flag that determine if physics calculations are done for this object in PhysicsEngine so return is pshysics enabled/disabled
+     */
+    public boolean isPhysicsEnabled() {
+        return physics_enabled;
+    }
+
+    /**
+     * Setter for a flag that determine if physics calculations are done for this object in PhysicsEngine
+     * @param physics_enabled new value of a flag that determine if physics calculations are done for this object in PhysicsEngine
+     */
+    public void setPhysicsEnabled(boolean physics_enabled) {
+        this.physics_enabled = physics_enabled;
     }
 }

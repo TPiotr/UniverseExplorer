@@ -13,6 +13,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
 import java.util.concurrent.Future;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
@@ -34,6 +35,10 @@ public class FileChunkDataProvider extends ChunkDataProvider {
         this.world_dir = world_dir;
     }
 
+    public String getWorldDir() {
+        return world_dir;
+    }
+
     /**
      * Get path to chunk
      * @param world_dir world directory, this method assume that world_dir ends with "\" symbol
@@ -49,6 +54,7 @@ public class FileChunkDataProvider extends ChunkDataProvider {
 
     @Override
     public Future<?> getChunkData(final DataLoaded callback, final Vector2 chunk_position, final World world, final Game game) {
+        //CALCULATION THESE COORDS JUST STOLEN FROM WorldChunk getGlobalChunkXIndex, getGlobalChunkYIndex
         int x = (int) chunk_position.x / World.CHUNK_WORLD_SIZE;
         int y = (int) chunk_position.y / World.CHUNK_WORLD_SIZE;
 
@@ -131,8 +137,29 @@ public class FileChunkDataProvider extends ChunkDataProvider {
                 Vector2 position = new Vector2(data_input.readFloat(), data_input.readFloat());
                 position.add(chunk_position);
 
+                int object_id = data_input.readInt();
+
                 WorldObject new_object = createInstanceFromClass(class_name, position, world, game);
+
                 if (new_object != null) {
+                    new_object.OBJECT_ID = object_id;
+
+                    boolean have_properties = data_input.readBoolean();
+
+                    if(have_properties) {
+                        HashMap<String, String> properties = new HashMap<String, String>();
+                        int properties_count = data_input.readInt();
+
+                        for(int j = 0; j < properties_count; j++) {
+                            String key = data_input.readUTF();
+                            String val = data_input.readUTF();
+                            properties.put(key, val);
+                        }
+
+                        //set object properties to new one
+                        new_object.setObjectProperties(properties);
+                    }
+
                     //if object has custom data load it
                     if (new_object instanceof CustomDataWorldObject) {
                         ((CustomDataWorldObject) new_object).load(data_input);
@@ -267,6 +294,29 @@ public class FileChunkDataProvider extends ChunkDataProvider {
                         //save position
                         data_output.writeFloat(object.getPosition().x - chunk_position.x);
                         data_output.writeFloat(object.getPosition().y - chunk_position.y);
+
+                        //save object id
+                        data_output.writeInt(object.OBJECT_ID);
+
+                        //check if we have to save properties
+                        if(object.getObjectProperties() == null) {
+                            //save info that this object does not contain any properties
+                            data_output.writeBoolean(false);
+                        } else {
+                            //save info that this object have some properties that were saved
+                            data_output.writeBoolean(true);
+
+                            //write info about amount of properties
+                            data_output.writeInt(object.getObjectProperties().size());
+
+                            for(String key : object.getObjectProperties().keySet()) {
+                                String val = object.getObjectProperties().get(key);
+
+                                //save key, val couple
+                                data_output.writeUTF(key);
+                                data_output.writeUTF(val);
+                            }
+                        }
 
                         //if object implements CustomDataWorldObject use it
                         if(object instanceof CustomDataWorldObject) {

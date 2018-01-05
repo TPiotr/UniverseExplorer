@@ -120,6 +120,11 @@ public class TestWorldGenerator extends WorldGenerator {
             }
         }
 
+        //assign ids to objects
+        for(int i = 0; i < out.objects.size; i++) {
+            out.objects.get(i).OBJECT_ID = WorldObject.IDAssigner.next();
+        }
+
         return out;
     }
 
@@ -157,6 +162,29 @@ public class TestWorldGenerator extends WorldGenerator {
                 data_output.writeFloat(object.getPosition().x - chunk_position.x);
                 data_output.writeFloat(object.getPosition().y - chunk_position.y);
 
+                //save object id
+                data_output.writeInt(object.OBJECT_ID);
+
+                //check if we have to save properties
+                if(object.getObjectProperties() == null) {
+                    //save info that this object does not contain any properties
+                    data_output.writeBoolean(false);
+                } else {
+                    //save info that this object have some properties that were saved
+                    data_output.writeBoolean(true);
+
+                    //write info about amount of properties
+                    data_output.writeInt(object.getObjectProperties().size());
+
+                    for(String key : object.getObjectProperties().keySet()) {
+                        String val = object.getObjectProperties().get(key);
+
+                        //save key, val couple
+                        data_output.writeUTF(key);
+                        data_output.writeUTF(val);
+                    }
+                }
+
                 //if object implements CustomDataWorldObject use it
                 if(object instanceof CustomDataWorldObject) {
                     ((CustomDataWorldObject) object).save(data_output);
@@ -178,8 +206,11 @@ public class TestWorldGenerator extends WorldGenerator {
     public Vector2 getPlayerSpawn() {
         Vector2 out = new Vector2();
 
-        int y = getHeight(0, 0);
-        out.set(0, y * World.BLOCK_SIZE);
+        int chunk_x = 2;
+        int block_x = 10;
+
+        int y = getHeight(block_x, chunk_x);
+        out.set(chunk_x * World.CHUNK_WORLD_SIZE + (block_x * World.BLOCK_SIZE), y * World.BLOCK_SIZE);
 
         return out;
     }
