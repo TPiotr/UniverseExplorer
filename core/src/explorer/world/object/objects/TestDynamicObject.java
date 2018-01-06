@@ -109,7 +109,7 @@ public class TestDynamicObject extends DynamicWorldObject implements CanReceiveP
         batch.setColor(Color.WHITE);
         batch.draw(texture, getPosition().x, getPosition().y, getWH().x, getWH().y);
 
-        AssetsManager.font.draw(batch, "" + OBJECT_ID + " " + World.SIMULATE_LOGIC + "" + getPosition(), getPosition().x, getPosition().y + 50);
+        //AssetsManager.font.draw(batch, "" + OBJECT_ID + " " + World.SIMULATE_LOGIC + "" + getPosition(), getPosition().x, getPosition().y + 50);
     }
 
     @Override

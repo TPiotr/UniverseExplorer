@@ -1,5 +1,6 @@
 package explorer.network.client;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Array;
 import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Connection;
@@ -10,6 +11,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 
 import explorer.game.framework.Game;
+import explorer.game.screen.gui.dialog.YesNoDialog;
 import explorer.game.screen.screens.Screens;
 import explorer.game.screen.screens.planet.PlanetScreen;
 import explorer.network.server.GameServer;
@@ -138,6 +140,26 @@ public class GameClient {
                     //show planet screen and hide universe screen
                     planet_screen.setVisible(true);
                     game.getScreen(Screens.UNIVERSE_SCREEN_NAME).setVisible(false);
+                } else if(o instanceof NetworkClasses.VoteForGoingToPlanetPacket) {
+                    final NetworkClasses.VoteForGoingToPlanetPacket vote_packet = (NetworkClasses.VoteForGoingToPlanetPacket) o;
+
+                    Runnable r = new Runnable() {
+                        @Override
+                        public void run() {
+                            game.getDialogHandler().showDialog(new YesNoDialog("Go to planet: " + vote_packet.planet_index + " voting", game.getGUIViewport(), game).setListener(new YesNoDialog.YesNoDialogListener() {
+                                @Override
+                                public void yesOption() {
+
+                                }
+
+                                @Override
+                                public void noOption() {
+
+                                }
+                            }));
+                        }
+                    };
+                    Gdx.app.postRunnable(r);
                 }
             }
 

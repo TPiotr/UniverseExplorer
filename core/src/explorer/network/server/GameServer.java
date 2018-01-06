@@ -125,20 +125,16 @@ public class GameServer {
                     server.sendToAllExceptTCP(connection.getID(), new_player_info);
                 }
 
-                //world stuff
-                else if(o instanceof NetworkClasses.ChunkDataRequestPacket) {
-                    //so if we are here that means some player double clicked on some planet that he want to go but
-                    //this instance (which is host) is not on any planet at the moment
-                    //and that client which send this is waiting for response which contains chunk data
-                    if(planet_screen.getWorld() == null) {
-
-                    }
-                }
-
                 //universe stuff
                 else if(o instanceof NetworkClasses.GoToPlanetRequestPacket) {
-                    //make vote if we want to go to this planet or not
+                    //so at this point send to client information about new voting about going to some planet
+                    NetworkClasses.GoToPlanetRequestPacket goto_planet_request = (NetworkClasses.GoToPlanetRequestPacket) o;
 
+                    System.out.println("Player: " + getPlayerInstanceByConnection(connection).username + " (" + goto_planet_request.connection_id + "), want to go planet with index: " + goto_planet_request.planet_index);
+
+                    NetworkClasses.VoteForGoingToPlanetPacket voting_packet = new NetworkClasses.VoteForGoingToPlanetPacket();
+                    voting_packet.planet_index = goto_planet_request.planet_index;
+                    server.sendToAllTCP(voting_packet);
                 }
             }
 

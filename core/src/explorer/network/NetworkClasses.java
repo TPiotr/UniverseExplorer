@@ -43,6 +43,12 @@ public class NetworkClasses {
         public int planet_index;
     }
 
+    public static class VoteForGoingToPlanetPacket {
+        public int planet_index;
+
+        public int voting_index;
+    }
+
     //this is different from upper packet because this is not request but task that every client have to do
     public static class GoToPlanetPacket {
         public int planet_index;
@@ -104,6 +110,7 @@ public class NetworkClasses {
 
         kryo.register(GoToPlanetRequestPacket.class);
         kryo.register(GoToPlanetPacket.class);
+        kryo.register(VoteForGoingToPlanetPacket.class);
 
         kryo.register(Vector2.class);
         kryo.register(ChunkDataRequestPacket.class);

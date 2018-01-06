@@ -14,6 +14,7 @@ import java.util.HashMap;
 
 import explorer.game.framework.utils.RenderCallsCounterSpriteBatch;
 import explorer.game.screen.Screen;
+import explorer.game.screen.gui.dialog.DialogHandler;
 import explorer.game.screen.screens.Screens;
 import explorer.game.screen.screens.planet.PlanetScreen;
 import explorer.network.client.GameClient;
@@ -34,6 +35,9 @@ public abstract class Game extends ApplicationAdapter {
 
 	//array that holds all screens
 	private HashMap<String, Screen> screens;
+
+	//dialogs
+	private DialogHandler dialog_handler;
 
 	//networking
 	public static boolean IS_HOST;
@@ -77,6 +81,9 @@ public abstract class Game extends ApplicationAdapter {
 
 		//init screens array
 		screens = new HashMap<String, Screen>();
+
+		//init dialogs handler
+		dialog_handler = new DialogHandler(gui_viewport, this);
 
 		//init network
 		initNetwork();
@@ -130,6 +137,8 @@ public abstract class Game extends ApplicationAdapter {
 	}
 
 	public void tick(float delta) {
+		dialog_handler.tick(delta);
+
 		for(Screen screen : screens.values()) {
 			if(screen.isVisible())
 				screen.tick(delta);
@@ -150,6 +159,8 @@ public abstract class Game extends ApplicationAdapter {
 			if(s.isVisible())
 				s.render(batch);
 		}
+
+		dialog_handler.render(batch);
 
 		batch.end();
 
@@ -286,5 +297,13 @@ public abstract class Game extends ApplicationAdapter {
 	 */
 	public String getUsername() {
 		return username;
+	}
+
+	/**
+	 * Getter for dialog handler instance responsible for rendering and updating dialogs
+	 * @return dialog handler instance
+	 */
+	public DialogHandler getDialogHandler() {
+		return dialog_handler;
 	}
 }
