@@ -26,7 +26,7 @@ public class DesktopLauncher {
 
 		settings.combineSubdirectories = false;
 
-		TexturePacker.processIfModified(settings, "assets_to_pack", "atlas", "main_atlas");
+		TexturePacker.process(settings, "assets_to_pack", "atlas", "main_atlas");
 
 		//run game like normally
 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
