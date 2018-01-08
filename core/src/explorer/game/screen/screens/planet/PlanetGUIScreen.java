@@ -64,7 +64,7 @@ public class PlanetGUIScreen extends Screen {
             white_texture = game.getAssetsManager().getTextureRegion("white_texture");
 
             //create background checkbox
-            background_checkbox = new TextButton(AssetsManager.font, "Foreground", new Vector2(position.x - 80, position.y + 180), game.getGUIViewport(), game);
+            background_checkbox = new TextButton(AssetsManager.font, "Foreground", new Vector2(position.x - 120, position.y + 20), game.getGUIViewport(), game);
             background_checkbox.setButtonListener(new TextureButton.ButtonListener() {
                 @Override
                 public void touched() {
@@ -97,7 +97,7 @@ public class PlanetGUIScreen extends Screen {
                         int column = i / max_in_column;
                         int row = i % max_in_column;
 
-                        if(MathHelper.overlaps2Rectangles(position.x + (column * (block_render_size + spacing)), position.y + (row * (block_render_size + spacing)), block_render_size, block_render_size, unproj.x, unproj.y, 1, 1)) {
+                        if(MathHelper.overlaps2Rectangles(position.x + (column * (block_render_size + spacing)), position.y - (row * (block_render_size + spacing)), block_render_size, block_render_size, unproj.x, unproj.y, 1, 1)) {
                             selected = i;
                             planet_screen.getWorld().getPlayer().setSelectedBlock(block);
 
@@ -138,21 +138,21 @@ public class PlanetGUIScreen extends Screen {
                 if(block.getTextureRegion(Block.COLLIDE_NONE) != null) {
                     if(block instanceof CustomColorBlock) {
                         batch.setColor(((CustomColorBlock) block).getBlockColor());
-                        batch.draw(block.getTextureRegion(Block.COLLIDE_NONE), position.x + (column * (block_render_size + spacing)), position.y + (row * (block_render_size + spacing)), block_render_size, block_render_size);
+                        batch.draw(block.getTextureRegion(Block.COLLIDE_NONE), position.x + (column * (block_render_size + spacing)), position.y - (row * (block_render_size + spacing)), block_render_size, block_render_size);
                     } else if(block instanceof CustomRenderingBlock) {
                         CustomRenderingBlock cr_block = (CustomRenderingBlock) block;
-                        cr_block.render(batch, Block.COLLIDE_NONE, position.x + (column * (block_render_size + spacing)), position.y + (row * (block_render_size + spacing)), block_render_size, block_render_size, false);
+                        cr_block.render(batch, Block.COLLIDE_NONE, position.x + (column * (block_render_size + spacing)), position.y - (row * (block_render_size + spacing)), block_render_size, block_render_size, false);
                     } else {
-                        batch.draw(block.getTextureRegion(Block.COLLIDE_NONE), position.x + (column * (block_render_size + spacing)), position.y + (row * (block_render_size + spacing)), block_render_size, block_render_size);
+                        batch.draw(block.getTextureRegion(Block.COLLIDE_NONE), position.x + (column * (block_render_size + spacing)), position.y - (row * (block_render_size + spacing)), block_render_size, block_render_size);
                     }
                 } else {
                     //just draw white texture as placeholder because it is probably air or other invisible block
-                    batch.draw(white_texture, position.x + (column * (block_render_size + spacing)), position.y + (row * (block_render_size + spacing)), block_render_size, block_render_size);
+                    batch.draw(white_texture, position.x + (column * (block_render_size + spacing)), position.y - (row * (block_render_size + spacing)), block_render_size, block_render_size);
                 }
 
                 if(i == selected) {
                     batch.setColor(.5f, .5f, .5f, .5f);
-                    batch.draw(white_texture, position.x + (column * (block_render_size + spacing)), position.y + (row * (block_render_size + spacing)), block_render_size, block_render_size);
+                    batch.draw(white_texture, position.x + (column * (block_render_size + spacing)), position.y - (row * (block_render_size + spacing)), block_render_size, block_render_size);
                 }
 
                 batch.setColor(Color.WHITE);
@@ -229,7 +229,7 @@ public class PlanetGUIScreen extends Screen {
             }
         });
 
-        blocks_selector = new BlockPlacingSelector(new Vector2(500, 150), planet_screen);
+        blocks_selector = new BlockPlacingSelector(new Vector2(500, 290), planet_screen);
         addScreenComponent(blocks_selector);
     }
 

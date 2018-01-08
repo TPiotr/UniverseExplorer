@@ -2,7 +2,7 @@
 main_atlas.png
 size: 512,512
 format: RGBA8888
-filter: Nearest,Nearest
+filter: Linear,Linear
 repeat: none
 badlogic
   rotate: false
@@ -29,7 +29,7 @@ white_texture
 main_atlas2.png
 size: 1024,1024
 format: RGBA8888
-filter: Nearest,Nearest
+filter: Linear,Linear
 repeat: none
 background/sky_day
   rotate: false
@@ -40,50 +40,78 @@ background/sky_day
   index: -1
 
 main_atlas3.png
-size: 512,512
+size: 4096,4096
 format: RGBA8888
-filter: Nearest,Nearest
+filter: Linear,Linear
 repeat: none
 blocks/dirt_colorpack
+  rotate: false
+  xy: 2054, 3080
+  size: 16, 1
+  orig: 16, 1
+  offset: 0, 0
+  index: -1
+blocks/dirtz
+  rotate: false
+  xy: 2, 2057
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1
+blocks/grass_colorpack
   rotate: false
   xy: 2, 2
   size: 16, 1
   orig: 16, 1
   offset: 0, 0
   index: -1
-blocks/dirt_spritesheet
+blocks/grassz
   rotate: false
-  xy: 2, 5
-  size: 64, 64
-  orig: 64, 64
-  offset: 0, 0
-  index: -1
-blocks/grass_colorpack
-  rotate: false
-  xy: 68, 68
-  size: 16, 1
-  orig: 16, 1
-  offset: 0, 0
-  index: -1
-blocks/grass_mask_spritesheet
-  rotate: false
-  xy: 260, 263
-  size: 64, 64
-  orig: 64, 64
+  xy: 2, 1031
+  size: 1024, 1024
+  orig: 1024, 1024
   offset: 0, 0
   index: -1
 blocks/light
   rotate: false
-  xy: 2, 71
+  xy: 1028, 1799
   size: 256, 256
   orig: 256, 256
+  offset: 0, 0
+  index: -1
+blocks/stone_colorpack
+  rotate: false
+  xy: 1028, 1796
+  size: 16, 1
+  orig: 16, 1
+  offset: 0, 0
+  index: -1
+blocks/stonez
+  rotate: false
+  xy: 1028, 2057
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1
+blocks/wooden_planks_colorpack
+  rotate: false
+  xy: 1286, 2054
+  size: 16, 1
+  orig: 16, 1
+  offset: 0, 0
+  index: -1
+blocks/woodz
+  rotate: false
+  xy: 2, 5
+  size: 1024, 1024
+  orig: 1024, 1024
   offset: 0, 0
   index: -1
 
 main_atlas4.png
 size: 32,32
 format: RGBA8888
-filter: Nearest,Nearest
+filter: Linear,Linear
 repeat: none
 objects/torch_texture
   rotate: false
@@ -94,36 +122,29 @@ objects/torch_texture
   index: -1
 
 main_atlas5.png
-size: 4096,2048
+size: 256,128
 format: RGBA8888
-filter: Nearest,Nearest
+filter: Linear,Linear
 repeat: none
-old/dirt
+old/dirt_spritesheet
   rotate: false
   xy: 2, 2
-  size: 256, 256
-  orig: 256, 256
+  size: 64, 64
+  orig: 64, 64
   offset: 0, 0
   index: -1
-old/grass1_mask
+old/grass_mask_spritesheet
   rotate: false
-  xy: 2, 260
-  size: 1024, 1024
-  orig: 1024, 1024
-  offset: 0, 0
-  index: -1
-old/stone
-  rotate: false
-  xy: 1028, 260
-  size: 1024, 1024
-  orig: 1024, 1024
+  xy: 68, 2
+  size: 64, 64
+  orig: 64, 64
   offset: 0, 0
   index: -1
 
 main_atlas6.png
 size: 512,128
 format: RGBA8888
-filter: Nearest,Nearest
+filter: Linear,Linear
 repeat: none
 player/base_arm
   rotate: false

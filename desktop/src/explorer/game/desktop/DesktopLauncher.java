@@ -15,8 +15,8 @@ public class DesktopLauncher {
 		settings.maxWidth = 4096;
 		settings.maxHeight = 4096;
 
-		settings.filterMag = Texture.TextureFilter.Nearest;
-		settings.filterMin = Texture.TextureFilter.Nearest;
+		settings.filterMag = Texture.TextureFilter.Linear;
+		settings.filterMin = Texture.TextureFilter.Linear;
 
 		settings.bleed = true;
 		settings.bleedIterations = 4;

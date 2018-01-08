@@ -9,6 +9,8 @@ import explorer.game.framework.Game;
 import explorer.world.World;
 import explorer.world.block.blocks.AirBlock;
 import explorer.world.block.blocks.GrassBlock;
+import explorer.world.block.blocks.StoneBlock;
+import explorer.world.block.blocks.WoodenPlanksBlock;
 
 /**
  * Class that stores all blocks instances
@@ -22,6 +24,9 @@ public class Blocks {
     public explorer.world.block.blocks.AirBlock AIR;
     public explorer.world.block.blocks.DirtBlock DIRT;
     public GrassBlock GRASS;
+    public StoneBlock STONE;
+
+    public WoodenPlanksBlock WOODEN_PLANKS_BLOCK;
 
     public Blocks(World world, Game game) {
         all_blocks_instances = new ConcurrentHashMap<Integer, Block>();
@@ -35,10 +40,16 @@ public class Blocks {
 
         GRASS = new GrassBlock(world, this, game);
         all_blocks_instances.put(GRASS.getBlockID(), GRASS);
+
+        STONE = new StoneBlock(world, game);
+        all_blocks_instances.put(STONE.getBlockID(), STONE);
+
+        WOODEN_PLANKS_BLOCK = new WoodenPlanksBlock(world, game);
+        all_blocks_instances.put(WOODEN_PLANKS_BLOCK.getBlockID(), WOODEN_PLANKS_BLOCK);
     }
 
     /**
-     * Get block instance by ID, returns AIR if block wasnt found by ID
+     * Get block instance by ID, returns AIR if block wasn't found by ID
      * @param ID  block ID
      * @return block instance
      */
