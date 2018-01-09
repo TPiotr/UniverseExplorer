@@ -190,7 +190,7 @@ public abstract class Game extends ApplicationAdapter {
 	 * @param <T> class of screen
 	 * @return screen instance
 	 */
-	public <T> T getScreen(String screen_name, Class<T> s_class) {
+	public synchronized  <T> T getScreen(String screen_name, Class<T> s_class) {
 		return (T) screens.get(screen_name);
 	}
 
@@ -199,7 +199,7 @@ public abstract class Game extends ApplicationAdapter {
 	 * @param screen_name name of screen that we want (use ScreenClass.NAME variable)
 	 * @return screen instance
 	 */
-	public Screen getScreen(String screen_name) {
+	public synchronized Screen getScreen(String screen_name) {
 		return screens.get(screen_name);
 	}
 

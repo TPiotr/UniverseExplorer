@@ -9,6 +9,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
 
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import explorer.game.framework.Game;
 import explorer.network.NetworkClasses;
@@ -57,7 +58,7 @@ public class WorldChunk extends StaticWorldObject {
     /**
      * Flag that determines if chunk after going unloaded needs to be saved to file again
      */
-    private boolean need_save;
+    private AtomicBoolean need_save;
 
     /**
      * Rectangles used in tick method when checking dynamic objects
@@ -74,7 +75,7 @@ public class WorldChunk extends StaticWorldObject {
     /**
      * Flag that determines if this chunk is dirty (if loading process is in progress)
      */
-    private boolean is_dirty;
+    private AtomicBoolean is_dirty;
 
     /**
      * Future instance used to abort loading task when we have to
@@ -85,6 +86,9 @@ public class WorldChunk extends StaticWorldObject {
         super(position, world, game);
 
         this.world = world;
+
+        is_dirty = new AtomicBoolean();
+        need_save = new AtomicBoolean();
 
         getWH().set(World.CHUNK_WORLD_SIZE, World.CHUNK_WORLD_SIZE);
 
@@ -119,7 +123,7 @@ public class WorldChunk extends StaticWorldObject {
             object.setParentChunk(this);
 
             //because new object appeared this chunk have to be saved in a file
-            need_save = true;
+            need_save.set(true);
 
             //assign to new object an ID
             if(object.OBJECT_ID == -1) {
@@ -148,7 +152,7 @@ public class WorldChunk extends StaticWorldObject {
         getPosition().add(chunks_x * World.CHUNK_WORLD_SIZE, chunks_y * World.CHUNK_WORLD_SIZE);
 
         //mark as dirty
-        is_dirty = true;
+        is_dirty.set(true);
 
         //next get data for "new chunk"
         ChunkDataProvider provider = world.getChunksDataProvider();
@@ -178,7 +182,7 @@ public class WorldChunk extends StaticWorldObject {
                     }
 
                     //reset save flag
-                    need_save = false;
+                    need_save.set(false);
 
                     //copy new data
                     for (int i = 0; i < blocks.length; i++) {
@@ -206,9 +210,9 @@ public class WorldChunk extends StaticWorldObject {
                         WorldObject o = data.objects.get(i);
 
                         //because dynamic world object will move or smth there is almost 100% possibility that this chunk have to be saved after
-                        if (!need_save)
+                        if (!need_save.get())
                             if (o instanceof DynamicWorldObject)
-                                need_save = true;
+                                need_save.set(true);
 
                         o.setParentChunk(WorldChunk.this);
                         objects.add(o);
@@ -254,7 +258,7 @@ public class WorldChunk extends StaticWorldObject {
                     }
 
                     //loading completed so change dirty flag
-                    is_dirty = false;
+                    is_dirty.set(false);
 
                     long end_time = System.nanoTime();
                     System.out.println("Total loading time: " + TimeUtils.nanosToMillis(end_time - loading_start) + " milis");
@@ -286,7 +290,7 @@ public class WorldChunk extends StaticWorldObject {
         getPosition().add(chunks_x * World.CHUNK_WORLD_SIZE, chunks_y * World.CHUNK_WORLD_SIZE);
 
         //mark as dirty
-        is_dirty = true;
+        is_dirty.set(true);
 
         //copy blocks data
         for(int i = 0; i < blocks.length; i++) {
@@ -304,10 +308,10 @@ public class WorldChunk extends StaticWorldObject {
             objects.add(o);
         }
 
-        need_save = copy_from.isSaveRequest();
+        need_save.set(copy_from.isSaveRequest());
 
         //copying completed so not dirty anymore
-        is_dirty = false;
+        is_dirty.set(false);
     }
 
     /**
@@ -401,7 +405,7 @@ public class WorldChunk extends StaticWorldObject {
         }
 
         //because chunk was changed we need to save it to a file again
-        need_save = true;
+        need_save.set(true);
     }
 
     /**
@@ -539,7 +543,7 @@ public class WorldChunk extends StaticWorldObject {
                                 chunk.objects.add(o);
                                 o.setParentChunk(chunk);
 
-                                need_save = true;
+                                need_save.set(true);
 
                                 //because work is done break object transfer loop
                                 break object_transfer_loop;
@@ -789,7 +793,7 @@ public class WorldChunk extends StaticWorldObject {
      * Get instance of this chunk loading future to get info about this process (is done, in progress, never started etc), may be null
      * @return loading future instance
      */
-    public Future<?> getLoadingFuture() {
+    public synchronized Future<?> getLoadingFuture() {
         return loading_future;
     }
 
@@ -813,7 +817,7 @@ public class WorldChunk extends StaticWorldObject {
      * @return dirty flag
      */
     public boolean isDirty() {
-        return is_dirty;
+        return is_dirty.get();
     }
 
     /**
@@ -821,6 +825,6 @@ public class WorldChunk extends StaticWorldObject {
      * @return save request
      */
     public boolean isSaveRequest() {
-        return need_save;
+        return need_save.get();
     }
 }

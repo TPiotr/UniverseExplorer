@@ -16,6 +16,7 @@ import com.esotericsoftware.kryonet.Listener;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import explorer.game.framework.AssetsManager;
@@ -95,12 +96,12 @@ public class World extends StaticWorldObject {
     /**
      * Flag that determines if world is generating right now
      */
-    private boolean generating;
+    private AtomicBoolean generating;
 
     /**
      * Flat that determines if world is initializated
      */
-    private boolean initializated;
+    private AtomicBoolean initializated;
 
     /**
      * All blocks
@@ -155,6 +156,9 @@ public class World extends StaticWorldObject {
         world = this;
 
         this.planet_seed = planet_seed;
+
+        initializated = new AtomicBoolean(false);
+        generating = new AtomicBoolean(false);
 
         server_players = new Array<Player>();
     }
@@ -444,7 +448,7 @@ public class World extends StaticWorldObject {
 
         chunk_rect = new Rectangle();
 
-        initializated = true;
+        initializated.set(true);
 
         /* DEBUG*/
         shape_renderer = new ShapeRenderer();
@@ -473,7 +477,7 @@ public class World extends StaticWorldObject {
             handle.mkdirs();
 
             //set generating flag
-            generating = true;
+            generating.set(true);
 
             //reset indexing stuff
             IDAssigner.set(0);
@@ -545,7 +549,7 @@ public class World extends StaticWorldObject {
                             //TODO
                             int last_index = IDAssigner.accValue();
 
-                            generating = false;
+                            generating.set(false);
                         }
                     }
                 };
@@ -602,9 +606,34 @@ public class World extends StaticWorldObject {
 
     @Override
     public void tick(float delta) {
+        //first check if all 9 chunks are generating so we have to stop the game and show loading screen
+        if(isInitializated()) {
+            int dirty_count = 0;
+            for (int i = 0; i < chunks.length; i++) {
+                for (int j = 0; j < chunks[0].length; j++) {
+                    if (chunks[i][j].isDirty()) {
+                        dirty_count++;
+                    }
+                }
+            }
+
+            //if more than 70% of chunks are generating stop the game and wait
+            if (dirty_count >= (chunks.length * chunks.length) * .75f) {
+                System.out.println(">= 70% of chunks dirty showing loading screen!");
+                PlanetScreen game_screen = game.getScreen(Screens.PLANET_SCREEN_NAME, PlanetScreen.class);
+                WorldLoadingScreen loading_screen = game.getScreen(Screens.WORLD_LOADING_SCREEN_NAME, WorldLoadingScreen.class);
+
+                game_screen.setVisible(false);
+                loading_screen.setVisible(true);
+                return;
+            }
+        }
+
         //can't tick if world is generating
-        if(isGenerating() || !isInitializated())
+        if(isGenerating() || !isInitializated()) {
+            System.out.println("Returning world tick method!");
             return;
+        }
 
         //calculate SIMULATE_LOGIC value
 
@@ -967,27 +996,6 @@ public class World extends StaticWorldObject {
                 player.move(new Vector2((getPlanetProperties().PLANET_SIZE) * CHUNK_WORLD_SIZE, 0));
             }
         } else {
-
-            //first check if all 9 chunks are generating so we have to stop the game and show loading screen
-            int dirty_count = 0;
-            for (int i = 0; i < chunks.length; i++) {
-                for (int j = 0; j < chunks[0].length; j++) {
-                    if (chunks[i][j].isDirty()) {
-                        dirty_count++;
-                    }
-                }
-            }
-
-            //if more than 70% of chunks are generating stop the game and wait
-            if (dirty_count >= (chunks.length * chunks.length) * .75f) {
-                PlanetScreen game_screen = game.getScreen(Screens.PLANET_SCREEN_NAME, PlanetScreen.class);
-                WorldLoadingScreen loading_screen = game.getScreen(Screens.WORLD_LOADING_SCREEN_NAME, WorldLoadingScreen.class);
-
-                game_screen.setVisible(false);
-                loading_screen.setVisible(true);
-                //return;
-            }
-
             //update chunks
             for (int i = 0; i < chunks.length; i++) {
                 for (int j = 0; j < chunks[0].length; j++) {
@@ -1191,7 +1199,7 @@ public class World extends StaticWorldObject {
      * @return true if world is generating in background
      */
     public boolean isGenerating() {
-        return generating;
+        return generating.get();
     }
 
     /**
@@ -1199,7 +1207,7 @@ public class World extends StaticWorldObject {
      * @return initalizated flag
      */
     public boolean isInitializated() {
-        return initializated;
+        return initializated.get();
     }
 
     /**

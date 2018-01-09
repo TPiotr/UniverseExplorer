@@ -50,9 +50,10 @@ public class WorldLoadingScreen extends Screen {
                 if(!game_screen.getWorld().getWorldChunks()[i][j].isDirty())
                     not_dirty_count++;
                 else {
+                    System.out.println("(WorldLoadingScreen) moving chunk to force loading");
                     //if dirty flag is false and loading future is null or isDone() returns true that means our chunk loading runnable is stopped and we have to run it again
                     Future<?> generating_future = game_screen.getWorld().getWorldChunks()[i][j].getLoadingFuture();
-                    if(generating_future == null || generating_future.isDone()) {
+                    if(generating_future == null) {
                         game_screen.getWorld().getWorldChunks()[i][j].move(0, 0);
                     }
                 }
@@ -63,11 +64,18 @@ public class WorldLoadingScreen extends Screen {
 
         //>= to avoid some bugs if something other is broken this will not stop whole game
         if(progress >= 1f) {
+            System.out.println("(WorldLoadingScreen) Showing game screen");
             game_screen.setVisible(true);
             setVisible(false);
 
             progress = 0f;
         }
+    }
+
+    @Override
+    public void setVisible(boolean visible) {
+        super.setVisible(visible);
+        System.out.println("(WorldLoadingScreen) Setting visibility to: " + visible);
     }
 
     @Override

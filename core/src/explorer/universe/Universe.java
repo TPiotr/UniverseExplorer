@@ -54,7 +54,7 @@ public class Universe implements ScreenComponent {
     private ShapeRenderer shape_renderer = new ShapeRenderer();
 
     /**
-     * Variable used for sync in f.e. planets orbiting
+     * Variable used for sync f.e. planets orbiting
      */
     private float universe_time;
 

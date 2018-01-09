@@ -9,6 +9,7 @@ import com.badlogic.gdx.utils.TimeUtils;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import explorer.game.framework.Game;
 import explorer.universe.Universe;
@@ -50,7 +51,7 @@ public class UniverseChunk {
     /**
      * Flag that determines if this chunk is dirty (if loading process is in progress)
      */
-    private boolean is_dirty;
+    private AtomicBoolean is_dirty;
 
     /**
      * Future instance used to abort loading task when we have to
@@ -73,7 +74,9 @@ public class UniverseChunk {
         this.game = game;
 
         this.wh = new Vector2(Universe.UNIVERSE_CHUNK_SIZE, Universe.UNIVERSE_CHUNK_SIZE);
-        
+
+        is_dirty = new AtomicBoolean();
+
         wh.set(Universe.UNIVERSE_CHUNK_SIZE, Universe.UNIVERSE_CHUNK_SIZE);
         
         //init rects
@@ -139,7 +142,7 @@ public class UniverseChunk {
         getPosition().add(chunks_x * Universe.UNIVERSE_CHUNK_SIZE, chunks_y * Universe.UNIVERSE_CHUNK_SIZE);
 
         //mark as dirty
-        is_dirty = true;
+        is_dirty.set(true);
 
         //next get data for "new chunk"
         UniverseChunkDataProvider provider = universe.getChunksDataProvider();
@@ -181,7 +184,7 @@ public class UniverseChunk {
                     }
 
                     //loading completed so change dirty flag
-                    is_dirty = false;
+                    is_dirty.set(false);
 
                     long end_time = System.nanoTime();
                     System.out.println("(Universe) Total loading time: " + TimeUtils.nanosToMillis(end_time - loading_start) + " milis");
@@ -211,7 +214,7 @@ public class UniverseChunk {
         getPosition().add(chunks_x * Universe.UNIVERSE_CHUNK_SIZE, chunks_y * Universe.UNIVERSE_CHUNK_SIZE);
 
         //mark as dirty
-        is_dirty = true;
+        is_dirty.set(true);
 
         //copy objects
         getObjects().clear();
@@ -230,7 +233,7 @@ public class UniverseChunk {
         }
 
         //copying completed so not dirty anymore
-        is_dirty = false;
+        is_dirty.set(false);
     }
 
     public void tick(float delta) {
@@ -315,6 +318,6 @@ public class UniverseChunk {
      * @return dirty flag
      */
     public boolean isDirty() {
-        return is_dirty;
+        return is_dirty.get();
     }
 }

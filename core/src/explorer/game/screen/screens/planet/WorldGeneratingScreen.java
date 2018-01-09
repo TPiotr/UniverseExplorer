@@ -41,6 +41,12 @@ public class WorldGeneratingScreen extends Screen {
     }
 
     @Override
+    public void setVisible(boolean visible) {
+        super.setVisible(visible);
+        System.out.println("(WorldGeneratingScreen) Setting visibility to: " + visible);
+    }
+
+    @Override
     public void render(SpriteBatch batch) {
         batch.end();
 

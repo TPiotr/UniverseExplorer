@@ -63,8 +63,8 @@ public class PlanetScreen extends Screen {
 
     @Override
     public void tick(float delta) {
-        if(world.isGenerating())
-            setVisible(false);
+        //if(world.isGenerating())
+        //    setVisible(false);
 
         world.tick(delta);
     }
@@ -104,6 +104,8 @@ public class PlanetScreen extends Screen {
     public void setVisible(boolean visible) {
         super.setVisible(visible);
         game.getScreen(Screens.PLANET_GUI_SCREEN_NAME).setVisible(visible);
+
+        System.out.println("Setting planet screen visibility to: " + visible);
     }
 
     @Override
