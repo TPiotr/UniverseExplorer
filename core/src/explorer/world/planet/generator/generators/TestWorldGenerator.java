@@ -15,6 +15,7 @@ import explorer.world.object.CustomDataWorldObject;
 import explorer.world.object.WorldObject;
 import explorer.world.object.objects.TestDynamicObject;
 import explorer.world.object.objects.TestObject;
+import explorer.world.object.objects.TreeObject;
 import explorer.world.planet.PlanetProperties;
 import explorer.world.planet.generator.HeightsGenerator;
 import explorer.world.planet.generator.WorldGenerator;
@@ -112,7 +113,7 @@ public class TestWorldGenerator extends WorldGenerator {
                     float noise = heights_generator.getNoise(i + (chunk_pos_x * World.CHUNK_SIZE), j);
 
                     if(noise >= .9f) {
-                        out.objects.add(new TestObject(new Vector2(chunk_position).add(i * World.BLOCK_SIZE, (j + 1) * World.BLOCK_SIZE), world, game));
+                        out.objects.add(new TreeObject(new Vector2(chunk_position).add(i * World.BLOCK_SIZE, (j + 1) * World.BLOCK_SIZE), world, game));
                     } else if(noise >= .6f && noise <= .65f) {
                         out.objects.add(new TestDynamicObject(new Vector2(chunk_position).add(i * World.BLOCK_SIZE, (j + 1) * World.BLOCK_SIZE), world, game));
                     }

@@ -26,6 +26,8 @@ import explorer.world.object.WorldObject;
 
 public class LightEngine {
 
+
+
     /**
      * Game instance for assets management
      */
@@ -177,8 +179,15 @@ public class LightEngine {
 
                 for(int ii = 0; ii < chunk.getObjects().size; ii++) {
                     WorldObject chunk_object = chunk.getObjects().get(ii);
-                    if(chunk_object == null) continue;
-                    renderObjectPointLight(chunk_object, chunk, batch);
+                    if(chunk_object == null || !chunk_object.isCastingSelfLight()) continue;
+
+                    if(renderObjectLight(chunk_object, chunk, batch)) {
+                        if(chunk_object instanceof CustomWorldObjectLight) {
+                            ((CustomWorldObjectLight) chunk_object).renderCustomLight(batch);
+                        } else {
+                            renderObjectPointLight(chunk_object, chunk, batch);
+                        }
+                    }
                 }
             }
         }
@@ -200,25 +209,33 @@ public class LightEngine {
     }
 
     /**
-     * Function used to render bounding object point light
+     * Checks if there is need to render bounding point light for an object
      * @param chunk_object world object
      * @param chunk parent chunk
      * @param batch sprite batch instance
-     * @return false if object wasn't rendered because is outside of screen bounding rectangle
+     * @return false if object light is not going to render because is outside of screen bounding rectangle or is covered by blocks
      */
-    private boolean renderObjectPointLight(WorldObject chunk_object, WorldChunk chunk, SpriteBatch batch) {
+    private boolean renderObjectLight(WorldObject chunk_object, WorldChunk chunk, SpriteBatch batch) {
         int block_x = (int) ((chunk_object.getPosition().x + chunk_object.getWH().x / 2) - chunk.getPosition().x) / World.BLOCK_SIZE;
         int block_y = (int) ((chunk_object.getPosition().y + chunk_object.getWH().y / 2) - chunk.getPosition().y) / World.BLOCK_SIZE;
 
-        if(WorldChunk.inChunkBounds(block_x, block_y)) {
-            if(chunk.getBlocks()[block_x][block_y].getForegroundBlock().getBlockID() != world.getBlocks().AIR.getBlockID()
+        if (WorldChunk.inChunkBounds(block_x, block_y)) {
+            if (chunk.getBlocks()[block_x][block_y].getForegroundBlock().getBlockID() != world.getBlocks().AIR.getBlockID()
                     || chunk.getBlocks()[block_x][block_y].getBackgroundBlock().getBlockID() != world.getBlocks().AIR.getBlockID()) {
                 //because our object overlaps with some block we will not render any light
                 return false;
             }
         }
+        return true;
+    }
 
-        //if we are there that means we will render object light
+    /**
+     * Function used to render bounding point light for world object
+     * @param chunk_object world object
+     * @param chunk parent chunk
+     * @param batch sprite batch instance
+     */
+    private void renderObjectPointLight(WorldObject chunk_object, WorldChunk chunk, SpriteBatch batch) {
         int radius = (int) Math.max(chunk_object.getWH().x, chunk_object.getWH().y);
         radius *= 1.41f; //mul by sqrt2 (because diagonal from border is border * sqrt2)
 
@@ -236,8 +253,6 @@ public class LightEngine {
             batch.draw(light.getAlphaMask(), light_bounds.x, light_bounds.y, light_bounds.width, light_bounds.height);
             drawn_lights_count++;
         }
-
-        return true;
     }
 
     /**

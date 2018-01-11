@@ -10,6 +10,7 @@ import explorer.game.framework.Game;
 import explorer.game.screen.Screen;
 import explorer.game.screen.screens.Screens;
 import explorer.world.World;
+import explorer.world.object.WorldObject;
 
 /**
  * Created by RYZEN on 26.10.2017.
@@ -94,6 +95,7 @@ public class PlanetScreen extends Screen {
         font.draw(batch, "Draw calls: " + GLProfiler.drawCalls, -620, 210);
         font.draw(batch, "Vertices rendered: " + (int) GLProfiler.vertexCount.average, -620, 190);
         font.draw(batch, "Texture binds: " + GLProfiler.textureBindings, -620, 170);
+        font.draw(batch, "ID assigner: " + WorldObject.IDAssigner.accValue(), -620, 150);
 
 
         //batch.draw(world.getLightEngine().getLightMap().getColorBufferTexture(), 0, 0, 480, 320);

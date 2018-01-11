@@ -3,11 +3,9 @@ package explorer.world.object.objects.player;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import com.esotericsoftware.kryonet.Server;
 
 import explorer.game.framework.Game;
 import explorer.network.NetworkClasses;
@@ -17,8 +15,6 @@ import explorer.world.World;
 import explorer.world.block.Block;
 import explorer.world.chunk.WorldChunk;
 import explorer.world.object.DynamicWorldObject;
-import explorer.world.object.objects.TestDynamicObject;
-import explorer.world.object.objects.TorchObject;
 import explorer.world.physics.shapes.RectanglePhysicsShape;
 
 /**
@@ -53,7 +49,7 @@ public class Player extends DynamicWorldObject {
 
         player_renderer = new PlayerRenderer(this, w, game);
 
-        getWH().set(player_renderer.body_root.getWH());
+        getWH().set(player_renderer.getPlayerWH());
         this.physics_shape = new RectanglePhysicsShape(new Vector2(), new Vector2(getWH()), this);
 
         chunk_rect = new Rectangle();
@@ -61,6 +57,8 @@ public class Player extends DynamicWorldObject {
         recived_position = new Vector2();
         last_recived_position = new Vector2();
 
+        //is this instance is just clone don't calculate physics for it because we are just receiving position of player and physics for him is
+        //calculated on other client side which sends packets about position update
         setPhysicsEnabled(!is_clone);
 
         if(is_clone)
@@ -276,7 +274,7 @@ public class Player extends DynamicWorldObject {
             last_time_send = System.currentTimeMillis();
         }
 
-        game.getMainCamera().position.lerp(new Vector3(getPosition().x, getPosition().y + (getWH().y / 2f), 0), delta * 10f);
+        game.getMainCamera().position.lerp(new Vector3(getPosition().x + (getWH().x / 2f), getPosition().y + (getWH().y / 2f), 0), delta * 10f);
         game.getMainCamera().update();
     }
 

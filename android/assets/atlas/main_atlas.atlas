@@ -109,7 +109,7 @@ blocks/woodz
   index: -1
 
 main_atlas4.png
-size: 32,32
+size: 2048,2048
 format: RGBA8888
 filter: Linear,Linear
 repeat: none
@@ -120,8 +120,28 @@ objects/torch_texture
   orig: 18, 14
   offset: 0, 0
   index: -1
+objects/tree_earth1
+  rotate: false
+  xy: 2, 18
+  size: 1024, 1024
+  orig: 1024, 1024
+  offset: 0, 0
+  index: -1
 
 main_atlas5.png
+size: 32,32
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+objects/player/player_standing_base_texture
+  rotate: false
+  xy: 2, 2
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: -1
+
+main_atlas6.png
 size: 256,128
 format: RGBA8888
 filter: Linear,Linear
@@ -141,7 +161,7 @@ old/grass_mask_spritesheet
   offset: 0, 0
   index: -1
 
-main_atlas6.png
+main_atlas7.png
 size: 512,128
 format: RGBA8888
 filter: Linear,Linear

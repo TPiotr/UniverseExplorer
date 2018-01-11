@@ -16,6 +16,7 @@ import explorer.game.screen.screens.Screens;
 import explorer.game.screen.screens.planet.PlanetScreen;
 import explorer.network.server.GameServer;
 import explorer.network.NetworkClasses;
+import explorer.world.object.WorldObject;
 
 /**
  * Class responsible for receiving basic packets from net like new player, registering player on server etc.
@@ -160,6 +161,9 @@ public class GameClient {
                         }
                     };
                     Gdx.app.postRunnable(r);
+                } else if(o instanceof NetworkClasses.UpdateCurrentIDAssignerValuePacket) {
+                    NetworkClasses.UpdateCurrentIDAssignerValuePacket update_assigner_id = (NetworkClasses.UpdateCurrentIDAssignerValuePacket) o;
+                    WorldObject.IDAssigner.set(update_assigner_id.new_current_id);
                 }
             }
 

@@ -56,6 +56,10 @@ public class NetworkClasses {
 
     //WORLD OBJECT BOUND PACKETS
 
+    public static class UpdateCurrentIDAssignerValuePacket {
+        public int new_current_id;
+    }
+
     public static class ObjectBoundPacket {
         public int object_id;
     }
@@ -125,6 +129,7 @@ public class NetworkClasses {
         kryo.register(ObjectBoundPacket.class);
         kryo.register(ObjectRemovedPacket.class);
         kryo.register(ObjectPositionUpdatePacket.class);
+        kryo.register(UpdateCurrentIDAssignerValuePacket.class);
 
         kryo.register(PlayerPositionUpdatePacket.class);
         kryo.register(PlayerBoundPacket.class);

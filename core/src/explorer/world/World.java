@@ -3,7 +3,6 @@ package explorer.world;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -14,8 +13,11 @@ import com.badlogic.gdx.utils.TimeUtils;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
+import java.io.BufferedWriter;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -534,6 +536,9 @@ public class World extends StaticWorldObject {
 
                         //if this is the last generating runnable show game screen again
                         if(done_integer.get() == threads_num) {
+                            //save world info to file
+                            saveWorldInfoToFile();
+
                             System.out.println("Generating time: " + TimeUtils.timeSinceMillis(start_generating_time) + " milis" + "\n------------");
 
                             generating_screen.setVisible(false);
@@ -546,8 +551,14 @@ public class World extends StaticWorldObject {
                                 }
                             }
 
-                            //TODO
-                            int last_index = IDAssigner.accValue();
+                            //if we are server send info about current id assigner id
+                            int acc_index = IDAssigner.accValue();
+
+                            if(Game.IS_HOST) {
+                                NetworkClasses.UpdateCurrentIDAssignerValuePacket update_assigner_id_packet = new NetworkClasses.UpdateCurrentIDAssignerValuePacket();
+                                update_assigner_id_packet.new_current_id = acc_index;
+                                game.getGameServer().getServer().sendToAllTCP(update_assigner_id_packet);
+                            }
 
                             generating.set(false);
                         }
@@ -561,12 +572,47 @@ public class World extends StaticWorldObject {
                 System.out.println("have to generate: "+diff);
             }
         } else {
-            //if there is no need for generating world or we are client just force chunks to load themselves
+            //if there is no need for generating world or we are client just force chunks to load themselves and load world properties file
+            loadWorldInfoFromFile();
+
             for(int i = 0; i < chunks.length; i++) {
                 for(int j = 0; j < chunks[0].length; j++) {
                     chunks[i][j].move(0, 0);
                 }
             }
+        }
+    }
+
+    /**
+     * Save world properties to world properties file
+     */
+    protected void saveWorldInfoToFile() {
+        DataOutputStream writer = new DataOutputStream(Gdx.files.local(getWorldDirectory(getPlanetProperties().PLANET_SEED) + "world.properties").write(false, 128));
+        try {
+            //write value from IDAssigner to next time properly assign id's to objects
+            writer.writeInt(IDAssigner.accValue());
+
+            writer.close();
+            System.out.println("Saving world info done!");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Load world properties from world properties file
+     */
+    protected void loadWorldInfoFromFile() {
+        DataInputStream reader = new DataInputStream(Gdx.files.local(getWorldDirectory(getPlanetProperties().PLANET_SEED) + "world.properties").read(128));
+        try {
+            //write value from IDAssigner to next time properly assign id's to objects
+            int acc_id = reader.readInt();
+            IDAssigner.set(acc_id);
+
+            reader.close();
+            System.out.println("World info read successful!");
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -606,7 +652,7 @@ public class World extends StaticWorldObject {
 
     @Override
     public void tick(float delta) {
-        //first check if all 9 chunks are generating so we have to stop the game and show loading screen
+        //first check status about chunks if more than 70% procents of them are loading hide planet screen and show loading screen and wait until everything will be ready for playing a game
         if(isInitializated()) {
             int dirty_count = 0;
             for (int i = 0; i < chunks.length; i++) {
@@ -629,9 +675,9 @@ public class World extends StaticWorldObject {
             }
         }
 
-        //can't tick if world is generating
+        //can't tick if world is generating or is not initializated
         if(isGenerating() || !isInitializated()) {
-            System.out.println("Returning world tick method!");
+            System.out.println("Returning world tick method! (generating: " + isGenerating() + " initializated: " + isInitializated() + ")");
             return;
         }
 

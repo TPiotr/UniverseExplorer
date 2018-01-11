@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import explorer.game.framework.Game;
 import explorer.world.World;
@@ -20,14 +21,14 @@ public abstract class WorldObject {
      */
     public static class IDAssigner {
 
-        private static int acc_id = 0;
+        private static AtomicInteger acc_id = new AtomicInteger();
 
         /**
          * Get new unique id
          * @return new unique id
          */
         public static synchronized int next() {
-            return acc_id++;
+            return acc_id.getAndIncrement();
         }
 
         /**
@@ -35,11 +36,11 @@ public abstract class WorldObject {
          * @return
          */
         public static synchronized int accValue() {
-            return acc_id;
+            return acc_id.get();
         }
 
-        public static synchronized void set(int new_val) {
-            acc_id = new_val;
+        public static synchronized void set(final int new_val) {
+            acc_id.set(new_val);
         }
     }
 
@@ -69,6 +70,13 @@ public abstract class WorldObject {
      * Flag that determines if this objects should be saved
      */
     protected boolean saveable = true;
+
+    /**
+     * So because how this lighting engine works,
+     * engine for every world object renders point light with size of this world object (see LightEngine class)
+     * If this flag is false world object bound point light will not be rendered
+     */
+    protected boolean cast_self_light = true;
 
     /**
      * Chunk on which object is actually staying
@@ -118,6 +126,14 @@ public abstract class WorldObject {
      * Called when objects removed from world or game is closing
      */
     public abstract void dispose();
+
+    /**
+     * Flag informating world ligthing engine if for this world object should be rendered point light with bound of this objects to simulate ambient lighting
+     * @return
+     */
+    public boolean isCastingSelfLight() {
+        return cast_self_light;
+    }
 
     /**
      * If object will be saved
