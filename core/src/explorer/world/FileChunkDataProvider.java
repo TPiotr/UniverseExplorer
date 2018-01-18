@@ -2,7 +2,6 @@ package explorer.world;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
@@ -20,7 +19,6 @@ import java.util.zip.InflaterInputStream;
 
 import explorer.game.framework.Game;
 import explorer.world.chunk.WorldChunk;
-import explorer.world.object.CustomDataWorldObject;
 import explorer.world.object.WorldObject;
 
 /**
@@ -87,7 +85,7 @@ public class FileChunkDataProvider extends ChunkDataProvider {
                     return;
                 }
 
-                //try to load data from file until all data is loaded
+                //try to load data from file until loading data process is successful
                 while(!loadData(data, handle, chunk_position, world, game)) {
                     data.objects.clear();
                 }
@@ -135,7 +133,6 @@ public class FileChunkDataProvider extends ChunkDataProvider {
                 String class_name = data_input.readUTF();
 
                 Vector2 position = new Vector2(data_input.readFloat(), data_input.readFloat());
-                position.add(chunk_position);
 
                 int object_id = data_input.readInt();
 
@@ -158,11 +155,6 @@ public class FileChunkDataProvider extends ChunkDataProvider {
 
                         //set object properties to new one
                         new_object.setObjectProperties(properties);
-                    }
-
-                    //if object has custom data load it
-                    if (new_object instanceof CustomDataWorldObject) {
-                        ((CustomDataWorldObject) new_object).load(data_input);
                     }
 
                     //finally add out new object to chunk data
@@ -203,7 +195,7 @@ public class FileChunkDataProvider extends ChunkDataProvider {
         }
     }
 
-    private WorldObject createInstanceFromClass(String class_name, Vector2 position, World world, Game game) {
+    public static WorldObject createInstanceFromClass(String class_name, Vector2 position, World world, Game game) {
         try {
             Class<?> clazz = Class.forName(class_name);
 
@@ -292,8 +284,8 @@ public class FileChunkDataProvider extends ChunkDataProvider {
                         data_output.writeUTF(class_name);
 
                         //save position
-                        data_output.writeFloat(object.getPosition().x - chunk_position.x);
-                        data_output.writeFloat(object.getPosition().y - chunk_position.y);
+                        data_output.writeFloat(object.getPosition().x);
+                        data_output.writeFloat(object.getPosition().y);
 
                         //save object id
                         data_output.writeInt(object.OBJECT_ID);
@@ -316,11 +308,6 @@ public class FileChunkDataProvider extends ChunkDataProvider {
                                 data_output.writeUTF(key);
                                 data_output.writeUTF(val);
                             }
-                        }
-
-                        //if object implements CustomDataWorldObject use it
-                        if(object instanceof CustomDataWorldObject) {
-                            ((CustomDataWorldObject) object).save(data_output);
                         }
 
                         if(WorldChunk.YIELD) {

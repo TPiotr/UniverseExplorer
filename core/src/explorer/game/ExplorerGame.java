@@ -1,5 +1,7 @@
 package explorer.game;
 
+import com.badlogic.gdx.Gdx;
+
 import explorer.game.screen.screens.menu.ClientServerChooseScreen;
 import explorer.game.screen.screens.menu.MainMenuScreen;
 import explorer.game.screen.screens.planet.PlanetGUIScreen;
@@ -8,6 +10,7 @@ import explorer.game.screen.screens.universe.UniverseLoadingScreen;
 import explorer.game.screen.screens.universe.UniverseScreen;
 import explorer.game.screen.screens.planet.WorldGeneratingScreen;
 import explorer.game.screen.screens.planet.WorldLoadingScreen;
+import explorer.world.World;
 
 /**
  * Created by RYZEN on 26.10.2017.
@@ -63,5 +66,11 @@ public class ExplorerGame extends explorer.game.framework.Game {
         //game_screen.createWorld(11);
     }
 
+    @Override
+    public void tick(float delta) {
+        //update world time
+        World.TIME += Gdx.graphics.getRawDeltaTime();
 
+        super.tick(delta);
+    }
 }

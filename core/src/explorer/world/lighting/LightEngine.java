@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -14,6 +15,7 @@ import com.badlogic.gdx.utils.TimeUtils;
 
 import explorer.game.framework.Game;
 import explorer.game.Helper;
+import explorer.game.framework.utils.MathHelper;
 import explorer.world.World;
 import explorer.world.chunk.WorldChunk;
 import explorer.world.lighting.lights.Light;
@@ -25,7 +27,6 @@ import explorer.world.object.WorldObject;
  */
 
 public class LightEngine {
-
 
 
     /**
@@ -85,6 +86,11 @@ public class LightEngine {
      */
     private int frame_index;
 
+    /**
+     * Shader used to render objects that implements SolidColorWorldObjectLight
+     */
+    private ShaderProgram solid_color_mask_shader;
+
     public LightEngine(World world, Game game) {
         this.game = game;
         this.world = world;
@@ -104,8 +110,9 @@ public class LightEngine {
         //init rect for culling
         screen_bounds = new Rectangle();
 
-        //create custom lights shader
+        //load shaders
         lights_shader = Helper.createShaderProgram("shaders/basic_vertex_shader.vs", "shaders/light_shader.fs", "LIGHT SHADER");
+        solid_color_mask_shader = Helper.createShaderProgram("shaders/basic_vertex_shader.vs", "shaders/solid_light_shader.fs", "SOLID COLOR LIGHT SHADER");
     }
 
     /**
@@ -181,11 +188,47 @@ public class LightEngine {
                     WorldObject chunk_object = chunk.getObjects().get(ii);
                     if(chunk_object == null || !chunk_object.isCastingSelfLight()) continue;
 
-                    if(renderObjectLight(chunk_object, chunk, batch)) {
-                        if(chunk_object instanceof CustomWorldObjectLight) {
-                            ((CustomWorldObjectLight) chunk_object).renderCustomLight(batch);
-                        } else {
+                    if(!(chunk_object instanceof CustomWorldObjectLight) && !(chunk_object instanceof SolidColorWorldObjectLight)) {
+                        if(renderObjectLight(chunk_object, chunk, batch)) {
                             renderObjectPointLight(chunk_object, chunk, batch);
+                        }
+                    }
+                }
+            }
+        }
+
+        //render objects that implements SolidColorWorldObjectLight
+        batch.setShader(solid_color_mask_shader);
+        for(int i = 0; i < world.getWorldChunks().length; i++) {
+            for(int j = 0; j < world.getWorldChunks()[0].length; j++) {
+                WorldChunk chunk = world.getWorldChunks()[i][j];
+
+                for(int ii = 0; ii < chunk.getObjects().size; ii++) {
+                    WorldObject chunk_object = chunk.getObjects().get(ii);
+                    if(chunk_object == null || !chunk_object.isCastingSelfLight()) continue;
+
+                    if((chunk_object instanceof SolidColorWorldObjectLight) && !(chunk_object instanceof CustomWorldObjectLight)) {
+                        if(renderObjectLight(chunk_object, chunk, batch)) {
+                            renderObjectSilhouetteLight(chunk_object, batch);
+                        }
+                    }
+                }
+            }
+        }
+
+        batch.setShader(lights_shader);
+        //copy loop because custom rendering of light shape could make some texture binds etc. so firstly render objects that we know will batch and them custom ones
+        for(int i = 0; i < world.getWorldChunks().length; i++) {
+            for(int j = 0; j < world.getWorldChunks()[0].length; j++) {
+                WorldChunk chunk = world.getWorldChunks()[i][j];
+
+                for(int ii = 0; ii < chunk.getObjects().size; ii++) {
+                    WorldObject chunk_object = chunk.getObjects().get(ii);
+                    if(chunk_object == null || !chunk_object.isCastingSelfLight()) continue;
+
+                    if(chunk_object instanceof CustomWorldObjectLight && !(chunk_object instanceof SolidColorWorldObjectLight)) {
+                        if(renderObjectLight(chunk_object, chunk, batch)) {
+                            ((CustomWorldObjectLight) chunk_object).renderCustomLight(batch);
                         }
                     }
                 }
@@ -252,6 +295,23 @@ public class LightEngine {
         if(screen_bounds.overlaps(light_bounds)) {
             batch.draw(light.getAlphaMask(), light_bounds.x, light_bounds.y, light_bounds.width, light_bounds.height);
             drawn_lights_count++;
+        }
+    }
+
+    /**
+     * Render silhouette of object using proper shader (solid_color_mask_shader) used by world objects that implements SolidColorWorldObjectLight interface
+     * @param object world object
+     * @param batch sprite batch
+     */
+    private void renderObjectSilhouetteLight(WorldObject object, SpriteBatch batch) {
+        //here I know batch shader is solid_color_mask_shader
+
+        //cull out invisible for screen camera objects
+        if(MathHelper.overlaps2Rectangles(screen_bounds.x, screen_bounds.y, screen_bounds.width, screen_bounds.height,
+                object.getPosition().x, object.getPosition().y, object.getWH().x, object.getWH().y)) {
+
+            batch.setColor(((SolidColorWorldObjectLight) object).getSolidColorOfLightMask());
+            object.render(batch);
         }
     }
 

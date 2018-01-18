@@ -8,11 +8,15 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
 
+import org.apache.commons.lang3.SerializationUtils;
+
+import java.io.Serializable;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import explorer.game.framework.Game;
 import explorer.network.NetworkClasses;
+import explorer.network.NetworkHelper;
 import explorer.world.ChunkDataProvider;
 import explorer.world.World;
 import explorer.world.block.Block;
@@ -113,9 +117,10 @@ public class WorldChunk extends StaticWorldObject {
     /**
      * Add object to this chunk
      * @param object object that we want to add
+     * @param notify_network flag determining if proper packet informing other clients about new object will be send (true = send info)
      * @return if object was added
      */
-    public synchronized boolean addObject(WorldObject object) {
+    public synchronized boolean addObject(WorldObject object, boolean notify_network) {
         synchronized (objects) {
             objects.add(object);
 
@@ -130,7 +135,52 @@ public class WorldChunk extends StaticWorldObject {
                 object.OBJECT_ID = IDAssigner.next();
             }
 
+            //send him over network
+            if((Game.IS_HOST || Game.IS_CLIENT) && notify_network) {
+                NetworkClasses.NewObjectPacket new_object_packet = new NetworkClasses.NewObjectPacket();
+                new_object_packet.OBJECT_ID = object.OBJECT_ID;
+                new_object_packet.new_object_class_name = object.getClass().getName();
+
+                new_object_packet.x = object.getPosition().x;
+                new_object_packet.y = object.getPosition().y;
+
+                //serialize properties hashmap
+                if(object.getObjectProperties() != null) {
+                    byte[] properties_bytes = SerializationUtils.serialize(object.getObjectProperties());
+                    new_object_packet.properties_bytes = properties_bytes;
+                }
+
+                NetworkHelper.send(new_object_packet);
+            }
+
             return true;
+        }
+    }
+
+    /**
+     * Remove object from this chunk
+     * @param object object we want to remove
+     * @param notify_network flag determining if proper packet informing other clients about removed object will be send (true = send info)
+     */
+    public synchronized void removeObject(WorldObject object, boolean notify_network) {
+        synchronized (objects) {
+            //firstly call dispose() object method
+            object.dispose();
+
+            //remove object from physics engine and chunk objects list
+            objects.removeValue(object, true);
+            world.getPhysicsEngine().removeWorldObject(object);
+
+            //amount of objects changed so we have to save chunk
+            need_save.set(true);
+
+            //if game is in multiplayer mode send packets informing about it to other players
+            if((Game.IS_HOST || Game.IS_CLIENT) && notify_network) {
+                NetworkClasses.ObjectRemovedPacket removed_packet = new NetworkClasses.ObjectRemovedPacket();
+                removed_packet.removed_object_id = object.OBJECT_ID;
+
+                NetworkHelper.send(removed_packet);
+            }
         }
     }
 

@@ -30,8 +30,6 @@ public class PlanetScreen extends Screen {
 
         NAME = Screens.PLANET_SCREEN_NAME;
 
-        world = new World(game, 122);
-
         font = AssetsManager.font;
 
         GLProfiler.enable();
@@ -43,7 +41,8 @@ public class PlanetScreen extends Screen {
             public void run() {
                 System.out.println("Creating world: " + planet_seed);
 
-                world.dispose();
+                if(world != null)
+                    world.dispose();
 
                 world = new World(game, planet_seed);
                 world.init();
@@ -59,7 +58,8 @@ public class PlanetScreen extends Screen {
     public void screenSizeChanged(int new_w, int new_h) {
         super.screenSizeChanged(new_w, new_h);
 
-        world.screenSizeChanged(new_w, new_h);
+        if(world != null)
+            world.screenSizeChanged(new_w, new_h);
     }
 
     @Override
@@ -67,7 +67,8 @@ public class PlanetScreen extends Screen {
         //if(world.isGenerating())
         //    setVisible(false);
 
-        world.tick(delta);
+        if(world != null)
+            world.tick(delta);
     }
 
     @Override
@@ -96,7 +97,7 @@ public class PlanetScreen extends Screen {
         font.draw(batch, "Vertices rendered: " + (int) GLProfiler.vertexCount.average, -620, 190);
         font.draw(batch, "Texture binds: " + GLProfiler.textureBindings, -620, 170);
         font.draw(batch, "ID assigner: " + WorldObject.IDAssigner.accValue(), -620, 150);
-
+        font.draw(batch, "Time: " + World.TIME, -620, 130);
 
         //batch.draw(world.getLightEngine().getLightMap().getColorBufferTexture(), 0, 0, 480, 320);
 
@@ -112,7 +113,8 @@ public class PlanetScreen extends Screen {
 
     @Override
     public void dispose() {
-        world.dispose();
+        if(world != null)
+            world.dispose();
     }
 
     /**

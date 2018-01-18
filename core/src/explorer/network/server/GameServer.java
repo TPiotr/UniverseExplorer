@@ -53,14 +53,18 @@ public class GameServer {
      */
     public static final int SERVER_CONNECTION_ID = -1;
 
+    private VotingHandler voting_handler;
+
     public void start(GameServerCreatedCallback callback, final PlanetScreen planet_screen, final Game game) {
         server = new Server(65536 * 5, 65536 * 5);
         server.start();
 
+        voting_handler = new VotingHandler(game);
+
         Log.INFO();
 
         //register all classes that are send over network
-        NetworkClasses.register(server.getKryo());
+        NetworkClasses.register(server.getKryo(), game);
 
         try {
             server.bind(TCP_PORT, UDP_PORT);
@@ -129,12 +133,9 @@ public class GameServer {
                 else if(o instanceof NetworkClasses.GoToPlanetRequestPacket) {
                     //so at this point send to client information about new voting about going to some planet
                     NetworkClasses.GoToPlanetRequestPacket goto_planet_request = (NetworkClasses.GoToPlanetRequestPacket) o;
-
                     System.out.println("Player: " + getPlayerInstanceByConnection(connection).username + " (" + goto_planet_request.connection_id + "), want to go planet with index: " + goto_planet_request.planet_index);
 
-                    NetworkClasses.VoteForGoingToPlanetPacket voting_packet = new NetworkClasses.VoteForGoingToPlanetPacket();
-                    voting_packet.planet_index = goto_planet_request.planet_index;
-                    server.sendToAllTCP(voting_packet);
+                    voting_handler.process(o);
                 }
             }
 

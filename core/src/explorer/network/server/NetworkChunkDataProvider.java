@@ -1,6 +1,5 @@
 package explorer.network.server;
 
-import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.esotericsoftware.kryonet.Connection;
@@ -24,7 +23,6 @@ import explorer.network.NetworkClasses;
 import explorer.world.ChunkDataProvider;
 import explorer.world.World;
 import explorer.world.chunk.WorldChunk;
-import explorer.world.object.CustomDataWorldObject;
 import explorer.world.object.WorldObject;
 
 /**
@@ -219,7 +217,6 @@ public class NetworkChunkDataProvider extends ChunkDataProvider {
                 String class_name = data_input.readUTF();
 
                 Vector2 position = new Vector2(data_input.readFloat(), data_input.readFloat());
-                position.add(chunk_position);
 
                 int object_id = data_input.readInt();
 
@@ -241,11 +238,6 @@ public class NetworkChunkDataProvider extends ChunkDataProvider {
 
                         //set object properties to new one
                         new_object.setObjectProperties(properties);
-                    }
-
-                    //if object has custom data load it
-                    if (new_object instanceof CustomDataWorldObject) {
-                        ((CustomDataWorldObject) new_object).load(data_input);
                     }
 
                     //finally add out new object to chunk data

@@ -99,6 +99,9 @@ project(":core") {
 
         compile "com.esotericsoftware:kryonet:2.22.0-RC1"
 
+        //utils library used in serialization/deserialization of objects send over network
+        compile 'org.apache.commons:commons-lang3:3.6'
+
     }
 }
 

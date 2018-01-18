@@ -17,6 +17,7 @@ import explorer.game.screen.Screen;
 import explorer.game.screen.gui.dialog.DialogHandler;
 import explorer.game.screen.screens.Screens;
 import explorer.game.screen.screens.planet.PlanetScreen;
+import explorer.network.NetworkHelper;
 import explorer.network.client.GameClient;
 import explorer.network.server.GameServer;
 
@@ -95,6 +96,8 @@ public abstract class Game extends ApplicationAdapter {
 	private void initNetwork() {
 		game_client = new GameClient(this);
 		game_server = new GameServer();
+
+		NetworkHelper.init(this);
 	}
 
 	/**
@@ -106,23 +109,51 @@ public abstract class Game extends ApplicationAdapter {
 	 * Call this to connect to server with given ip
 	 * @param ip ip address of server to which we want to connect
 	 */
-	public void connectToServer(InetAddress ip, GameClient.ConnectedToServerCallback connected_callback) {
-		game_client.connect(ip, connected_callback);
+	public void connectToServer(InetAddress ip, final GameClient.ConnectedToServerCallback connected_callback) {
+		GameClient.ConnectedToServerCallback callback = new GameClient.ConnectedToServerCallback() {
+			@Override
+			public void connected() {
+				IS_HOST = false;
+				IS_CONNECTED = false;
+				IS_CLIENT = true;
 
-		IS_HOST = false;
-		IS_CONNECTED = false;
-		IS_CLIENT = true;
+				if(connected_callback != null)
+					connected_callback.connected();
+			}
+
+			@Override
+			public void failed() {
+				if(connected_callback != null)
+					connected_callback.failed();
+			}
+		};
+
+		game_client.connect(ip, callback);
 	}
 
 	/**
 	 * Host local server
 	 */
-	public void hostServer(GameServer.GameServerCreatedCallback created_callback) {
-		game_server.start(created_callback, getScreen(Screens.PLANET_SCREEN_NAME, PlanetScreen.class), this);
+	public void hostServer(final GameServer.GameServerCreatedCallback created_callback) {
+		GameServer.GameServerCreatedCallback callback = new GameServer.GameServerCreatedCallback() {
+			@Override
+			public void created() {
+				IS_HOST = true;
+				IS_CONNECTED = true;
+				IS_CLIENT = false;
 
-		IS_HOST = true;
-		IS_CONNECTED = true;
-		IS_CLIENT = false;
+				if(created_callback != null)
+					created_callback.created();
+			}
+
+			@Override
+			public void failed() {
+				if(created_callback != null)
+					created_callback.failed();
+			}
+		};
+
+		game_server.start(callback, getScreen(Screens.PLANET_SCREEN_NAME, PlanetScreen.class), this);
 	}
 
 	@Override
@@ -305,5 +336,13 @@ public abstract class Game extends ApplicationAdapter {
 	 */
 	public DialogHandler getDialogHandler() {
 		return dialog_handler;
+	}
+
+	/**
+	 * Getter for sprite batch instance
+	 * @return sprite batch instance
+	 */
+	public SpriteBatch getSpriteBatch() {
+		return batch;
 	}
 }

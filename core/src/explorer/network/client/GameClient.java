@@ -50,6 +50,11 @@ public class GameClient {
     private Game game;
 
     /**
+     * Flag determines if Client instance start() method was called
+     */
+    private volatile boolean started;
+
+    /**
      * Instantiate new GameClient object
      * @param game game instance
      */
@@ -58,18 +63,22 @@ public class GameClient {
 
         //write buffer, read buffer sizes
         client = new Client(65536, 65536);
-        client.start();
 
         Log.INFO();
 
         //register all classes that are send over network
-        NetworkClasses.register(client.getKryo());
+        NetworkClasses.register(client.getKryo(), game);
 
         setupClientStuff();
     }
 
     public void connect(InetAddress address, final ConnectedToServerCallback connected_callback) {
         try {
+            if(!started) {
+                client.start();
+                started = true;
+            }
+
             client.connect(10000, address, GameServer.TCP_PORT, GameServer.UDP_PORT);
 
             Game.IS_CONNECTED = true;
@@ -78,6 +87,7 @@ public class GameClient {
             if(connected_callback != null)
                 connected_callback.connected();
 
+            sendRegistrationPacket(game.getUsername());
         } catch (IOException e) {
             e.printStackTrace();
 
@@ -86,10 +96,6 @@ public class GameClient {
                 connected_callback.failed();
             }
         }
-
-        //if client connected send info about him to the server as registration packet
-        if(Game.IS_CONNECTED)
-            sendRegistrationPacket("Test Username!");
     }
 
     /**
@@ -101,6 +107,7 @@ public class GameClient {
         registration_packet.username = username;
 
         client.sendTCP(registration_packet);
+        System.out.println("(Network Client) Sending registration packet!");
     }
 
     /**
@@ -150,12 +157,18 @@ public class GameClient {
                             game.getDialogHandler().showDialog(new YesNoDialog("Go to planet: " + vote_packet.planet_index + " voting", game.getGUIViewport(), game).setListener(new YesNoDialog.YesNoDialogListener() {
                                 @Override
                                 public void yesOption() {
-
+                                    NetworkClasses.VotingVotePacket vote_send_packet = new NetworkClasses.VotingVotePacket();
+                                    vote_send_packet.voting_index = vote_packet.voting_index;
+                                    vote_send_packet.vote = 1;
+                                    getClient().sendTCP(vote_send_packet);
                                 }
 
                                 @Override
                                 public void noOption() {
-
+                                    NetworkClasses.VotingVotePacket vote_send_packet = new NetworkClasses.VotingVotePacket();
+                                    vote_send_packet.voting_index = vote_packet.voting_index;
+                                    vote_send_packet.vote = -1;
+                                    getClient().sendTCP(vote_send_packet);
                                 }
                             }));
                         }

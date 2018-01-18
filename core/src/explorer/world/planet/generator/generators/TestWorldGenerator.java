@@ -1,7 +1,6 @@
 package explorer.world.planet.generator.generators;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 
 import java.io.DataOutputStream;
@@ -11,10 +10,8 @@ import java.util.zip.DeflaterOutputStream;
 import explorer.game.framework.Game;
 import explorer.world.ChunkDataProvider;
 import explorer.world.World;
-import explorer.world.object.CustomDataWorldObject;
 import explorer.world.object.WorldObject;
 import explorer.world.object.objects.TestDynamicObject;
-import explorer.world.object.objects.TestObject;
 import explorer.world.object.objects.TreeObject;
 import explorer.world.planet.PlanetProperties;
 import explorer.world.planet.generator.HeightsGenerator;
@@ -160,8 +157,8 @@ public class TestWorldGenerator extends WorldGenerator {
                 data_output.writeUTF(class_name);
 
                 //save position
-                data_output.writeFloat(object.getPosition().x - chunk_position.x);
-                data_output.writeFloat(object.getPosition().y - chunk_position.y);
+                data_output.writeFloat(object.getPosition().x);
+                data_output.writeFloat(object.getPosition().y);
 
                 //save object id
                 data_output.writeInt(object.OBJECT_ID);
@@ -184,11 +181,6 @@ public class TestWorldGenerator extends WorldGenerator {
                         data_output.writeUTF(key);
                         data_output.writeUTF(val);
                     }
-                }
-
-                //if object implements CustomDataWorldObject use it
-                if(object instanceof CustomDataWorldObject) {
-                    ((CustomDataWorldObject) object).save(data_output);
                 }
             }
 

@@ -1,6 +1,9 @@
 package explorer.game;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
@@ -55,5 +58,40 @@ public class Helper {
         return out;
     }
 
+
+    /**
+     * Creates new texture with every color as white if in source was in that place was some color, so it generates some kind of silhouette
+     * @param source
+     * @return
+     */
+    public static Texture createWhiteTexture(TextureRegion source) {
+        source.getTexture().getTextureData().prepare();
+        while(!source.getTexture().getTextureData().isPrepared());
+
+        Pixmap pixmap = source.getTexture().getTextureData().consumePixmap();
+
+        Pixmap new_pixmap = new Pixmap(source.getRegionWidth(), source.getRegionHeight(), pixmap.getFormat());
+        Color c = new Color();
+
+        int white = new Color(1,1,1,1).toIntBits();
+        int none = new Color(0, 0, 0, 0).toIntBits();
+
+        for(int i = 0; i < source.getRegionWidth(); i++) {
+            for(int j = 0; j < source.getRegionHeight(); j++) {
+                int x = i + source.getRegionX();
+                int y = j + source.getRegionY();
+
+                c.set(pixmap.getPixel(x, y));
+                new_pixmap.drawPixel(x, y, (c.a > .1f) ? white : none);
+            }
+        }
+
+        pixmap.dispose();
+
+        Texture out = new Texture(new_pixmap);
+        new_pixmap.dispose();
+
+        return out;
+    }
 
 }

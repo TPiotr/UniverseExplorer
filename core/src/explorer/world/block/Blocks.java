@@ -55,10 +55,15 @@ public class Blocks {
      */
     public synchronized Block getBlock(int ID) {
         Block out = all_blocks_instances.get(ID);
-        return (out == null) ? AIR : out;
+        if(out == null) {
+            out = AIR;
+            System.err.println("(Blocks) There is no block with ID: " + ID);
+        }
+
+        return out;
     }
 
-    public ConcurrentHashMap<Integer, Block> getAllBlocksHashmap() {
+    public ConcurrentHashMap<Integer, Block> getAllBlocksMap() {
         return all_blocks_instances;
     }
 }

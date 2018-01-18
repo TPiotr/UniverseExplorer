@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 
 import explorer.game.framework.AssetsManager;
@@ -25,9 +26,11 @@ public class TestDynamicObject extends DynamicWorldObject implements CanReceiveP
 
     private static TextureRegion texture;
 
+    /* no.1
     //interpolating vars
     private Vector2 recived_position, last_recived_position, predicted_server_position;
     private long recive_time, probably_next_recive_time;
+    */
 
     public TestDynamicObject(Vector2 position, World world, Game game) {
         super(position, world, game);
@@ -40,13 +43,16 @@ public class TestDynamicObject extends DynamicWorldObject implements CanReceiveP
         physics_shape = new RectanglePhysicsShape(new Vector2(0, 0), getWH(), this);
 
         //init interpolating vars
+
+        /* no.1
         recived_position = new Vector2();
         last_recived_position = new Vector2();
-        predicted_server_position = new Vector2();
+        predicted_server_position = new Vector2(); */
     }
 
     @Override
     public void receivedPacket(Object packet) {
+        /*no.1 attempt of synchronization
         if(packet instanceof NetworkClasses.ObjectPositionUpdatePacket) {
             NetworkClasses.ObjectPositionUpdatePacket pos_update = (NetworkClasses.ObjectPositionUpdatePacket) packet;
 
@@ -60,7 +66,7 @@ public class TestDynamicObject extends DynamicWorldObject implements CanReceiveP
 
             recive_time = System.currentTimeMillis();
             probably_next_recive_time = recive_time + time_step; //+ ((Game.IS_CLIENT) ? game.getGameClient().getClient().getReturnTripTime() : 0); //test it first because on local ping is near 0
-        }
+        } */
     }
 
     //pos update stuff
@@ -71,10 +77,11 @@ public class TestDynamicObject extends DynamicWorldObject implements CanReceiveP
     @Override
     public void tick(float delta) {
         //normal logic
-        if (getVelocity().y == 0) {
+        if (getVelocity().y == 0 && MathUtils.cos(World.TIME) < .1f) {
             getVelocity().y = 500f;
         }
 
+        /*no.1 attempt to synchronize this shieet
         //network stuff
         if(World.SIMULATE_LOGIC) {
             //position update packet
@@ -101,7 +108,7 @@ public class TestDynamicObject extends DynamicWorldObject implements CanReceiveP
             if(!getPosition().epsilonEquals(predicted_server_position, getWH().x * 2f)) {
                 getPosition().set(predicted_server_position);
             }
-        }
+        } */
     }
 
     @Override

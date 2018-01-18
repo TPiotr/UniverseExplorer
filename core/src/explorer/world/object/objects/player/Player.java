@@ -3,18 +3,23 @@ package explorer.world.object.objects.player;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 
 import explorer.game.framework.Game;
+import explorer.game.framework.utils.MathHelper;
 import explorer.network.NetworkClasses;
+import explorer.network.NetworkHelper;
 import explorer.network.client.ServerPlayer;
 import explorer.network.server.GameServer;
 import explorer.world.World;
 import explorer.world.block.Block;
 import explorer.world.chunk.WorldChunk;
 import explorer.world.object.DynamicWorldObject;
+import explorer.world.object.WorldObject;
+import explorer.world.object.objects.TorchObject;
 import explorer.world.physics.shapes.RectanglePhysicsShape;
 
 /**
@@ -107,9 +112,6 @@ public class Player extends DynamicWorldObject {
                     getPosition().set(touch);
                     getVelocity().set(0, 0);
                 } else if(button == 1) {
-                    //TorchObject new_object = new TorchObject(new Vector2((int) (touch.x / World.BLOCK_SIZE) * World.BLOCK_SIZE, (int) (touch.y / World.BLOCK_SIZE) * World.BLOCK_SIZE), world, game);
-                    //world.addObject(new_object);
-
                     if(selected_block == null)
                         return false;
 
@@ -125,22 +127,21 @@ public class Player extends DynamicWorldObject {
 
                                 //we have to notify network if game is using network(game checks it itself)
                                 chunk.setBlock(local_x, local_y, selected_block.getBlockID(), background_placing, true);
+
+                                /*for(int k = 0; k < chunk.getObjects().size; k++) {
+                                    WorldObject o = chunk.getObjects().get(k);
+                                    if(MathHelper.overlaps2Rectangles(o.getPosition().x, o.getPosition().y, o.getWH().x, o.getWH().y, touch.x, touch.y, 1, 1)) {
+                                        world.removeObject(o, true);
+                                    }
+                                }*/
+
                             }
                         }
                     }
 
                 } else if(button == 2) {
-                    for(int i = 0; i < world.getWorldChunks().length; i++) {
-                        for(int j = 0; j < world.getWorldChunks()[0].length; j++) {
-                            WorldChunk chunk = world.getWorldChunks()[i][j];
-                            Rectangle chunk_rect = new Rectangle(chunk.getPosition().x, chunk.getPosition().y, chunk.getWH().x, chunk.getWH().y);
-
-                            //so we have proper chunk now just transform global cords to local blocks coords
-                            if(chunk_rect.contains(touch)) {
-                                world.getLightEngine().getGroundLineRenderer().removeChunkBoundLights(chunk);
-                            }
-                        }
-                    }
+                    TorchObject torch_object = new TorchObject(touch, world, game);
+                    world.addObject(torch_object, true);
                 }
 
                 return false;
@@ -265,11 +266,7 @@ public class Player extends DynamicWorldObject {
             position_update_packet.x = getPosition().x;
             position_update_packet.y = getPosition().y;
 
-            if(Game.IS_HOST) {
-                game.getGameServer().getServer().sendToAllUDP(position_update_packet);
-            } else {
-                game.getGameClient().getClient().sendUDP(position_update_packet);
-            }
+            NetworkHelper.send(position_update_packet);
 
             last_time_send = System.currentTimeMillis();
         }

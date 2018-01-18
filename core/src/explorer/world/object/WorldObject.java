@@ -3,10 +3,14 @@ package explorer.world.object;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 
+import java.io.Serializable;
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import explorer.game.framework.Game;
+import explorer.network.NetworkClasses;
+import explorer.network.NetworkHelper;
 import explorer.world.World;
 import explorer.world.chunk.WorldChunk;
 
@@ -23,12 +27,29 @@ public abstract class WorldObject {
 
         private static AtomicInteger acc_id = new AtomicInteger();
 
+        private static Game game;
+        private static World world;
+
+        public static void init(Game g, World w) {
+            acc_id.set(0);
+
+            game = g;
+            world = w;
+        }
+
         /**
          * Get new unique id
          * @return new unique id
          */
         public static synchronized int next() {
-            return acc_id.getAndIncrement();
+            int value = acc_id.incrementAndGet();
+
+            //inform other players about new id assigner value to keep it in sync
+            NetworkClasses.UpdateCurrentIDAssignerValuePacket id_assigner_packet = new NetworkClasses.UpdateCurrentIDAssignerValuePacket();
+            id_assigner_packet.new_current_id = value;
+            NetworkHelper.send(id_assigner_packet);
+
+            return value;
         }
 
         /**

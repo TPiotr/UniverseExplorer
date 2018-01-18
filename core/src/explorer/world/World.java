@@ -13,11 +13,14 @@ import com.badlogic.gdx.utils.TimeUtils;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 
+import org.apache.commons.lang3.SerializationUtils;
+
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -39,6 +42,7 @@ import explorer.world.chunk.WorldChunk;
 import explorer.world.lighting.LightEngine;
 import explorer.world.object.StaticWorldObject;
 import explorer.world.object.WorldObject;
+import explorer.world.object.objects.TreeObject;
 import explorer.world.object.objects.player.Player;
 import explorer.world.physics.PhysicsEngine;
 import explorer.world.planet.PlanetProperties;
@@ -104,6 +108,17 @@ public class World extends StaticWorldObject {
      * Flat that determines if world is initializated
      */
     private AtomicBoolean initializated;
+
+    /**
+     * Float that is same on every client so very usefull variable to synchronize objects
+     * in fact time in seconds passed since started this world
+     */
+    public static float TIME;
+
+    /**
+     * Last TIME variable value when update packet was send to players
+     */
+    private int last_time_send;
 
     /**
      * All blocks
@@ -184,6 +199,9 @@ public class World extends StaticWorldObject {
         combine_shader.setUniformf("ambient_color", getLightEngine().getAmbientColor());
         combine_shader.end();
 
+        //init IDAssigner
+        IDAssigner.init(game, this);
+
         //load blocks
         blocks = new Blocks(this, game);
 
@@ -246,15 +264,80 @@ public class World extends StaticWorldObject {
                                 }
                             }
                         }
-                    }
+                    } else if(o instanceof NetworkClasses.ObjectRemovedPacket) {
+                        NetworkClasses.ObjectRemovedPacket removed_object_packet = (NetworkClasses.ObjectRemovedPacket) o;
 
-                    else if(o instanceof NetworkClasses.ObjectBoundPacket) {
-                        //handle and send packets to all remaining players
+                        //send it to other players
+                        game.getGameServer().getServer().sendToAllExceptUDP(connection.getID(), o);
+
+                        //parse it like client
+                        for(int i = 0; i < world.getWorldChunks().length; i++) {
+                            for (int j = 0; j < world.getWorldChunks()[0].length; j++) {
+                                WorldChunk chunk = world.getWorldChunks()[i][j];
+
+                                //search for removed object in currently loaded world
+                                for(int k = 0; k < chunk.getObjects().size; k++) {
+                                    //if true we found our object that was removed so just remove it
+                                    WorldObject object = chunk.getObjects().get(k);
+                                    if(object != null && object.OBJECT_ID == removed_object_packet.removed_object_id) {
+                                        world.removeObject(object, false);
+                                    }
+                                }
+                            }
+                        }
+                    } else if(o instanceof NetworkClasses.NewObjectPacket) {
+                        final NetworkClasses.NewObjectPacket new_object_packet = (NetworkClasses.NewObjectPacket) o;
+
+                        int object_id = new_object_packet.OBJECT_ID;
+
+                        //IDAssigner.accValue() != object_id not IDAssigner.accValue() + 1 != object_id because when we create new object on client/server side firstly TCP packet from IDassigner which informs
+                        //server and then other players about new proper value of IDAssigner packet is send and then packet about new WorldObject so because TCP order is not randomly like in UDP
+                        //we are sure that in this place in code current IDAssigner value should be same as new object ID
+
+                        if(IDAssigner.accValue() != object_id) {
+                            //if we are here that means new object has wrong ID
+                            System.out.println("(Network Server) New object with wrong id! (has: " + object_id + " should have: " + IDAssigner.accValue());
+
+                            //send packet to this client to update this object id on client side to proper one
+                            NetworkClasses.UpdateObjectIDPacket update_object_id_packet = new NetworkClasses.UpdateObjectIDPacket();
+                            update_object_id_packet.acc_id = object_id;
+                            update_object_id_packet.new_id = IDAssigner.accValue();
+                            game.getGameServer().getServer().sendToTCP(connection.getID(), update_object_id_packet);
+                        }
+
+                        //send this packet to all other players
                         game.getGameServer().getServer().sendToAllExceptTCP(connection.getID(), o);
 
+                        //try to deserialize properties hashmap
+                        final HashMap<String, String> object_properties = (new_object_packet.properties_bytes != null) ? (HashMap<String, String>) SerializationUtils.deserialize(new_object_packet.properties_bytes) : null;
+
+                        Runnable create_object_runnable = new Runnable() {
+                            @Override
+                            public void run() {
+                                WorldObject instance = FileChunkDataProvider.createInstanceFromClass(new_object_packet.new_object_class_name, new Vector2(new_object_packet.x, new_object_packet.y), World.this, game);
+                                if(instance != null) {
+                                    instance.OBJECT_ID = new_object_packet.OBJECT_ID;
+
+                                    if (object_properties != null) {
+                                        instance.setObjectProperties(object_properties);
+                                    }
+
+                                    World.this.addObject(instance, false);
+                                }
+                            }
+                        };
+                        Gdx.app.postRunnable(create_object_runnable);
+                    } else if(o instanceof NetworkClasses.ObjectBoundPacket) {
                         NetworkClasses.ObjectBoundPacket packet = (NetworkClasses.ObjectBoundPacket) o;
 
+                        //handle and send packets to all remaining players
+                        if(packet.tcp)
+                            game.getGameServer().getServer().sendToAllExceptTCP(connection.getID(), o);
+                        else
+                            game.getGameServer().getServer().sendToAllExceptUDP(connection.getID(), o);
+
                         //find object to which this is addressing
+                        search_object_loop:
                         for(int i = 0; i < chunks.length; i++) {
                             for(int j = 0; j < chunks[0].length; j++) {
                                 for(int k = 0; k < chunks[i][j].getObjects().size; k++) {
@@ -266,9 +349,31 @@ public class World extends StaticWorldObject {
                                     if(object instanceof CanReceivePacketWorldObject && object.OBJECT_ID == packet.object_id) {
                                         //System.out.println("Server o bound packet: " + o.getClass().getSimpleName() + " o_id: " + packet.object_id);
                                         ((CanReceivePacketWorldObject) object).receivedPacket(o);
+                                        break search_object_loop;
                                     }
                                 }
                             }
+                        }
+                    } else if(o instanceof NetworkClasses.UpdateCurrentIDAssignerValuePacket) {
+                        NetworkClasses.UpdateCurrentIDAssignerValuePacket update_value_packet = (NetworkClasses.UpdateCurrentIDAssignerValuePacket) o;
+
+                        int current_value = IDAssigner.accValue();
+
+                        //decide here if new id is proper if not send to player which sended this information about acc proper id
+                        if(update_value_packet.new_current_id - 1 == current_value) {
+                            //proper value
+
+                            //so update here current val and send current value to all other players
+                            IDAssigner.set(update_value_packet.new_current_id);
+                            game.getGameServer().getServer().sendToAllExceptTCP(connection.getID(), o);
+                        } else {
+                            //wrong value
+
+                            //send to sender of this packet proper current value
+                            NetworkClasses.UpdateCurrentIDAssignerValuePacket update_index_packet = new NetworkClasses.UpdateCurrentIDAssignerValuePacket();
+                            update_index_packet.new_current_id = IDAssigner.accValue();
+                            game.getGameServer().getServer().sendToTCP(connection.getID(), update_index_packet);
+                            System.err.println("(Network server) Player " + connection.getID() + " had wrong IDAssigner value (" + update_value_packet.new_current_id + ") proper is: " + current_value);
                         }
                     }
 
@@ -301,7 +406,6 @@ public class World extends StaticWorldObject {
                                     Thread.sleep(1000);
                                 } catch (InterruptedException e) {
                                     //ignore
-                                    //e.printStackTrace();
                                 }
 
                                 NetworkClasses.GoToPlanetPacket goto_planet_request = new NetworkClasses.GoToPlanetPacket();
@@ -312,17 +416,26 @@ public class World extends StaticWorldObject {
                         };
                         new Thread(r).start();
 
-                    } else if(o instanceof NetworkClasses.PlayerBoundPacket) {
-                        //send this packet to all other clients
-                        game.getGameServer().getServer().sendToAllExceptTCP(connection.getID(), o);
+                        //send world time update packet to have this variable in sync
+                        NetworkClasses.UpdateGameTimePacket update_time_packet = new NetworkClasses.UpdateGameTimePacket();
+                        update_time_packet.new_time = World.TIME;
+                        game.getGameServer().getServer().sendToTCP(connection.getID(), update_time_packet);
 
+                    } else if(o instanceof NetworkClasses.PlayerBoundPacket) {
                         NetworkClasses.PlayerBoundPacket packet = (NetworkClasses.PlayerBoundPacket) o;
+
+                        //send this packet to all other clients
+                        if(packet.tcp)
+                            game.getGameServer().getServer().sendToAllExceptTCP(connection.getID(), o);
+                        else
+                            game.getGameServer().getServer().sendToAllExceptUDP(connection.getID(), o);
 
                         for(int i = 0; i < server_players.size; i++) {
                             Player player_clone = server_players.get(i);
 
                             if(player_clone.getRepresentingPlayer().connection_id == packet.player_connection_id) {
                                 player_clone.processPacket(o);
+                                break;
                             }
                         }
                     }
@@ -354,6 +467,7 @@ public class World extends StaticWorldObject {
                         NetworkClasses.BlockChangedPacket info = (NetworkClasses.BlockChangedPacket) o;
 
                         //handle packet
+                        search_block_loop:
                         for(int i = 0; i < world.getWorldChunks().length; i++) {
                             for(int j = 0; j < world.getWorldChunks()[0].length; j++) {
                                 WorldChunk chunk = world.getWorldChunks()[i][j];
@@ -362,15 +476,58 @@ public class World extends StaticWorldObject {
                                 if(chunk.getGlobalChunkXIndex() == info.chunk_x && chunk.getGlobalChunkYIndex() == info.chunk_y) {
                                     //don't notify network because we are there because of some other notify from network
                                     chunk.setBlock(info.block_x, info.block_y, info.new_block_id, info.background, false);
+                                    break search_block_loop;
                                 }
                             }
                         }
-                    }
+                    } else if(o instanceof NetworkClasses.ObjectRemovedPacket) {
+                        NetworkClasses.ObjectRemovedPacket removed_object_packet = (NetworkClasses.ObjectRemovedPacket) o;
 
-                    else if(o instanceof NetworkClasses.ObjectBoundPacket) {
+                        remove_search_loop:
+                        for(int i = 0; i < world.getWorldChunks().length; i++) {
+                            for (int j = 0; j < world.getWorldChunks()[0].length; j++) {
+                                WorldChunk chunk = world.getWorldChunks()[i][j];
+
+                                //search for removed object in currently loaded world
+                                for(int k = 0; k < chunk.getObjects().size; k++) {
+                                    //if true we found our object that was removed so just remove it
+                                    WorldObject object = chunk.getObjects().get(k);
+                                    if(object != null && object.OBJECT_ID == removed_object_packet.removed_object_id) {
+                                        world.removeObject(object, false);
+                                        break remove_search_loop;
+                                    }
+                                }
+                            }
+                        }
+
+                    } else if(o instanceof NetworkClasses.NewObjectPacket) {
+                        final NetworkClasses.NewObjectPacket new_object_packet = (NetworkClasses.NewObjectPacket) o;
+
+                        //try to deserialize properties hashmap
+                        final HashMap<String, String> object_properties = (new_object_packet.properties_bytes != null) ? (HashMap<String, String>) SerializationUtils.deserialize(new_object_packet.properties_bytes) : null;
+                        System.out.println("New object packet! ( ID: " + new_object_packet.OBJECT_ID+ ")");
+                        Runnable instantine_runnable = new Runnable() {
+                            @Override
+                            public void run() {
+                                WorldObject instance = FileChunkDataProvider.createInstanceFromClass(new_object_packet.new_object_class_name, new Vector2(new_object_packet.x, new_object_packet.y), World.this, game);
+                                if(instance != null) {
+                                    instance.OBJECT_ID = new_object_packet.OBJECT_ID;
+
+                                    if (object_properties != null) {
+                                        instance.setObjectProperties(object_properties);
+                                    }
+
+                                    boolean added =  World.this.addObject(instance, false);
+                                    System.out.println("placing object! " + added + " player pos: " + world.getPlayer().getPosition() + " this pos: " + instance.getPosition());
+                                }
+                            }
+                        };
+                        Gdx.app.postRunnable(instantine_runnable);
+                    } else if(o instanceof NetworkClasses.ObjectBoundPacket) {
                         NetworkClasses.ObjectBoundPacket packet = (NetworkClasses.ObjectBoundPacket) o;
 
                         //find object to which this is addressing
+                        search_loop:
                         for(int i = 0; i < chunks.length; i++) {
                             for(int j = 0; j < chunks[0].length; j++) {
                                 for(int k = 0; k < chunks[i][j].getObjects().size; k++) {
@@ -382,10 +539,34 @@ public class World extends StaticWorldObject {
                                     if(object instanceof CanReceivePacketWorldObject && object.OBJECT_ID == packet.object_id) {
                                         //System.out.println("Client o bound packet: " + o.getClass().getSimpleName() + " o_id: " + packet.object_id);
                                         ((CanReceivePacketWorldObject) object).receivedPacket(o);
+                                        break search_loop;
                                     }
                                 }
                             }
                         }
+                    } else if(o instanceof NetworkClasses.UpdateObjectIDPacket) {
+                        //packet that updates some object ID to a new one because was unproperly assigned
+                        NetworkClasses.UpdateObjectIDPacket update_id_packet = (NetworkClasses.UpdateObjectIDPacket) o;
+
+                        search_loop:
+                        for(int i = 0; i < chunks.length; i++) {
+                            for (int j = 0; j < chunks[0].length; j++) {
+                                for (int k = 0; k < chunks[i][j].getObjects().size; k++) {
+                                    WorldObject object = chunks[i][j].getObjects().get(k);
+
+                                    if (object == null)
+                                        continue;
+
+                                    if(object.OBJECT_ID == update_id_packet.acc_id) {
+                                        object.OBJECT_ID = update_id_packet.new_id;
+                                        break search_loop;
+                                    }
+                                }
+                            }
+                        }
+                    } else if(o instanceof NetworkClasses.UpdateGameTimePacket) {
+                        NetworkClasses.UpdateGameTimePacket update_time_packet = (NetworkClasses.UpdateGameTimePacket) o;
+                        TIME = update_time_packet.new_time;
                     }
 
                     //PLAYER STUFF
@@ -409,6 +590,7 @@ public class World extends StaticWorldObject {
                             if(server_players.get(i).getRepresentingPlayer().connection_id == con_id) {
                                 server_players.get(i).dispose();
                                 server_players.removeIndex(i);
+                                break;
                             }
                         }
                     }
@@ -423,6 +605,7 @@ public class World extends StaticWorldObject {
 
                             if(player_clone.getRepresentingPlayer().connection_id == packet.player_connection_id) {
                                 player_clone.processPacket(o);
+                                break;
                             }
                         }
                     }
@@ -474,7 +657,7 @@ public class World extends StaticWorldObject {
         final String world_dir = getWorldDirectory(getPlanetProperties().PLANET_SEED);
 
         FileHandle handle = Gdx.files.local(world_dir);
-        if((!handle.exists() || true) && !Game.IS_CLIENT) {
+        if((!handle.exists()) && !Game.IS_CLIENT) {
             //so we have to generate our world :), first create dir for this planet
             handle.mkdirs();
 
@@ -556,8 +739,12 @@ public class World extends StaticWorldObject {
 
                             if(Game.IS_HOST) {
                                 NetworkClasses.UpdateCurrentIDAssignerValuePacket update_assigner_id_packet = new NetworkClasses.UpdateCurrentIDAssignerValuePacket();
-                                update_assigner_id_packet.new_current_id = acc_index;
+                                update_assigner_id_packet.new_current_id = acc_index + 1;
                                 game.getGameServer().getServer().sendToAllTCP(update_assigner_id_packet);
+
+                                NetworkClasses.UpdateGameTimePacket update_time_packet = new NetworkClasses.UpdateGameTimePacket();
+                                update_time_packet.new_time = World.TIME;
+                                game.getGameServer().getServer().sendToAllTCP(update_time_packet);
                             }
 
                             generating.set(false);
@@ -581,13 +768,18 @@ public class World extends StaticWorldObject {
                 }
             }
         }
+
     }
 
     /**
      * Save world properties to world properties file
      */
     protected void saveWorldInfoToFile() {
-        DataOutputStream writer = new DataOutputStream(Gdx.files.local(getWorldDirectory(getPlanetProperties().PLANET_SEED) + "world.properties").write(false, 128));
+        //
+        FileHandle handle = Gdx.files.local(getWorldDirectory(getPlanetProperties().PLANET_SEED) + "world.properties");
+        //handle.mkdirs();
+
+        DataOutputStream writer = new DataOutputStream(handle.write(false, 128));
         try {
             //write value from IDAssigner to next time properly assign id's to objects
             writer.writeInt(IDAssigner.accValue());
@@ -632,10 +824,11 @@ public class World extends StaticWorldObject {
 
     /**
      * Add object to world
-      * @param object given object
+     * @param object given object
+     * @param notify_network flag determining if proper packet informing other clients about new object will be send (true = send info)
      * @return if object was added
      */
-    public synchronized boolean addObject(WorldObject object) {
+    public synchronized boolean addObject(WorldObject object, boolean notify_network) {
         for(int i = 0; i < getWorldChunks().length; i++) {
             for(int j = 0; j < getWorldChunks()[0].length; j++) {
                 WorldChunk chunk = getWorldChunks()[i][j];
@@ -643,11 +836,21 @@ public class World extends StaticWorldObject {
 
                 //so we have proper chunk now just transform global cords to local blocks coords
                 if(chunk_rect.contains(object.getPosition())) {
-                    return chunk.addObject(object);
+                    return chunk.addObject(object, notify_network);
                 }
             }
         }
         return false;
+    }
+
+    /**
+     * Removes given object from world
+     * @param object object we want to remove
+     * @param notify_network flag determining if proper packet informing other clients about removed object will be send (true = send info)
+     */
+    public synchronized void removeObject(WorldObject object, boolean notify_network) {
+        if(object.getParentChunk() != null)
+            object.getParentChunk().removeObject(object, notify_network);
     }
 
     @Override
@@ -672,6 +875,17 @@ public class World extends StaticWorldObject {
                 game_screen.setVisible(false);
                 loading_screen.setVisible(true);
                 return;
+            }
+
+            //every 10 seconds resend info about current world.Time to have everything in sync
+            if(((int) TIME) % 10 == 0 && last_time_send < ((int) TIME) % 10) {
+                System.out.println("(World Host) Sending time update packet to players (TIME: " + TIME);
+
+                NetworkClasses.UpdateGameTimePacket update_time_packet = new NetworkClasses.UpdateGameTimePacket();
+                update_time_packet.new_time = TIME;
+                game.getGameServer().getServer().sendToAllTCP(update_time_packet);
+
+                last_time_send = ((int) TIME) % 10;
             }
         }
 
@@ -1173,6 +1387,9 @@ public class World extends StaticWorldObject {
 
     @Override
     public void dispose() {
+        if(isInitializated() && (Game.IS_HOST || (!Game.IS_HOST || !Game.IS_CLIENT)))
+            saveWorldInfoToFile();
+
         if(light_engine != null)
             light_engine.dispose();
 

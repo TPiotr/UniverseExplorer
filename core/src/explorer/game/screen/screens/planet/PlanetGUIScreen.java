@@ -93,7 +93,7 @@ public class PlanetGUIScreen extends Screen {
                         return false;
 
                     int i = 0;
-                    for(Block block : planet_screen.getWorld().getBlocks().getAllBlocksHashmap().values()) {
+                    for(Block block : planet_screen.getWorld().getBlocks().getAllBlocksMap().values()) {
                         int column = i / max_in_column;
                         int row = i % max_in_column;
 
@@ -128,10 +128,10 @@ public class PlanetGUIScreen extends Screen {
         public void render(SpriteBatch batch) {
             int i = 0;
 
-            if(planet_screen.getWorld().getBlocks() == null)
+            if(planet_screen.getWorld() == null || planet_screen.getWorld().getBlocks() == null)
                 return;
 
-            for(Block block : planet_screen.getWorld().getBlocks().getAllBlocksHashmap().values()) {
+            for(Block block : planet_screen.getWorld().getBlocks().getAllBlocksMap().values()) {
                 int column = i / max_in_column;
                 int row = i % max_in_column;
 
