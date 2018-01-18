@@ -7,6 +7,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
+import com.esotericsoftware.minlog.Log;
 
 import org.apache.commons.lang3.SerializationUtils;
 
@@ -192,7 +193,7 @@ public class WorldChunk extends StaticWorldObject {
     public void move(int chunks_x, int chunks_y) {
         //abort old task if have  to
         if(loading_future != null && !loading_future.isDone()) {
-            System.out.println("Aborting loading task!");
+            Log.debug("(WorldChunk) Aborting loading task!");
             loading_future.cancel(true);
         }
 
@@ -311,9 +312,9 @@ public class WorldChunk extends StaticWorldObject {
                     is_dirty.set(false);
 
                     long end_time = System.nanoTime();
-                    System.out.println("Total loading time: " + TimeUtils.nanosToMillis(end_time - loading_start) + " milis");
+                    Log.debug("(WorldChunk) Total loading time: " + TimeUtils.nanosToMillis(end_time - loading_start) + " milis");
                 } catch(Exception e) {
-                    System.out.println("Loading exception: " + e.getClass().getSimpleName());
+                    Log.debug("(WorldChunk) Loading exception: " + e.getClass().getSimpleName());
 
                     //if creating physics stuff flag is true and task was aborted we have to clean loaded mess up
                     if(started_creating_physics_body) {
@@ -332,7 +333,7 @@ public class WorldChunk extends StaticWorldObject {
      */
     public void moveAndCopy(int chunks_x, int chunks_y, WorldChunk copy_from) {
         if(loading_future != null && !loading_future.isDone()) {
-            System.out.println("Aborting loading task!");
+            Log.debug("(WorldChunk) Aborting loading task!");
             loading_future.cancel(true);
         }
 

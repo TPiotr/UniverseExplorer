@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.TimeUtils;
+import com.esotericsoftware.minlog.Log;
 
 import explorer.game.framework.Game;
 import explorer.game.screen.ScreenComponent;
@@ -120,7 +121,7 @@ public class Universe implements ScreenComponent {
                 universe_screen.setVisible(false);
                 loading_screen.setVisible(true);
 
-                System.out.println("(Universe) Showing chunks loading screen");
+                Log.info("(Universe) Showing chunks loading screen");
                 return;
             }
         }
@@ -128,7 +129,7 @@ public class Universe implements ScreenComponent {
         if(can_move && (System.currentTimeMillis() - last_time_chunk_changed > load_chunk_after)) {
             long time_start = System.currentTimeMillis();
 
-            System.out.println("Moving!");
+            Log.debug("(Universe) Moving!");
 
             //if we can move check if we can copy some chunks to save processing time
             if(move_factor_x == -1 && move_factor_y == 0) {
@@ -303,7 +304,7 @@ public class Universe implements ScreenComponent {
                 }
             }
 
-            System.out.println("(Universe) Chunks operation time: " + TimeUtils.timeSinceMillis(time_start));
+            Log.debug("(Universe) Chunks operation time: " + TimeUtils.timeSinceMillis(time_start));
         } else {
             //first check if all 9 chunks are generating so we have to stop the game and show loading screen
             int dirty_count = 0;
@@ -322,7 +323,7 @@ public class Universe implements ScreenComponent {
 
                 universe_screen.setVisible(false);
                 loading_screen.setVisible(true);
-                System.out.println("(Universe) Showing chunks loading screen");
+                Log.info("(Universe) Showing chunks loading screen");
 
                 return;
             }

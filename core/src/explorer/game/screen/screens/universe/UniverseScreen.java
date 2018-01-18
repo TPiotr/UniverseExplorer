@@ -9,6 +9,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.esotericsoftware.minlog.Log;
 
 import explorer.game.framework.Game;
 import explorer.game.screen.Screen;
@@ -111,7 +112,7 @@ public class UniverseScreen extends Screen {
                                             target_pos.set(o.getPosition()).add(o.getWH().x / 2f, o.getWH().y / 2f);
 
                                             clicked_planet = (StarUniverseObject) o;
-                                            System.out.println("Planet index/seed: " + clicked_planet.getPlanetIndex());
+                                            Log.debug("(UniverseScreen) Planet index/seed: " + clicked_planet.getPlanetIndex());
                                         }
                                     }
                                 }
@@ -152,7 +153,7 @@ public class UniverseScreen extends Screen {
 
                 zoom_in = false;
 
-                System.out.println("(Universe) zoom: " + game.getMainCamera().zoom);
+                Log.debug("(UniverseScreen) zoom: " + game.getMainCamera().zoom);
 
                 return false;
             }

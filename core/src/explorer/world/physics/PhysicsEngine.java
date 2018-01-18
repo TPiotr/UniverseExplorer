@@ -608,7 +608,6 @@ public class PhysicsEngine {
 
 			//calc with how much this objects is colliding with grid cells
 			int width_parts = (int) (object_width / GRID_CHUNK_X);
-			//System.out.println("WP:" + width_parts);
 
 			//add this objects to overlapping grid cells
 			int last_map_index = -1;
@@ -723,7 +722,6 @@ public class PhysicsEngine {
 
 	public void addWorldObjects(List<WorldObject> objects) {
 		synchronized (add_objects_bufor) {
-			System.out.println("adding objects count: " + objects.size());
 			for (WorldObject o : objects)
 				addWorldObject(o);
 		}

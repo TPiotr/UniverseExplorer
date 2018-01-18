@@ -4,6 +4,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
+import com.esotericsoftware.minlog.Log;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -148,7 +149,7 @@ public class NetworkChunkDataProvider extends ChunkDataProvider {
                     //send this received data to chunk using created before future
                     NetworkClasses.ChunkDataPacket chunk_data = (NetworkClasses.ChunkDataPacket) o;
 
-                    System.out.println("New chunk data (rid: " + chunk_data.request_id + ")");
+                    Log.debug("(NetworkChunkDataProvider) New chunk data (rid: " + chunk_data.request_id + ")");
 
                     //find future with proper ID
                     int remove_id = -1;
@@ -258,7 +259,7 @@ public class NetworkChunkDataProvider extends ChunkDataProvider {
 
             return true;
         } catch(EOFException e) {
-            System.out.println("(Network Server Chunk Loader) Failed to read whole chunk file (EOF exception, unexpected end of ZLIB input stream)");
+            Log.debug("(Network Server Chunk Loader) Failed to read whole chunk file (EOF exception, unexpected end of ZLIB input stream)", e);
 
             //wait some time because this exception was thrown probably because
             //system wasn't able to provide access to file at that time so wait and try to load chunk file again

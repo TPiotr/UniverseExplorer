@@ -5,6 +5,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
+import com.esotericsoftware.minlog.Log;
 
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -121,7 +122,7 @@ public class UniverseChunk {
     public void move(int chunks_x, int chunks_y) {
         //abort old task if have  to
         if(generating_future != null && !generating_future.isDone()) {
-            System.out.println("(Universe) Aborting loading task!");
+            Log.debug("(UniverseChunk) Aborting loading task!");
             generating_future.cancel(true);
 
             try {
@@ -187,11 +188,11 @@ public class UniverseChunk {
                     is_dirty.set(false);
 
                     long end_time = System.nanoTime();
-                    System.out.println("(Universe) Total loading time: " + TimeUtils.nanosToMillis(end_time - loading_start) + " milis");
+                    Log.debug("(UniverseChunk) Total loading time: " + TimeUtils.nanosToMillis(end_time - loading_start) + " milis");
                 } catch(InterruptedException e) {
-                    System.out.println("(Universe) Loading chunk stopped by interruption");
+                    Log.debug("(UniverseChunk) Loading chunk stopped by interruption");
                 } catch(Exception e) {
-                    System.out.println("(Universe) Loading exception: " + e.getClass().getSimpleName());
+                    Log.error("(UniverseChunk) Loading exception: " + e.getClass().getSimpleName());
                     e.printStackTrace();
                 }
             }
@@ -206,7 +207,7 @@ public class UniverseChunk {
      */
     public void moveAndCopy(int chunks_x, int chunks_y, UniverseChunk copy_from) {
         if(generating_future != null && !generating_future.isDone()) {
-            System.out.println("(Universe) Aborting loading task because chunk is going to be copied!");
+            Log.debug("(UniverseChunk) Aborting loading task because chunk is going to be copied!");
             generating_future.cancel(true);
         }
 

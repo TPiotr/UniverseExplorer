@@ -12,6 +12,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
+import com.esotericsoftware.minlog.Log;
 
 import org.apache.commons.lang3.SerializationUtils;
 
@@ -296,7 +297,7 @@ public class World extends StaticWorldObject {
 
                         if(IDAssigner.accValue() != object_id) {
                             //if we are here that means new object has wrong ID
-                            System.out.println("(Network Server) New object with wrong id! (has: " + object_id + " should have: " + IDAssigner.accValue());
+                            Log.info("(Network Server) New object with wrong id! (has: " + object_id + " should have: " + IDAssigner.accValue());
 
                             //send packet to this client to update this object id on client side to proper one
                             NetworkClasses.UpdateObjectIDPacket update_object_id_packet = new NetworkClasses.UpdateObjectIDPacket();
@@ -443,7 +444,7 @@ public class World extends StaticWorldObject {
             };
 
             game.getGameServer().getServer().addListener(listener);
-            System.out.println("Listener made");
+            Log.info("(World) Listener made");
         } else if(Game.IS_CLIENT) {
 
             //create players clones
@@ -505,7 +506,8 @@ public class World extends StaticWorldObject {
 
                         //try to deserialize properties hashmap
                         final HashMap<String, String> object_properties = (new_object_packet.properties_bytes != null) ? (HashMap<String, String>) SerializationUtils.deserialize(new_object_packet.properties_bytes) : null;
-                        System.out.println("New object packet! ( ID: " + new_object_packet.OBJECT_ID+ ")");
+
+                        Log.debug("(World NetworkClient) New object packet! ( ID: " + new_object_packet.OBJECT_ID+ ")");
                         Runnable instantine_runnable = new Runnable() {
                             @Override
                             public void run() {
@@ -518,7 +520,7 @@ public class World extends StaticWorldObject {
                                     }
 
                                     boolean added =  World.this.addObject(instance, false);
-                                    System.out.println("placing object! " + added + " player pos: " + world.getPlayer().getPosition() + " this pos: " + instance.getPosition());
+                                    Log.debug("(World NetworkClient) Placing object from network! " + added + " player pos: " + world.getPlayer().getPosition() + " this pos: " + instance.getPosition());
                                 }
                             }
                         };
@@ -675,17 +677,17 @@ public class World extends StaticWorldObject {
             generating_screen.setVisible(true);
 
             //run multithreaded world generation
-            System.out.println("------------\nGenerating world:");
+            Log.info("(World) ------------\nGenerating world:");
 
             //first split work into parts
             int threads = Runtime.getRuntime().availableProcessors();
             threads = (threads <= 0) ? 1 : threads;
             final int threads_num = threads;
-            System.out.println("Threads generating count: " + threads_num);
+            Log.info("(World) Threads generating count: " + threads_num);
 
             //calc how much every thread rows have to generate
             final int one_thread_x_width = Math.round((float) getPlanetProperties().PLANET_SIZE / (float) threads_num);
-            System.out.println("Work per thread: "+one_thread_x_width);
+            Log.info("(World) Work per thread: "+one_thread_x_width);
 
             //thread safe for assigning indexes for working runnables and progress calculating
             final AtomicInteger index_integer = new AtomicInteger(0);
@@ -722,7 +724,7 @@ public class World extends StaticWorldObject {
                             //save world info to file
                             saveWorldInfoToFile();
 
-                            System.out.println("Generating time: " + TimeUtils.timeSinceMillis(start_generating_time) + " milis" + "\n------------");
+                            Log.info("(World) Generating time: " + TimeUtils.timeSinceMillis(start_generating_time) + " milis" + "\n------------");
 
                             generating_screen.setVisible(false);
                             game_screen.setVisible(true);
@@ -756,7 +758,8 @@ public class World extends StaticWorldObject {
 
             if(one_thread_x_width * threads_num < getPlanetProperties().PLANET_SIZE) {
                 int diff = getPlanetProperties().PLANET_SIZE - (one_thread_x_width * threads_num);
-                System.out.println("have to generate: "+diff);
+
+                Log.debug("(World) Have to generate: " + diff);
             }
         } else {
             //if there is no need for generating world or we are client just force chunks to load themselves and load world properties file
@@ -785,9 +788,9 @@ public class World extends StaticWorldObject {
             writer.writeInt(IDAssigner.accValue());
 
             writer.close();
-            System.out.println("Saving world info done!");
+            Log.info("(World) Saving world info done!");
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.error("(World) Failed to save world info file!", e);
         }
     }
 
@@ -795,6 +798,7 @@ public class World extends StaticWorldObject {
      * Load world properties from world properties file
      */
     protected void loadWorldInfoFromFile() {
+        long start_time = System.currentTimeMillis();
         DataInputStream reader = new DataInputStream(Gdx.files.local(getWorldDirectory(getPlanetProperties().PLANET_SEED) + "world.properties").read(128));
         try {
             //write value from IDAssigner to next time properly assign id's to objects
@@ -802,9 +806,11 @@ public class World extends StaticWorldObject {
             IDAssigner.set(acc_id);
 
             reader.close();
-            System.out.println("World info read successful!");
+            Log.info("(World) World info read successful! (Time: " + (TimeUtils.timeSinceMillis(start_time)) + "ms");
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.error("(World) Failed to read world info file", e);
+
+            //TODO handle corrupted world file(push back to menu and show dialog or whatever)
         }
     }
 
@@ -868,7 +874,8 @@ public class World extends StaticWorldObject {
 
             //if more than 70% of chunks are generating stop the game and wait
             if (dirty_count >= (chunks.length * chunks.length) * .75f) {
-                System.out.println(">= 70% of chunks dirty showing loading screen!");
+                Log.info("(World) >= 70% of chunks dirty showing loading screen!");
+
                 PlanetScreen game_screen = game.getScreen(Screens.PLANET_SCREEN_NAME, PlanetScreen.class);
                 WorldLoadingScreen loading_screen = game.getScreen(Screens.WORLD_LOADING_SCREEN_NAME, WorldLoadingScreen.class);
 
@@ -879,7 +886,7 @@ public class World extends StaticWorldObject {
 
             //every 10 seconds resend info about current world.Time to have everything in sync
             if(((int) TIME) % 10 == 0 && last_time_send < ((int) TIME) % 10) {
-                System.out.println("(World Host) Sending time update packet to players (TIME: " + TIME);
+                Log.info("(World, Host) Sending time update packet to players (TIME: " + TIME);
 
                 NetworkClasses.UpdateGameTimePacket update_time_packet = new NetworkClasses.UpdateGameTimePacket();
                 update_time_packet.new_time = TIME;
@@ -891,7 +898,7 @@ public class World extends StaticWorldObject {
 
         //can't tick if world is generating or is not initializated
         if(isGenerating() || !isInitializated()) {
-            System.out.println("Returning world tick method! (generating: " + isGenerating() + " initializated: " + isInitializated() + ")");
+            Log.debug("(World) Returning world tick method! (generating: " + isGenerating() + " initializated: " + isInitializated() + ")");
             return;
         }
 
@@ -1241,9 +1248,9 @@ public class World extends StaticWorldObject {
             //filter out old lights from light engine
             getLightEngine().getGroundLineRenderer().filterOut();
 
-            System.out.println("Chunks operation time: " + TimeUtils.timeSinceMillis(time_start));
+            Log.debug("(World) Chunks operation time: " + TimeUtils.timeSinceMillis(time_start));
         } else if(teleport_chunks) {
-            System.out.println("Teleporting! (tp_to_max: " + teleport_to_max + ", tp_to_zero: " + teleport_to_zero + ")");
+            Log.debug("(World) Teleporting! (tp_to_max: " + teleport_to_max + ", tp_to_zero: " + teleport_to_zero + ")");
             if(teleport_to_max) {
                 //to avoid this situation when 0,0 chunk is on pos 0,0 translate to (pos.xy + vec2(10000.0, 0.0))
                 for (int i = 0; i < chunks.length; i++) {

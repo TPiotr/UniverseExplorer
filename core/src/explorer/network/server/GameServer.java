@@ -68,7 +68,7 @@ public class GameServer {
 
         try {
             server.bind(TCP_PORT, UDP_PORT);
-            System.out.println("(Network Server) Server binded (TCP port: " + TCP_PORT + " UDP port: " + UDP_PORT + ")");
+            Log.info("(Network Server) Server binded (TCP port: " + TCP_PORT + " UDP port: " + UDP_PORT + ")");
 
             if(callback != null)
                 callback.created();
@@ -91,7 +91,7 @@ public class GameServer {
                 if(o instanceof NetworkClasses.OnServerRegistrationPacket) {
                     NetworkClasses.OnServerRegistrationPacket registration_info = (NetworkClasses.OnServerRegistrationPacket) o;
 
-                    System.out.println("(Network Server) New player registered! (" + registration_info.username + ")");
+                    Log.info("(Network Server) New player registered! (" + registration_info.username + ")");
 
                     //send to this player info about all other players
                     for(int i = 0; i < players.size; i++) {
@@ -133,7 +133,7 @@ public class GameServer {
                 else if(o instanceof NetworkClasses.GoToPlanetRequestPacket) {
                     //so at this point send to client information about new voting about going to some planet
                     NetworkClasses.GoToPlanetRequestPacket goto_planet_request = (NetworkClasses.GoToPlanetRequestPacket) o;
-                    System.out.println("Player: " + getPlayerInstanceByConnection(connection).username + " (" + goto_planet_request.connection_id + "), want to go planet with index: " + goto_planet_request.planet_index);
+                    Log.debug("Player: " + getPlayerInstanceByConnection(connection).username + " (" + goto_planet_request.connection_id + "), want to go planet with index: " + goto_planet_request.planet_index);
 
                     voting_handler.process(o);
                 }
@@ -141,23 +141,23 @@ public class GameServer {
 
             @Override
             public void connected(Connection connection) {
-                System.out.println("(Network Server) New client connected");
+                Log.info("(Network Server) New client connected");
 
             }
 
             @Override
             public void disconnected(Connection connection) {
-                System.out.println("(Network Server) Client disconnected");
-
                 ServerPlayer instance = getPlayerInstanceByConnection(connection);
                 if (instance != null) {
                     players.removeValue(instance, true);
-                    System.out.println("(Network Server) Player disconnected (" + instance.username + ")");
+                    Log.info("(Network Server) Player disconnected (" + instance.username + ")");
 
                     //send info to other clients about him
                     NetworkClasses.PlayerDisconnectedPacket disconnected_packet = new NetworkClasses.PlayerDisconnectedPacket();
                     disconnected_packet.connection_id = connection.getID();
                     server.sendToAllTCP(disconnected_packet);
+                } else {
+                    Log.info("(Network Server) Unregistered client disconnected");
                 }
             }
         });

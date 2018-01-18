@@ -2,6 +2,7 @@ package explorer.game.screen.screens.planet;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.esotericsoftware.minlog.Log;
 
 import java.util.concurrent.Future;
 
@@ -64,7 +65,7 @@ public class WorldLoadingScreen extends Screen {
 
         //>= to avoid some bugs if something other is broken this will not stop whole game
         if(progress >= 1f) {
-            System.out.println("(WorldLoadingScreen) Showing game screen");
+            Log.debug("(WorldLoadingScreen) Showing game screen");
             game_screen.setVisible(true);
             setVisible(false);
 
@@ -75,7 +76,7 @@ public class WorldLoadingScreen extends Screen {
     @Override
     public void setVisible(boolean visible) {
         super.setVisible(visible);
-        System.out.println("(WorldLoadingScreen) Setting visibility to: " + visible);
+        Log.debug("(WorldLoadingScreen) Setting visibility to: " + visible);
     }
 
     @Override

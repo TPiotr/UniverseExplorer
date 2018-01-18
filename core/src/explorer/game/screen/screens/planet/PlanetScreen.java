@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.profiling.GLProfiler;
+import com.esotericsoftware.minlog.Log;
 
 import explorer.game.framework.AssetsManager;
 import explorer.game.framework.Game;
@@ -39,7 +40,7 @@ public class PlanetScreen extends Screen {
         Runnable r = new Runnable() {
             @Override
             public void run() {
-                System.out.println("Creating world: " + planet_seed);
+                Log.info("Creating world: " + planet_seed);
 
                 if(world != null)
                     world.dispose();
@@ -108,7 +109,7 @@ public class PlanetScreen extends Screen {
         super.setVisible(visible);
         game.getScreen(Screens.PLANET_GUI_SCREEN_NAME).setVisible(visible);
 
-        System.out.println("Setting planet screen visibility to: " + visible);
+        Log.debug("Setting planet screen visibility to: " + visible);
     }
 
     @Override

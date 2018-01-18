@@ -1,5 +1,7 @@
 package explorer.game.framework.utils;
 
+import com.esotericsoftware.minlog.Log;
+
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -18,16 +20,16 @@ public class ThreadPool {
 		
 		//for now don't do anything
 		public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
-			System.err.println("Not enough worker threads, running task on main thread!");
+			Log.error("Not enough worker threads, running task on main thread!");
 			r.run();
 		}
 	}
 	
 	//class used to add id to threads
 	class ThreadIDAssigner {
-		private int id;
+		private AtomicInteger next_id = new AtomicInteger();
 		public synchronized int next() {
-			return id++;
+			return next_id.getAndIncrement();
 		}
 	}
 	
@@ -44,7 +46,7 @@ public class ThreadPool {
 		//threads_count = 1;
 
 		threads_count = (threads_count - 1 <= 0) ? 1 : threads_count - 1;
-		System.out.println("Aval. processors: " + threads_count);
+		Log.info("Aval. processors for app: " + threads_count);
 
 		//create executor
 		TerRejectedExecutionHandler rejection_handler = new TerRejectedExecutionHandler();

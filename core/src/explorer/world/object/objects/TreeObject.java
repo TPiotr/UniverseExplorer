@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
+import com.esotericsoftware.minlog.Log;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -35,7 +36,7 @@ public class TreeObject extends WorldObject implements SolidColorWorldObjectLigh
     //register packets
     static {
         //NetworkClasses.register();
-        System.out.println("Registering tree packets!");
+        Log.debug("Registering tree packets!");
     }
 
     public TreeObject(Vector2 position, World world, final Game game) {

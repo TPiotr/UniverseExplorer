@@ -2,6 +2,7 @@ package explorer.game.screen.screens.planet;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.esotericsoftware.minlog.Log;
 
 import explorer.game.framework.Game;
 import explorer.game.screen.Screen;
@@ -43,7 +44,7 @@ public class WorldGeneratingScreen extends Screen {
     @Override
     public void setVisible(boolean visible) {
         super.setVisible(visible);
-        System.out.println("(WorldGeneratingScreen) Setting visibility to: " + visible);
+        Log.debug("(WorldGeneratingScreen) Setting visibility to: " + visible);
     }
 
     @Override

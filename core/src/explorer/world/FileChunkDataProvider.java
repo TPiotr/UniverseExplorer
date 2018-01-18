@@ -5,6 +5,7 @@ import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
+import com.esotericsoftware.minlog.Log;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -90,7 +91,7 @@ public class FileChunkDataProvider extends ChunkDataProvider {
                     data.objects.clear();
                 }
 
-                System.out.println("Reading file time: " + TimeUtils.timeSinceMillis(file_loading_start) + "ms");
+                Log.debug("(FileChunkDataProvider) Reading file time: " + TimeUtils.timeSinceMillis(file_loading_start) + "ms");
 
                 callback.loaded(data);
             }
@@ -175,10 +176,10 @@ public class FileChunkDataProvider extends ChunkDataProvider {
 
             return true;
         } catch(EOFException e) {
-            System.out.println("Failed to read whole chunk file (EOF exception, unexpected end of ZLIB input stream)");
+            Log.debug("(FileChunkDataProvider) Failed to read whole chunk file (EOF exception, unexpected end of ZLIB input stream)", e);
 
             //wait some time because this exception was thrown probably because
-            //system wasn't able to provide access to file at that time so wait and try to load chunk file again
+            //system wasn't able to give us access to file at that time so wait and try to load chunk file again
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e1) {
@@ -247,7 +248,7 @@ public class FileChunkDataProvider extends ChunkDataProvider {
         final Array<WorldObject> objects = new Array<WorldObject>(chunk.getObjects());
         final Vector2 chunk_position = new Vector2(chunk_pos);
 
-        System.out.println("Save request: " + path);
+        Log.debug("(FileChunkDataProvider) Save request: " + path);
 
         Runnable r = new Runnable() {
             @Override

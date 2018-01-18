@@ -82,7 +82,6 @@ public class ChunkDataRequestsHandler {
                     data_packet.file_bytes = chunk_data;
 
                     //finally send packet to client
-                    //System.out.println("sending chunk data to: " + request.connection_id);
                     game.getGameServer().getServer().sendToTCP(request.connection_id, data_packet);
                 } catch(Exception e) {
                     System.err.println("(Chunk Data Requests Handler) loading chunk file for client failed! ("+e.getClass().getSimpleName()+ "):");

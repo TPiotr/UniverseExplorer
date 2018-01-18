@@ -107,7 +107,7 @@ public class GameClient {
         registration_packet.username = username;
 
         client.sendTCP(registration_packet);
-        System.out.println("(Network Client) Sending registration packet!");
+        Log.debug("(Network Client) Sending registration packet!");
     }
 
     /**
@@ -129,7 +129,7 @@ public class GameClient {
                     ServerPlayer new_player = new ServerPlayer(new_player_info.connection_id, new_player_info.username, new_player_info.is_host);
                     players.add(new_player);
 
-                    System.out.println("New player info: " + new_player.username + " cid: " + new_player.connection_id + " is_host: " + new_player.is_host);
+                    Log.debug("New player info: " + new_player.username + " cid: " + new_player.connection_id + " is_host: " + new_player.is_host);
                 }
                 //info received when some player left server
                 else if(o instanceof NetworkClasses.PlayerDisconnectedPacket) {
@@ -182,7 +182,7 @@ public class GameClient {
 
             @Override
             public void connected(Connection connection) {
-                System.out.println("(Network Client) Someone connected to server! But he needs to register himself first!");
+
             }
 
             @Override

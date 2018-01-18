@@ -1,6 +1,7 @@
 package explorer.game;
 
 import com.badlogic.gdx.Gdx;
+import com.esotericsoftware.minlog.Log;
 
 import explorer.game.screen.screens.menu.ClientServerChooseScreen;
 import explorer.game.screen.screens.menu.MainMenuScreen;
@@ -23,6 +24,8 @@ public class ExplorerGame extends explorer.game.framework.Game {
 
     @Override
     protected void initGame() {
+        Log.set(Log.LEVEL_DEBUG);
+
         //make game render thread as one with max priority to avoid lags from threads working in background
         Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 
