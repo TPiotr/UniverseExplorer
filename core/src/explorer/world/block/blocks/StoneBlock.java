@@ -25,7 +25,7 @@ public class StoneBlock extends PlanetBoundBlock {
         super(world, game);
 
         this.block_id = 4;
-        this.block_group = BlockGroup.CONNECT_WITH_EVERYTHING;
+        this.block_group = BlockGroup.CONNECT_WITH_SAME_BLOCK;
 
         this.need_background_block_rendered_if_not_fully_surrounded = true;
 
@@ -47,7 +47,7 @@ public class StoneBlock extends PlanetBoundBlock {
         tile_positions.put(Block.COLLIDE_LEFT, textures[3][1]);
         tile_positions.put(Block.COLLIDE_LEFT_DOWN, textures[0][3]);
         tile_positions.put(Block.COLLIDE_LEFT_DOWN_RIGHT, textures[0][2]);
-        tile_positions.put(Block.COLLIDE_LEFT_RIGHT, textures[3][2]); //
+        tile_positions.put(Block.COLLIDE_LEFT_RIGHT, textures[3][3]); //
         tile_positions.put(Block.COLLIDE_LEFT_UP, textures[2][3]);
         tile_positions.put(Block.COLLIDE_LEFT_UP_DOWN, textures[1][3]);
         tile_positions.put(Block.COLLIDE_LEFT_UP_RIGHT, textures[2][2]);
@@ -55,7 +55,7 @@ public class StoneBlock extends PlanetBoundBlock {
         tile_positions.put(Block.COLLIDE_RIGHT, textures[3][0]);
         tile_positions.put(Block.COLLIDE_RIGHT_DOWN, textures[0][1]);
         tile_positions.put(Block.COLLIDE_UP, textures[2][0]);
-        tile_positions.put(Block.COLLIDE_UP_DOWN, textures[3][3]); //
+        tile_positions.put(Block.COLLIDE_UP_DOWN, textures[3][2]); //
         tile_positions.put(Block.COLLIDE_UP_RIGHT, textures[2][1]);
         tile_positions.put(Block.COLLIDE_UP_RIGHT_DOWN, textures[1][1]);
     }
