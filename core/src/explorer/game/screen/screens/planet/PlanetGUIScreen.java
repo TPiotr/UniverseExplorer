@@ -1,31 +1,31 @@
 package explorer.game.screen.screens.planet;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.profiling.GLProfiler;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
-import com.esotericsoftware.kryonet.Server;
-
-import org.omg.CORBA.ServerRequest;
 
 import explorer.game.framework.AssetsManager;
 import explorer.game.framework.Game;
-import explorer.game.framework.utils.MathHelper;
+import explorer.game.framework.utils.math.MathHelper;
 import explorer.game.screen.Screen;
 import explorer.game.screen.ScreenComponent;
 import explorer.game.screen.gui.TextButton;
 import explorer.game.screen.gui.TextureButton;
 import explorer.game.screen.screens.Screens;
-import explorer.game.screen.screens.planet.PlanetScreen;
 import explorer.network.client.ServerPlayer;
 import explorer.world.World;
 import explorer.world.block.Block;
 import explorer.world.block.CustomColorBlock;
 import explorer.world.block.CustomRenderingBlock;
+import explorer.world.object.WorldObject;
+import explorer.world.object.objects.player.gui.PlayerInventoryRenderer;
+import explorer.world.object.objects.player.gui.PlayerToolBarGUIComponent;
 
 /**
  * Created by RYZEN on 05.11.2017.
@@ -71,7 +71,7 @@ public class PlanetGUIScreen extends Screen {
                     background_placing = !background_placing;
                     background_checkbox.setText((background_placing) ? "Background" : "Foreground");
 
-                    planet_screen.getWorld().getPlayer().setBackgroundPlacing(background_placing);
+                    //planet_screen.getWorld().getPlayer().setBackgroundPlacing(background_placing);
                 }
 
                 @Override
@@ -99,7 +99,7 @@ public class PlanetGUIScreen extends Screen {
 
                         if(MathHelper.overlaps2Rectangles(position.x + (column * (block_render_size + spacing)), position.y - (row * (block_render_size + spacing)), block_render_size, block_render_size, unproj.x, unproj.y, 1, 1)) {
                             selected = i;
-                            planet_screen.getWorld().getPlayer().setSelectedBlock(block);
+                            //planet_screen.getWorld().getPlayer().setSelectedBlock(block);
 
                             return true;
                         }
@@ -164,23 +164,32 @@ public class PlanetGUIScreen extends Screen {
         }
     }
 
-    private TextureButton left_button, right_button, jump_button;
+    private TextureButton left_button, right_button, jump_button, inventory_button;
 
-    private BlockPlacingSelector blocks_selector;
+    //private BlockPlacingSelector blocks_selector;
+
+    private PlayerToolBarGUIComponent toolbar_renderer;
 
     private BitmapFont debug_font;
+
+    private PlanetScreen planet_screen;
 
     /**
      * Construct new screen instance
      *
      * @param game game instance
      */
-    public PlanetGUIScreen(final PlanetScreen planet_screen, Game game) {
+    public PlanetGUIScreen(final PlanetScreen planet_screen, final Game game) {
         super(game);
+
+        this.planet_screen = planet_screen;
 
         debug_font = game.getAssetsManager().getFont("fonts/pixel_font.ttf", 15);
 
         NAME = Screens.PLANET_GUI_SCREEN_NAME;
+
+        toolbar_renderer = new PlayerToolBarGUIComponent(planet_screen, game.getGUIViewport(), game);
+        addScreenComponent(toolbar_renderer);
 
         TextureRegion white_texture = game.getAssetsManager().getTextureRegion("white_texture");
         left_button = new TextureButton(new Vector2(-550, -300), new Vector2(128, 128), new TextureRegion(white_texture), game.getGUIViewport(), game);
@@ -191,6 +200,9 @@ public class PlanetGUIScreen extends Screen {
 
         jump_button = new TextureButton(new Vector2(450, -300), new Vector2(128, 128), new TextureRegion(white_texture), game.getGUIViewport(), game);
         addScreenComponent(jump_button);
+
+        inventory_button = new TextureButton(new Vector2(450, 200), new Vector2(64, 64), new TextureRegion(white_texture), game.getGUIViewport(), game);
+        addScreenComponent(inventory_button);
 
         //create listeners
         left_button.setButtonListener(new TextureButton.ButtonListener() {
@@ -229,18 +241,19 @@ public class PlanetGUIScreen extends Screen {
             }
         });
 
-        blocks_selector = new BlockPlacingSelector(new Vector2(500, 290), planet_screen);
-        addScreenComponent(blocks_selector);
-    }
+        inventory_button.setButtonListener(new TextureButton.ButtonListener() {
+            @Override
+            public void touched() {
+                planet_screen.setVisible(false);
+                game.getScreen(Screens.PLAYER_INVENTORY_SCREEN).setVisible(true);
+            }
 
-    @Override
-    public void setVisible(boolean visible) {
-        super.setVisible(visible);
+            @Override
+            public void released() {}
+        });
 
-        jump_button.setVisible(visible);
-        left_button.setVisible(visible);
-        right_button.setVisible(visible);
-        blocks_selector.setVisible(visible);
+        //blocks_selector = new BlockPlacingSelector(new Vector2(500, 290), planet_screen);
+        //addScreenComponent(blocks_selector);
     }
 
     @Override
@@ -259,9 +272,34 @@ public class PlanetGUIScreen extends Screen {
         batch.setProjectionMatrix(game.getGUICamera().combined);
         renderComponents(batch);
 
-        if (Game.IS_HOST || Game.IS_CLIENT) {
+        /*if (Game.IS_HOST || Game.IS_CLIENT) {
             renderPlayers((Game.IS_HOST) ? game.getGameServer().getPlayers() : game.getGameClient().getPlayers(), batch);
         }
+
+        //render debug stats
+        if(planet_screen.getWorld() == null)
+            return;
+
+        World world = planet_screen.getWorld();
+        batch.setProjectionMatrix(game.getGUICamera().combined);
+
+        AssetsManager.font.draw(batch, "FPS: "+ Gdx.graphics.getFramesPerSecond(), -620, 350);
+        AssetsManager.font.draw(batch, "Drawn lights:" + world.getLightEngine().getDrawnLightsCount(), -620, 330);
+        AssetsManager.font.draw(batch, "Total ground lights:" + world.getLightEngine().getGroundLineRenderer().getPositions().size, -620, 310);
+        AssetsManager.font.draw(batch, "Current tasks: " + game.getThreadPool().getActuallyTasksRunningCount(), -620, 290);
+
+        AssetsManager.font.draw(batch, "Chunk x: " + ((world.getPlayer().getPosition().x / World.CHUNK_WORLD_SIZE) % world.getPlanetProperties().PLANET_SIZE), -620, 270);
+        AssetsManager.font.draw(batch, "Chunk x: " + ((world.getPlayer().getPosition().x / World.CHUNK_WORLD_SIZE)), -450, 270);
+
+        AssetsManager.font.draw(batch, "Phys. obj. count: " + world.getPhysicsEngine().getAllObjectsCount(), -620, 250);
+        //font.draw(batch, "Chunks colliders count: " + world.getPhysicsEngine().getPhysicsEngineChunksHelper().getChunkCollidersCount(), -620, 230);
+
+        AssetsManager.font.draw(batch, "Draw calls: " + GLProfiler.drawCalls, -620, 210);
+        AssetsManager.font.draw(batch, "Vertices rendered: " + (int) GLProfiler.vertexCount.average, -620, 190);
+        AssetsManager.font.draw(batch, "Texture binds: " + GLProfiler.textureBindings, -620, 170);
+        AssetsManager.font.draw(batch, "ID assigner: " + WorldObject.IDAssigner.accValue(), -620, 150);
+        AssetsManager.font.draw(batch, "Time: " + World.TIME, -620, 130);
+        */
     }
 
     private void renderPlayers(Array<ServerPlayer> players, SpriteBatch batch) {
@@ -270,6 +308,10 @@ public class PlanetGUIScreen extends Screen {
             ServerPlayer player = players.get(i);
             debug_font.draw(batch, player.username + " (" + player.connection_id + (player.is_host ? ", host)" : ")"), 180, 320 - (i * 30));
         }
+    }
+
+    public PlayerToolBarGUIComponent getPlayerToolbarGUIComponent() {
+        return toolbar_renderer;
     }
 
     @Override

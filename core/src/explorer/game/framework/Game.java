@@ -114,7 +114,7 @@ public abstract class Game extends ApplicationAdapter {
 			@Override
 			public void connected() {
 				IS_HOST = false;
-				IS_CONNECTED = false;
+				IS_CONNECTED = true;
 				IS_CLIENT = true;
 
 				if(connected_callback != null)

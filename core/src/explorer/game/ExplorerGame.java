@@ -1,12 +1,15 @@
 package explorer.game;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputAdapter;
+import com.badlogic.gdx.math.Vector2;
 import com.esotericsoftware.minlog.Log;
 
 import explorer.game.screen.screens.menu.ClientServerChooseScreen;
 import explorer.game.screen.screens.menu.MainMenuScreen;
 import explorer.game.screen.screens.planet.PlanetGUIScreen;
 import explorer.game.screen.screens.planet.PlanetScreen;
+import explorer.game.screen.screens.planet.PlayerInventoryScreen;
 import explorer.game.screen.screens.universe.UniverseLoadingScreen;
 import explorer.game.screen.screens.universe.UniverseScreen;
 import explorer.game.screen.screens.planet.WorldGeneratingScreen;
@@ -55,6 +58,10 @@ public class ExplorerGame extends explorer.game.framework.Game {
         addScreen(game_gui_screen);
         game_screen.setVisible(false);
 
+        PlayerInventoryScreen inventory_screen = new PlayerInventoryScreen(game_screen, this);
+        addScreen(inventory_screen);
+        inventory_screen.setVisible(false);
+
         WorldLoadingScreen world_loading_screen = new WorldLoadingScreen(this);
         world_loading_screen.setVisible(false);
         addScreen(world_loading_screen);
@@ -67,6 +74,19 @@ public class ExplorerGame extends explorer.game.framework.Game {
         //game_screen.setVisible(true);
         //universe_screen.setVisible(false);
         //game_screen.createWorld(11);
+
+        //debug
+        InputAdapter input = new InputAdapter() {
+            @Override
+            public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+                Vector2 gui_touch = new Vector2(screenX, screenY);
+                getGUIViewport().unproject(gui_touch);
+
+                Log.debug("GUI COORDS: " + gui_touch);
+                return false;
+            }
+        };
+        getInputEngine().addInputProcessor(input);
     }
 
     @Override

@@ -100,6 +100,11 @@ public abstract class WorldObject {
     protected boolean cast_self_light = true;
 
     /**
+     * Flag determining if block can be placed on/over this object
+     */
+    protected boolean can_place_block_over = true;
+
+    /**
      * Chunk on which object is actually staying
      */
     protected WorldChunk parent_chunk;
@@ -162,6 +167,14 @@ public abstract class WorldObject {
      */
     public boolean isSaveable() {
         return saveable;
+    }
+
+    /**
+     * If block can be placed over this object
+     * @return true if block can be placed on this objects bounding rectangle
+     */
+    public boolean canPlaceBlockOver() {
+        return can_place_block_over;
     }
 
     /**

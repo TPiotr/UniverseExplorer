@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter;
 import com.badlogic.gdx.utils.Array;
+import com.esotericsoftware.minlog.Log;
 
 import java.awt.TextField;
 import java.util.HashMap;
@@ -20,7 +21,7 @@ public class AssetsManager {
 	private TextureFilter default_min_filter;
 	private TextureFilter default_mag_filter;
 	
-	//textures 
+	//old_assets.textures
 	private HashMap<String, Texture> textures;
 
 	//atlases
@@ -50,11 +51,11 @@ public class AssetsManager {
 	
 	//callback class to handle assets loading on other threads
 	public static interface AssetCallback {
-		//objects because we will use it for fonts, textures, textureregions, textureregions arrays etc. (user will know what he is loading)
+		//objects because we will use it for fonts, old_assets.textures, textureregions, textureregions arrays etc. (user will know what he is loading)
 		public void loaded(Object asset);
 	}
 	
-	//class for loading texture atlas with animations frames on multiple threads
+	//class for loading texture assets.atlas with animations frames on multiple threads
 	private class TextureAtlasKey {
 		public int tile_x, tile_y;
 		public String path;
@@ -66,7 +67,7 @@ public class AssetsManager {
 		}
 	}
 	
-	//helper class to loading textures on other thread
+	//helper class to loading old_assets.textures on other thread
 	private class TextureRequest {
 		public String path;
 		public AssetCallback callback;
@@ -95,8 +96,8 @@ public class AssetsManager {
 		fonts_to_load = new HashMap<FontKey, AssetCallback>();
 		texture_atlases_to_load = new HashMap<TextureAtlasKey, AssetCallback>();
 
-		//load main atlas
-		main_atlas = getTextureAtlas("atlas/main_atlas.atlas");
+		//load main assets.atlas
+		main_atlas = getTextureAtlas("assets/atlas/main_atlas.atlas");
 
 		default_min_filter = TextureFilter.Nearest;
 		default_mag_filter = TextureFilter.Nearest;
@@ -105,9 +106,9 @@ public class AssetsManager {
 
 	}
 	
-	//func called in opengl thread to load some textures and pass them to another thread
+	//func called in opengl thread to load some old_assets.textures and pass them to another thread
 	public synchronized void update() {
-		//handle textures loading
+		//handle old_assets.textures loading
 		if(textures_to_load.size > 0) {
 			for(int i = 0; i < textures_to_load.size; i++) {
 				TextureRequest request = textures_to_load.get(i);
@@ -160,19 +161,28 @@ public class AssetsManager {
 	}
 
 	/**
-	 * Returns texture region from main game texture atlas
+	 * Returns texture region from main game texture assets.atlas
 	 * @param name name of texture region
 	 * @return texture region
 	 */
 	public TextureRegion getTextureRegion(String name) {
-		return main_atlas.findRegion(name);
+		TextureRegion region = main_atlas.findRegion(name);
+
+		if(region == null) {
+			Log.error("Couldn't found texture region with name: " + name + "!");
+
+			//grab basic white texture to not crash whole engine
+			region = main_atlas.findRegion("white_texture");
+		}
+
+		return region;
 	}
 
 	public TextureAtlas getTextureAtlas(String path) {
 		if(atlases.containsKey(path)) {
 			return atlases.get(path);
 		} else {
-			//load atlas
+			//load assets.atlas
 			TextureAtlas atlas = new TextureAtlas(Gdx.files.internal(path));
 			atlases.put(path, atlas);
 			return atlas;
@@ -294,7 +304,7 @@ public class AssetsManager {
 	}
 	
 	public synchronized void getTextureAtlasWithSplitedTextureRegionOnOtherThread(int tile_x, int tile_y, String path, AssetCallback callback) {
-		//if(!textures.containsKey(path)) {
+		//if(!old_assets.textures.containsKey(path)) {
 			texture_atlases_to_load.put(new TextureAtlasKey(tile_x, tile_y, path), callback);
 		//} else {
 		//	callback.loaded(getTextureAtlasWithSplitedTextureRegion(tile_x, tile_y, path));

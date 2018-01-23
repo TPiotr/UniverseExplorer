@@ -9,13 +9,13 @@ import explorer.game.ExplorerGame;
 
 public class DesktopLauncher {
 	public static void main (String[] arg) {
-		//pack textures into atlas
+		//pack old_assets.textures into assets.atlas
 		TexturePacker.Settings settings = new TexturePacker.Settings();
 		settings.maxWidth = 4096;
 		settings.maxHeight = 4096;
 
-		settings.filterMag = Texture.TextureFilter.Linear;
-		settings.filterMin = Texture.TextureFilter.Linear;
+		settings.filterMag = Texture.TextureFilter.Nearest;
+		settings.filterMin = Texture.TextureFilter.Nearest;
 
 		settings.bleed = true;
 		settings.bleedIterations = 4;
@@ -25,7 +25,7 @@ public class DesktopLauncher {
 
 		settings.combineSubdirectories = false;
 
-		TexturePacker.processIfModified(settings,"assets_to_pack", "atlas", "main_atlas");
+		TexturePacker.process(settings,"assets_to_pack", "assets/atlas", "main_atlas");
 
 		//run game like normally
 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();

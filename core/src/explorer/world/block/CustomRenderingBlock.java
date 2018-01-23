@@ -20,7 +20,7 @@ public abstract class CustomRenderingBlock extends Block {
     /**
      * Write here you custom rendering method for block
      * @param batch sprite batch instance
-     * @param connection_info info about how this block is colliding with surrounding blocks to use proper textures (see Short variables in {@link Block})
+     * @param connection_info info about how this block is colliding with surrounding blocks to use proper old_assets.textures (see Short variables in {@link Block})
      * @param x global x pos
      * @param y global y pos
      * @param w width of block

@@ -1,5 +1,6 @@
 package explorer.world.object.objects.player;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -9,7 +10,8 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 
 import explorer.game.framework.Game;
-import explorer.game.framework.utils.MathHelper;
+import explorer.game.framework.utils.math.PositionInterpolator;
+import explorer.game.screen.screens.Screens;
 import explorer.network.NetworkClasses;
 import explorer.network.NetworkHelper;
 import explorer.network.client.ServerPlayer;
@@ -17,8 +19,11 @@ import explorer.network.server.GameServer;
 import explorer.world.World;
 import explorer.world.block.Block;
 import explorer.world.chunk.WorldChunk;
+import explorer.world.inventory.ItemsContainer;
+import explorer.world.inventory.item_types.BlockItem;
+import explorer.world.inventory.items.wearables.BasicHeadItem;
+import explorer.world.inventory.items.wearables.RedBandanaHeadItem;
 import explorer.world.object.DynamicWorldObject;
-import explorer.world.object.WorldObject;
 import explorer.world.object.objects.TorchObject;
 import explorer.world.physics.shapes.RectanglePhysicsShape;
 
@@ -28,7 +33,7 @@ import explorer.world.physics.shapes.RectanglePhysicsShape;
 
 public class Player extends DynamicWorldObject {
 
-    private PlayerRenderer player_renderer;
+    private PlayerRenderer1 player_renderer;
 
     private boolean left, right, jump;
     private final float PLAYER_SPEED = 300f;
@@ -36,40 +41,64 @@ public class Player extends DynamicWorldObject {
     //clone vars
     private boolean is_clone;
     private ServerPlayer representing_player;
+    private Vector2 last_position_clone;
 
-    //interpolating vars
-    private Vector2 recived_position, last_recived_position;
-    private long recive_time, probably_next_recive_time;
+    //interpolating
+    private PositionInterpolator interpolator;
+
+    //player inventory container
+    private ItemsContainer items_container;
+    private ItemsContainer toolbar_items_container;
+    public static final int INVENTORY_SLOTS_COUNT = 30;
+    public static final int TOOLBAR_INVENTORY_SLOTS_COUNT = 6;
 
     //finding parent chunk vars
     private Rectangle chunk_rect;
 
-    private Block selected_block;
-    private boolean background_placing;
+    //selected item
+    private ItemsContainer.ItemsStack selected_items;
 
     public Player(Vector2 position, World w, boolean clone, final Game game) {
         super(position, w, game);
 
         this.is_clone = clone;
 
-        player_renderer = new PlayerRenderer(this, w, game);
+        player_renderer = new PlayerRenderer1(this, w, game);
 
         getWH().set(player_renderer.getPlayerWH());
         this.physics_shape = new RectanglePhysicsShape(new Vector2(), new Vector2(getWH()), this);
 
         chunk_rect = new Rectangle();
 
-        recived_position = new Vector2();
-        last_recived_position = new Vector2();
+        last_position_clone = new Vector2();
+
+        //create interpolator
+        interpolator = new PositionInterpolator(this, game);
+        interpolator.setOnlyReceive(is_clone);
+        interpolator.setOnlySend(!is_clone);
 
         //is this instance is just clone don't calculate physics for it because we are just receiving position of player and physics for him is
         //calculated on other client side which sends packets about position update
         setPhysicsEnabled(!is_clone);
 
-        if(is_clone)
+        if(is_clone) {
             return;
+        }
 
-        //because player is always on center of in ram map
+        //create items container
+        items_container = new ItemsContainer(INVENTORY_SLOTS_COUNT);
+        toolbar_items_container = new ItemsContainer(TOOLBAR_INVENTORY_SLOTS_COUNT);
+
+        for(int i = 0; i < INVENTORY_SLOTS_COUNT - 1; i++) {
+            items_container.getItems().set(i, new ItemsContainer.ItemsStack(new BlockItem(game, world.getBlocks().DIRT.getBlockID(), world), MathUtils.random(1, 64), items_container));
+        }
+        items_container.addItem(new RedBandanaHeadItem(game), 1);
+
+        for(int i = 0; i < TOOLBAR_INVENTORY_SLOTS_COUNT - 1; i++) {
+            toolbar_items_container.getItems().set(i, new ItemsContainer.ItemsStack(new BlockItem(game, world.getBlocks().STONE.getBlockID(), world), MathUtils.random(1, 64), toolbar_items_container));
+        }
+
+        //because player is always on center of map
         setParentChunk(w.getWorldChunks()[1][1]);
 
         game.getMainCamera().position.set(position.x, position.y, 0);
@@ -87,16 +116,12 @@ public class Player extends DynamicWorldObject {
         if(packet instanceof NetworkClasses.PlayerPositionUpdatePacket) {
             NetworkClasses.PlayerPositionUpdatePacket pos_update = (NetworkClasses.PlayerPositionUpdatePacket) packet;
 
-            last_recived_position.set(recived_position);
-            recived_position.set(pos_update.x, pos_update.y);
-
             final float teleport_after_distance = 200;
-            if(Vector2.dst(recived_position.x, recived_position.y, getPosition().x, getPosition().y) > teleport_after_distance) {
-                getPosition().set(recived_position);
+            if(Vector2.dst(pos_update.x, pos_update.y, getPosition().x, getPosition().y) > teleport_after_distance) {
+                getPosition().set(pos_update.x, pos_update.y);
             }
 
-            recive_time = System.currentTimeMillis();
-            probably_next_recive_time = recive_time + time_step; //+ ((Game.IS_CLIENT) ? game.getGameClient().getClient().getReturnTripTime() : 0); //test it first because on local ping is near 0
+            interpolator.interpolate(pos_update.x, pos_update.y, System.currentTimeMillis());
         }
     }
 
@@ -108,33 +133,49 @@ public class Player extends DynamicWorldObject {
                 final Vector2 touch = new Vector2(screenX, screenY);
                 game.getMainViewport().unproject(touch);
 
+                if(!game.getScreen(Screens.PLANET_SCREEN_NAME).isVisible())
+                    return false;
+
                 if(button == 0) {
                     getPosition().set(touch);
                     getVelocity().set(0, 0);
                 } else if(button == 1) {
-                    if(selected_block == null)
+                    if(selected_items == null)
                         return false;
 
-                    for(int i = 0; i < world.getWorldChunks().length; i++) {
-                        for(int j = 0; j < world.getWorldChunks()[0].length; j++) {
-                            WorldChunk chunk = world.getWorldChunks()[i][j];
-                            Rectangle chunk_rect = new Rectangle(chunk.getPosition().x, chunk.getPosition().y, chunk.getWH().x, chunk.getWH().y);
+                    if(selected_items.getItem() instanceof BlockItem) {
+                        for (int i = 0; i < world.getWorldChunks().length; i++) {
+                            for (int j = 0; j < world.getWorldChunks()[0].length; j++) {
+                                WorldChunk chunk = world.getWorldChunks()[i][j];
+                                Rectangle chunk_rect = new Rectangle(chunk.getPosition().x, chunk.getPosition().y, chunk.getWH().x, chunk.getWH().y);
 
-                            //so we have proper chunk now just transform global cords to local blocks coords
-                            if(chunk_rect.contains(touch)) {
-                                int local_x = (int) (touch.x - chunk_rect.getX()) / World.BLOCK_SIZE;
-                                int local_y = (int) (touch.y - chunk_rect.getY()) / World.BLOCK_SIZE;
+                                //so we have proper chunk now just transform global cords to local blocks coords
+                                if (chunk_rect.contains(touch)) {
+                                    int local_x = (int) (touch.x - chunk_rect.getX()) / World.BLOCK_SIZE;
+                                    int local_y = (int) (touch.y - chunk_rect.getY()) / World.BLOCK_SIZE;
 
-                                //we have to notify network if game is using network(game checks it itself)
-                                chunk.setBlock(local_x, local_y, selected_block.getBlockID(), background_placing, true);
+                                    //set block only if current one is an air
+                                    if(chunk.getBlocks()[local_x][local_y].getForegroundBlock().getBlockID() == world.getBlocks().AIR.getBlockID()) {
+                                        //we have to notify network if game is using network(game checks it itself)
+                                        boolean result = chunk.setBlockPlayerChecks(local_x, local_y, ((BlockItem) selected_items.getItem()).getRepresentingBlockID(), false, true);
 
-                                /*for(int k = 0; k < chunk.getObjects().size; k++) {
-                                    WorldObject o = chunk.getObjects().get(k);
-                                    if(MathHelper.overlaps2Rectangles(o.getPosition().x, o.getPosition().y, o.getWH().x, o.getWH().y, touch.x, touch.y, 1, 1)) {
-                                        world.removeObject(o, true);
+                                        //if block was placed removed one from stack and check if stack don't ended
+                                        if(result) {
+                                            selected_items.removeOneFromStack();
+
+                                            if (selected_items.getInStack() <= 0)
+                                                selected_items = null;
+                                        }
                                     }
-                                }*/
 
+                                    /*for(int k = 0; k < chunk.getObjects().size; k++) {
+                                        WorldObject o = chunk.getObjects().get(k);
+                                        if(MathHelper.overlaps2Rectangles(o.getPosition().x, o.getPosition().y, o.getWH().x, o.getWH().y, touch.x, touch.y, 1, 1)) {
+                                            world.removeObject(o, true);
+                                        }
+                                    }*/
+
+                                }
                             }
                         }
                     }
@@ -205,6 +246,13 @@ public class Player extends DynamicWorldObject {
         game.getInputEngine().addInputProcessor(input);
     }
 
+    private void calculateArmAngle(Vector2 touch_pos) {
+        Vector2 pos = new Vector2(getPosition()).add(getWH().x / 2f, getWH().y / 2f);
+        float angle = MathUtils.radiansToDegrees * (MathUtils.atan2((touch_pos.x - pos.x), touch_pos.y - pos.y));
+
+        player_renderer.setArmAngle(angle);
+    }
+
     @Override
     public void move(Vector2 move_vector) {
         super.move(move_vector);
@@ -216,11 +264,6 @@ public class Player extends DynamicWorldObject {
         game.getMainCamera().update();
         getPosition().add(move_vector.x, move_vector.y);
     }
-
-    //pos update stuff
-    private final float UPS = 10; // 10[Hz] times per second position info is send to server and then to clients
-    private final long time_step = (long) ((1f / UPS) * 1000f); //transform to milis
-    private long last_time_send;
 
     @Override
     public void tick(float delta) {
@@ -237,16 +280,31 @@ public class Player extends DynamicWorldObject {
             }
         }
 
+        //render our player
         player_renderer.tick(delta);
 
+        //update interpolator he will take care of sending or receiving packets about new position
+        interpolator.update();
+
         if(is_clone) {
-            //interpolate position to achieve smooth movement effect
-            float progress = 1.0f - (float) (probably_next_recive_time - System.currentTimeMillis()) / time_step;
-            getPosition().set(last_recived_position).lerp(recived_position, progress);
+            //fake calculate velocity for renderer to play animation properly
+            getVelocity().set(getPosition()).sub(last_position_clone);
+
+            if(getVelocity().epsilonEquals(0, 0, 5))
+                getVelocity().set(0, 0);
+
+            last_position_clone.set(getPosition());
 
             return;
         }
 
+        //arm animation
+        Vector2 mouse_pos = new Vector2(Gdx.input.getX(), Gdx.graphics.getHeight() - Gdx.input.getY());
+        game.getMainViewport().unproject(mouse_pos);
+
+        calculateArmAngle(mouse_pos);
+
+        //run this code only if this is not a clone
         if(left) {
             getVelocity().x = -PLAYER_SPEED;
         } else if(right) {
@@ -259,20 +317,18 @@ public class Player extends DynamicWorldObject {
             }
         }
 
-        //send player position update packet
-        if((Game.IS_HOST || Game.IS_CLIENT) && System.currentTimeMillis() - last_time_send > time_step) {
-            NetworkClasses.PlayerPositionUpdatePacket position_update_packet = new NetworkClasses.PlayerPositionUpdatePacket();
-            position_update_packet.player_connection_id = (Game.IS_HOST) ? GameServer.SERVER_CONNECTION_ID : game.getGameClient().getClient().getID();
-            position_update_packet.x = getPosition().x;
-            position_update_packet.y = getPosition().y;
-
-            NetworkHelper.send(position_update_packet);
-
-            last_time_send = System.currentTimeMillis();
-        }
-
         game.getMainCamera().position.lerp(new Vector3(getPosition().x + (getWH().x / 2f), getPosition().y + (getWH().y / 2f), 0), delta * 10f);
         game.getMainCamera().update();
+    }
+
+    @Override
+    public void render(SpriteBatch batch) {
+        player_renderer.render(batch);
+    }
+
+    @Override
+    public void dispose() {
+
     }
 
     public void setLeft(boolean left) {
@@ -285,12 +341,8 @@ public class Player extends DynamicWorldObject {
         this.jump = jump;
     }
 
-    public void setSelectedBlock(Block block) {
-        this.selected_block = block;
-    }
-
-    public void setBackgroundPlacing(boolean bool) {
-        this.background_placing = bool;
+    public void setSelectedItems(ItemsContainer.ItemsStack selected_items) {
+        this.selected_items = selected_items;
     }
 
     public void setRepresentingPlayer(ServerPlayer player) {
@@ -305,13 +357,15 @@ public class Player extends DynamicWorldObject {
         return is_clone;
     }
 
-    @Override
-    public void render(SpriteBatch batch) {
-        player_renderer.render(batch);
+    public ItemsContainer getItemsContainer() {
+        return items_container;
     }
 
-    @Override
-    public void dispose() {
+    public ItemsContainer getToolbarItemsContainer() {
+        return toolbar_items_container;
+    }
 
+    public PlayerRenderer1 getPlayerRenderer() {
+        return player_renderer;
     }
 }

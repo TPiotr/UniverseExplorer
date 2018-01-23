@@ -81,25 +81,6 @@ public class PlanetScreen extends Screen {
 
         world.render(batch);
 
-        batch.setProjectionMatrix(game.getGUICamera().combined);
-
-        font.draw(batch, "FPS: "+ Gdx.graphics.getFramesPerSecond(), -620, 350);
-        font.draw(batch, "Drawn lights:" + world.getLightEngine().getDrawnLightsCount(), -620, 330);
-        font.draw(batch, "Total ground lights:" + world.getLightEngine().getGroundLineRenderer().getPositions().size, -620, 310);
-        font.draw(batch, "Current tasks: " + game.getThreadPool().getActuallyTasksRunningCount(), -620, 290);
-
-        font.draw(batch, "Chunk x: " + ((world.getPlayer().getPosition().x / World.CHUNK_WORLD_SIZE) % world.getPlanetProperties().PLANET_SIZE), -620, 270);
-        font.draw(batch, "Chunk x: " + ((world.getPlayer().getPosition().x / World.CHUNK_WORLD_SIZE)), -450, 270);
-
-        font.draw(batch, "Phys. obj. count: " + world.getPhysicsEngine().getAllObjectsCount(), -620, 250);
-        //font.draw(batch, "Chunks colliders count: " + world.getPhysicsEngine().getPhysicsEngineChunksHelper().getChunkCollidersCount(), -620, 230);
-
-        font.draw(batch, "Draw calls: " + GLProfiler.drawCalls, -620, 210);
-        font.draw(batch, "Vertices rendered: " + (int) GLProfiler.vertexCount.average, -620, 190);
-        font.draw(batch, "Texture binds: " + GLProfiler.textureBindings, -620, 170);
-        font.draw(batch, "ID assigner: " + WorldObject.IDAssigner.accValue(), -620, 150);
-        font.draw(batch, "Time: " + World.TIME, -620, 130);
-
         //batch.draw(world.getLightEngine().getLightMap().getColorBufferTexture(), 0, 0, 480, 320);
 
         GLProfiler.reset();

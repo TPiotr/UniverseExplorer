@@ -1,4 +1,4 @@
-package explorer.game.framework.utils;
+package explorer.game.framework.utils.math;
 
 // MIT License
 //

@@ -5,7 +5,7 @@ import com.badlogic.gdx.math.Vector2;
 import java.util.concurrent.Future;
 
 import explorer.game.framework.Game;
-import explorer.game.framework.utils.FastNoise;
+import explorer.game.framework.utils.math.FastNoise;
 import explorer.universe.Universe;
 import explorer.universe.object.StarUniverseObject;
 

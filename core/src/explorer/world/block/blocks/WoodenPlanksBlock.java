@@ -37,9 +37,9 @@ public class WoodenPlanksBlock extends PlanetBoundBlock {
         String colorpack_region_name = world.getPlanetProperties().PLANET_TYPE.BLOCKS_PROPERTIES.getBlockProperties(WoodenPlanksBlock.class).COLOR_PACK_REGION_NAME;
         block_color.set(color_pack.load(world.getPlanetProperties().PLANET_FACTOR, game.getAssetsManager().getTextureRegion(colorpack_region_name)));
 
-        //load textures
-        final int BLOCK_PIXEL_SIZE = 256;
-        TextureRegion[][] textures = game.getAssetsManager().getTextureRegion("blocks/woodz").split(BLOCK_PIXEL_SIZE, BLOCK_PIXEL_SIZE);
+        //load old_assets.textures
+        final int BLOCK_PIXEL_SIZE = 16;
+        TextureRegion[][] textures = game.getAssetsManager().getTextureRegion("blocks/wooden_planks_spritesheet").split(BLOCK_PIXEL_SIZE, BLOCK_PIXEL_SIZE);
 
         tile_positions.put(Block.COLLIDE_NONE, textures[0][0]);
         tile_positions.put(Block.COLLIDE_ALL_SIDES, textures[1][2]);

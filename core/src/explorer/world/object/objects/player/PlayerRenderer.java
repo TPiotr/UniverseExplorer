@@ -32,7 +32,7 @@ public class PlayerRenderer {
      */
     private Vector2 wh;
 
-    //textures instances
+    //old_assets.textures instances
 
     //to jest ta twoja jedna cała tekstura jak stoi i nic nie robi, puki co dałem tam biała teksture jako placeholdera
     private TextureRegion player_standing_base_texture;

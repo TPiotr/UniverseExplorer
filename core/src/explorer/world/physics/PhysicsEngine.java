@@ -2,23 +2,18 @@ package explorer.world.physics;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectMap;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
 import explorer.game.framework.Game;
-import explorer.game.framework.utils.MathHelper;
+import explorer.game.framework.utils.math.MathHelper;
 import explorer.world.World;
 import explorer.world.block.Block;
-import explorer.world.chunk.TileHolder;
 import explorer.world.chunk.WorldChunk;
 import explorer.world.object.DynamicWorldObject;
 import explorer.world.object.StaticWorldObject;

@@ -6,16 +6,14 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.TimeUtils;
 
 import explorer.game.framework.Game;
 import explorer.game.Helper;
-import explorer.game.framework.utils.MathHelper;
+import explorer.game.framework.utils.math.MathHelper;
 import explorer.world.World;
 import explorer.world.chunk.WorldChunk;
 import explorer.world.lighting.lights.Light;

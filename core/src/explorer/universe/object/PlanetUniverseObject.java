@@ -7,7 +7,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 
 import explorer.game.framework.Game;
-import explorer.game.framework.utils.FastNoise;
+import explorer.game.framework.utils.math.FastNoise;
 import explorer.universe.Universe;
 
 /**

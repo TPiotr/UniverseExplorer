@@ -61,10 +61,10 @@ public class GrassBlock extends CustomRenderingBlock {
     }
 
     private void loadTextures() {
-        //load textures
-        final int BLOCK_PIXEL_SIZE = 256;
+        //load old_assets.textures
+        final int BLOCK_PIXEL_SIZE = 16;
 
-        TextureRegion[][] textures = game.getAssetsManager().getTextureRegion("blocks/dirtz").split(BLOCK_PIXEL_SIZE, BLOCK_PIXEL_SIZE);
+        TextureRegion[][] textures = game.getAssetsManager().getTextureRegion("blocks/dirt_spritesheet").split(BLOCK_PIXEL_SIZE, BLOCK_PIXEL_SIZE);
 
         tile_positions.put(Block.COLLIDE_NONE, textures[0][0]);
         tile_positions.put(Block.COLLIDE_ALL_SIDES, textures[1][2]);
@@ -87,7 +87,7 @@ public class GrassBlock extends CustomRenderingBlock {
         //
         grass_regions = new HashMap<Short, TextureRegion>();
 
-        TextureRegion[][] grass_textures = game.getAssetsManager().getTextureRegion("blocks/grassz").split(BLOCK_PIXEL_SIZE, BLOCK_PIXEL_SIZE);
+        TextureRegion[][] grass_textures = game.getAssetsManager().getTextureRegion("blocks/grass_spritesheet").split(BLOCK_PIXEL_SIZE, BLOCK_PIXEL_SIZE);
 
         grass_regions.put(Block.COLLIDE_NONE, grass_textures[0][0]);
         grass_regions.put(Block.COLLIDE_ALL_SIDES, grass_textures[1][2]);

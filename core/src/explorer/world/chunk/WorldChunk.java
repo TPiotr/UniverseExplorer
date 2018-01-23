@@ -3,6 +3,7 @@ package explorer.world.chunk;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
@@ -16,6 +17,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import explorer.game.framework.Game;
+import explorer.game.framework.utils.math.MathHelper;
 import explorer.network.NetworkClasses;
 import explorer.network.NetworkHelper;
 import explorer.world.ChunkDataProvider;
@@ -26,6 +28,7 @@ import explorer.world.block.CustomRenderingBlock;
 import explorer.world.object.DynamicWorldObject;
 import explorer.world.object.StaticWorldObject;
 import explorer.world.object.WorldObject;
+import explorer.world.object.objects.player.Player;
 
 /**
  * Created by RYZEN on 07.10.2017.
@@ -273,7 +276,7 @@ public class WorldChunk extends StaticWorldObject {
                         throw new InterruptedException();
                     }
 
-                    //calculate blocks textures
+                    //calculate blocks old_assets.textures
                     updateBlocksTextures();
 
                     if(Thread.interrupted()) {
@@ -287,7 +290,7 @@ public class WorldChunk extends StaticWorldObject {
                         throw new InterruptedException();
                     }
 
-                    //update center chunk border blocks textures
+                    //update center chunk border blocks old_assets.textures
                     world.getWorldChunks()[1][1].updateTexturesOnChunkBorders();
 
                     if(Thread.interrupted()) {
@@ -380,7 +383,7 @@ public class WorldChunk extends StaticWorldObject {
             blocks[x][y].setBackgroundBlock(world.getBlocks().getBlock(new_id));
         }
 
-        //update blocks textures in area where block was set
+        //update blocks old_assets.textures in area where block was set
         int area_size = 4;
         boolean update_other_border = false;
         for(int i = x - (area_size / 2); i < x + (area_size / 2); i++) {
@@ -460,6 +463,64 @@ public class WorldChunk extends StaticWorldObject {
     }
 
     /**
+     * Same as setBlock but this method checks if new block will collide with any objects if so you will not be able to place it
+     * @param x x in local cords
+     * @param y y in local cords
+     * @param new_id new block id
+     * @param background if true background block will be set to new one
+     * @param notify_network true if packet with information about block set will be send to other clients to notify them (if game is host or client)
+     * @return true if block was placed, false if not
+     */
+    public boolean setBlockPlayerChecks(int x, int y, int new_id, boolean background, boolean notify_network) {
+        boolean can_place = canPlaceBlock(x, y, background);
+
+        if(!can_place)
+            return false;
+
+        setBlock(x, y, new_id, background, notify_network);
+        return true;
+    }
+
+    /**
+     * Method that checks if block at given local coordinated can be places (check if will not collide with some blocks)
+     * @param x x in local cords
+     * @param y y in local cords
+     * @param background if true background block will be set to new one
+     * @return true if block can be placed at given coordinates
+     */
+    public boolean canPlaceBlock(int x, int y, boolean background) {
+        float block_x = (x * World.BLOCK_SIZE) + getPosition().x;
+        float block_y = (y * World.BLOCK_SIZE) + getPosition().y;
+
+        for(int i = 0; i < objects.size; i++) {
+            if(!objects.get(i).canPlaceBlockOver()) {
+                WorldObject object = objects.get(i);
+                if(MathHelper.overlaps2Rectangles(object.getPosition().x, object.getPosition().y, object.getWH().x, object.getWH().y,
+                        block_x, block_y, World.BLOCK_SIZE, World.BLOCK_SIZE)) {
+                    return false;
+                }
+            }
+        }
+
+        //check player & network players
+        if(MathHelper.overlaps2Rectangles(world.getPlayer().getPosition().x, world.getPlayer().getPosition().y, world.getPlayer().getWH().x, world.getPlayer().getWH().y,
+                block_x, block_y, World.BLOCK_SIZE, World.BLOCK_SIZE)) {
+            return false;
+        }
+
+        for(int i = 0; i < world.getClonedPlayers().size; i++) {
+            Player player = world.getClonedPlayers().get(i);
+
+            if(MathHelper.overlaps2Rectangles(player.getPosition().x, player.getPosition().y, player.getWH().x, player.getWH().y,
+                    block_x, block_y, World.BLOCK_SIZE, World.BLOCK_SIZE)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Function for smoothing blocks (nice connections effect)
      */
     private void updateBlocksTextures() {
@@ -487,8 +548,8 @@ public class WorldChunk extends StaticWorldObject {
     }
 
     /**
-     * Update blocks textures only on chunk borders
-     * used by other chunks when block is set on their border so textures of blocks on nearby chunk must be recalculated too
+     * Update blocks old_assets.textures only on chunk borders
+     * used by other chunks when block is set on their border so old_assets.textures of blocks on nearby chunk must be recalculated too
      */
     public void updateTexturesOnChunkBorders() {
         for(int i = 0; i < World.CHUNK_SIZE; i++) {

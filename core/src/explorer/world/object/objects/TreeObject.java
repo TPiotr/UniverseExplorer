@@ -42,6 +42,8 @@ public class TreeObject extends WorldObject implements SolidColorWorldObjectLigh
     public TreeObject(Vector2 position, World world, final Game game) {
         super(position, world, game);
 
+        can_place_block_over = true;
+
         synchronized (this) {
             texture = game.getAssetsManager().getTextureRegion("objects/tree_earth1");
             getWH().set(texture.getRegionWidth(), texture.getRegionHeight()).scl(SCALE);

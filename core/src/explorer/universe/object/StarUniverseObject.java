@@ -1,7 +1,6 @@
 package explorer.universe.object;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
@@ -9,7 +8,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 
 import explorer.game.framework.Game;
-import explorer.game.framework.utils.FastNoise;
+import explorer.game.framework.utils.math.FastNoise;
 import explorer.universe.Universe;
 import explorer.world.planet.generator.HeightsGenerator;
 
