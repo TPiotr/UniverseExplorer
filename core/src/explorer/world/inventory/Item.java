@@ -1,11 +1,19 @@
 package explorer.world.inventory;
 
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Affine2;
+import com.badlogic.gdx.math.Vector2;
 
 import explorer.game.framework.Game;
+import explorer.world.object.objects.player.Player;
 
 public abstract class Item {
-	
+
+	public interface InHandItemRenderer {
+		void render(float x, float y, float angle, int direction, Player player_instance, Affine2 transform, SpriteBatch batch);
+	}
+
 	//can lay on ground and can be pickable
 	protected boolean dropable;
 	

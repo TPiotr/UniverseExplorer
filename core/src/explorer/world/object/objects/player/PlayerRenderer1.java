@@ -4,11 +4,14 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Affine2;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.esotericsoftware.minlog.Log;
 
 import explorer.game.framework.Game;
 import explorer.world.World;
+import explorer.world.inventory.Item;
 import explorer.world.inventory.item_types.BodyWearableItem;
 import explorer.world.inventory.item_types.WearableItem;
 import explorer.world.inventory.items.wearables.BasicBodyItem;
@@ -124,10 +127,12 @@ public class PlayerRenderer1 {
         //render second background arm
         final float background_arm_brightness = .85f;
         batch.setColor(background_arm_brightness, background_arm_brightness, background_arm_brightness, 1f);
-        renderBackgroundArm(batch, basic_body_item.getArmRegion());
+
+        if(wear_body_item == null || (wear_body_item != null && wear_body_item.renderBasicItem()))
+            renderBackgroundArm(batch, basic_body_item.getArmRegion(), basic_body_item);
 
         if(wear_body_item != null)
-            renderBackgroundArm(batch, wear_body_item.getArmRegion());
+            renderBackgroundArm(batch, wear_body_item.getArmRegion(), wear_body_item);
 
         //body
         batch.setColor(Color.WHITE);
@@ -162,25 +167,27 @@ public class PlayerRenderer1 {
         }
 
         //arm
-        renderArm(batch, basic_body_item.getArmRegion());
+        if(wear_body_item == null || (wear_body_item != null && wear_body_item.renderBasicItem()))
+            renderArm(batch, basic_body_item.getArmRegion(), basic_body_item);
 
         if(wear_body_item != null)
-            renderArm(batch, wear_body_item.getArmRegion());
+            renderArm(batch, wear_body_item.getArmRegion(), wear_body_item);
     }
 
-    private void renderArm(SpriteBatch batch, TextureRegion arm_region) {
+    private Affine2 transform = new Affine2();
+    private void renderArm(SpriteBatch batch, TextureRegion arm_region, BodyWearableItem item) {
         ARM_SCALE = SCALE / 2f;
 
         //cords of socket for arm on body texture (in pixels) (y axis up!!!)
-        float body_arm_socket_x = 9.5f;
-        float body_arm_socket_y = 19.5f;
+        float body_arm_socket_x = item.getForegroundBodyArmSocket().x;
+        float body_arm_socket_y = item.getForegroundBodyArmSocket().y;
 
         float body_x = player.getPosition().x + (body_arm_socket_x * SCALE);
         float body_y = player.getPosition().y + (body_arm_socket_y * SCALE);
 
         //cords of origin in pixels (y axis up)
-        float local_origin_x = 7.5f;
-        float local_origin_y = 23f;
+        float local_origin_x = item.getLocalArmOrigin().x;
+        float local_origin_y = item.getLocalArmOrigin().y;
 
         float arm_origin_x = local_origin_x * ARM_SCALE;
         float arm_origin_y = local_origin_y * ARM_SCALE;
@@ -194,20 +201,41 @@ public class PlayerRenderer1 {
         float arm_rotation = (dir == -1) ? (360 - arm_angle) : arm_angle;
 
         //batch.draw(arm_region, arm_x, arm_y, arm_region.getRegionWidth() * ARM_SCALE, arm_region.getRegionHeight() * ARM_SCALE);
-        batch.draw(arm_region, arm_x + ((dir == -1) ? (arm_width + (1.5f * ARM_SCALE)) : 0), arm_y, arm_origin_x, arm_origin_y, arm_width, arm_height, dir, 1, arm_rotation);
+        batch.draw(arm_region, arm_x + ((dir == -1) ? (arm_width + arm_origin_x) : 0), arm_y, arm_origin_x, arm_origin_y, arm_width, arm_height, dir, 1, arm_rotation);
+
+        //try to render holding in arm item
+        if(player.getSelectedItems() != null && player.getSelectedItems().getItem() != null) {
+            if(player.getSelectedItems().getItem() instanceof Item.InHandItemRenderer) {
+                //calc item in hand position
+                float radius = (Vector2.dst(local_origin_x, local_origin_y, item.getArmToolSocket().x, item.getArmToolSocket().y)) * ARM_SCALE;
+
+                arm_rotation -= 90;
+                float x = radius * MathUtils.cosDeg(arm_rotation);
+                float y = radius * MathUtils.sinDeg(arm_rotation);
+
+                x += arm_x + arm_origin_x + ((dir == -1) ? (arm_width + arm_origin_x) : 0);
+                y += arm_y + arm_origin_y;
+
+                transform.idt();
+                transform.translate(x, y);
+                transform.rotate(arm_rotation);
+
+                ((Item.InHandItemRenderer) player.getSelectedItems().getItem()).render(x, y, arm_rotation, dir, player, transform, batch);
+            }
+        }
     }
 
-    private void renderBackgroundArm(SpriteBatch batch, TextureRegion arm_region) {
+    private void renderBackgroundArm(SpriteBatch batch, TextureRegion arm_region, BodyWearableItem item) {
         //cords of socket for arm on body texture (in pixels) (y axis up!!!)
-        float body_arm_socket_x = 16f;
-        float body_arm_socket_y = 19.5f;
+        float body_arm_socket_x = item.getBackgroundBodyArmSocket().x;
+        float body_arm_socket_y = item.getBackgroundBodyArmSocket().y;
 
         float body_x = player.getPosition().x + (body_arm_socket_x * SCALE);
         float body_y = player.getPosition().y + (body_arm_socket_y * SCALE);
 
         //cords of origin in pixels (y axis up)
-        float local_origin_x = 7.5f;
-        float local_origin_y = 23f;
+        float local_origin_x = item.getLocalArmOrigin().x;
+        float local_origin_y = item.getLocalArmOrigin().y;
 
         float arm_origin_x = local_origin_x * ARM_SCALE;
         float arm_origin_y = local_origin_y * ARM_SCALE;

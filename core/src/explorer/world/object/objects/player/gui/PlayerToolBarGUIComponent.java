@@ -162,6 +162,11 @@ public class PlayerToolBarGUIComponent extends GUIComponent {
             items_renderers.get(i).setItemsStack(player.getToolbarItemsContainer().getItems().get(i), player.getToolbarItemsContainer());
             items_renderers.get(i).tick(delta);
         }
+
+        //update player current holding item
+        if(selected_renderer != null) {
+            player.setSelectedItems(selected_renderer.getItemsStack());
+        }
     }
 
     @Override

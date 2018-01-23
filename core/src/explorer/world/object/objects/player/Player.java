@@ -167,14 +167,6 @@ public class Player extends DynamicWorldObject {
                                                 selected_items = null;
                                         }
                                     }
-
-                                    /*for(int k = 0; k < chunk.getObjects().size; k++) {
-                                        WorldObject o = chunk.getObjects().get(k);
-                                        if(MathHelper.overlaps2Rectangles(o.getPosition().x, o.getPosition().y, o.getWH().x, o.getWH().y, touch.x, touch.y, 1, 1)) {
-                                            world.removeObject(o, true);
-                                        }
-                                    }*/
-
                                 }
                             }
                         }
@@ -343,6 +335,10 @@ public class Player extends DynamicWorldObject {
 
     public void setSelectedItems(ItemsContainer.ItemsStack selected_items) {
         this.selected_items = selected_items;
+    }
+
+    public ItemsContainer.ItemsStack getSelectedItems() {
+        return selected_items;
     }
 
     public void setRepresentingPlayer(ServerPlayer player) {
