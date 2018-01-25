@@ -35,10 +35,6 @@ public class PlayerRenderer1 {
     private BodyWearableItem basic_body_item;
     private WearableItem basic_legs_item;
 
-    private WearableItem wear_head_item;
-    private BodyWearableItem wear_body_item;
-    private WearableItem wear_legs_item;
-
     //legs texture regions from splitting process used in rendering
     private TextureRegion basic_idle_legs, basic_falling_legs;
     private Animation<TextureRegion> basic_run_animation;
@@ -85,7 +81,7 @@ public class PlayerRenderer1 {
 
     private void loadWearLegs() {
         //load legs animation
-        TextureRegion[][] legs_splited = wear_legs_item.getClothTexture().split(26, 34);
+        TextureRegion[][] legs_splited = player.getWearLegsItem().getClothTexture().split(26, 34);
 
         int offset = 1;
         int frames_count = legs_splited[0].length - offset;
@@ -116,11 +112,11 @@ public class PlayerRenderer1 {
 
     private WearableItem last_legs = null;
     public void updateLegs() {
-        if(last_legs != wear_legs_item) {
+        if(last_legs != player.getWearLegsItem()) {
             loadWearLegs();
         }
 
-        last_legs = wear_legs_item;
+        last_legs = player.getWearLegsItem();
     }
 
     public void render(SpriteBatch batch) {
@@ -128,50 +124,77 @@ public class PlayerRenderer1 {
         final float background_arm_brightness = .85f;
         batch.setColor(background_arm_brightness, background_arm_brightness, background_arm_brightness, 1f);
 
-        if(wear_body_item == null || (wear_body_item != null && wear_body_item.renderBasicItem()))
+        if(player.getWearBodyItem() == null || (player.getWearBodyItem().renderBasic()))
             renderBackgroundArm(batch, basic_body_item.getArmRegion(), basic_body_item);
 
-        if(wear_body_item != null)
-            renderBackgroundArm(batch, wear_body_item.getArmRegion(), wear_body_item);
+        if(player.getWearBodyItem() != null)
+            renderBackgroundArm(batch, player.getWearBodyItem().getArmRegion(), player.getWearBodyItem());
 
         //body
         batch.setColor(Color.WHITE);
-        renderTextureRegion(basic_body_item.getClothTexture(), player.getPosition(), player.getWH(), dir, batch);
 
-        if(wear_body_item != null)
-            renderTextureRegion(wear_body_item.getClothTexture(), player.getPosition(), player.getWH(), dir, batch);
+        if(basic_body_item == null || (basic_body_item.renderBasic()))
+            renderTextureRegion(basic_body_item.getClothTexture(), player.getPosition(), player.getWH(), dir, batch);
 
-        //head
-        renderTextureRegion(basic_head_item.getClothTexture(), player.getPosition(), player.getWH(), dir, batch);
-
-        if(wear_head_item != null)
-            renderTextureRegion(wear_head_item.getClothTexture(), player.getPosition(), player.getWH(), dir, batch);
-
-        //legs anim
-        if(Math.abs(player.getVelocity().y) > 1) {
-            renderTextureRegion(basic_falling_legs, player.getPosition(), player.getWH(), dir, batch);
-        } else if(Math.abs(player.getVelocity().x) < 5) {
-            renderTextureRegion(basic_idle_legs, player.getPosition(), player.getWH(), dir, batch);
-        } else {
-            renderTextureRegion(basic_run_animation.getKeyFrame(time), player.getPosition(), player.getWH(), dir, batch);
+        if(player.getWearBodyItem() != null) {
+            if(player.getWearBodyItem() instanceof WearableItem.CustomWearableRenderer) {
+                ((WearableItem.CustomWearableRenderer) player.getWearBodyItem()).render(player.getPosition().x, player.getPosition().y, player.getWH().x, player.getWH().y, player.getWearBodyItem().getClothTexture(), dir, batch);
+            } else {
+                renderTextureRegion(player.getWearBodyItem().getClothTexture(), player.getPosition(), player.getWH(), dir, batch);
+            }
         }
 
-        if(wear_legs_item != null) {
-            if(Math.abs(player.getVelocity().y) > 1) {
-                renderTextureRegion(wear_falling_legs, player.getPosition(), player.getWH(), dir, batch);
-            } else if(Math.abs(player.getVelocity().x) < 5) {
-                renderTextureRegion(wear_idle_legs, player.getPosition(), player.getWH(), dir, batch);
+        //head
+        if(player.getWearHeadItem() == null || (player.getWearHeadItem().renderBasic()))
+            renderTextureRegion(basic_head_item.getClothTexture(), player.getPosition(), player.getWH(), dir, batch);
+
+        if(player.getWearHeadItem() != null) {
+            if(player.getWearHeadItem() instanceof WearableItem.CustomWearableRenderer) {
+                ((WearableItem.CustomWearableRenderer) player.getWearHeadItem()).render(player.getPosition().x, player.getPosition().y, player.getWH().x, player.getWH().y, player.getWearHeadItem().getClothTexture(), dir, batch);
             } else {
-                renderTextureRegion(wear_run_animation.getKeyFrame(time), player.getPosition(), player.getWH(), dir, batch);
+                renderTextureRegion(player.getWearHeadItem().getClothTexture(), player.getPosition(), player.getWH(), dir, batch);
+            }
+        }
+
+        //legs anim
+        if(player.getWearLegsItem() == null || player.getWearLegsItem().renderBasic()) {
+            if (Math.abs(player.getVelocity().y) > 1) {
+                renderTextureRegion(basic_falling_legs, player.getPosition(), player.getWH(), dir, batch);
+            } else if (Math.abs(player.getVelocity().x) < 5) {
+                renderTextureRegion(basic_idle_legs, player.getPosition(), player.getWH(), dir, batch);
+            } else {
+                renderTextureRegion(basic_run_animation.getKeyFrame(time), player.getPosition(), player.getWH(), dir, batch);
+            }
+        }
+
+        if(player.getWearLegsItem() != null) {
+            if(Math.abs(player.getVelocity().y) > 1) {
+                if(player.getWearLegsItem() instanceof WearableItem.CustomWearableRenderer) {
+                    ((WearableItem.CustomWearableRenderer) player.getWearLegsItem()).render(player.getPosition().x, player.getPosition().y, player.getWH().x, player.getWH().y, wear_falling_legs, dir, batch);
+                } else {
+                    renderTextureRegion(wear_falling_legs, player.getPosition(), player.getWH(), dir, batch);
+                }
+            } else if(Math.abs(player.getVelocity().x) < 5) {
+                if(player.getWearLegsItem() instanceof WearableItem.CustomWearableRenderer) {
+                    ((WearableItem.CustomWearableRenderer) player.getWearLegsItem()).render(player.getPosition().x, player.getPosition().y, player.getWH().x, player.getWH().y, wear_idle_legs, dir, batch);
+                } else {
+                    renderTextureRegion(wear_idle_legs, player.getPosition(), player.getWH(), dir, batch);
+                }
+            } else {
+                if(player.getWearLegsItem() instanceof WearableItem.CustomWearableRenderer) {
+                    ((WearableItem.CustomWearableRenderer) player.getWearLegsItem()).render(player.getPosition().x, player.getPosition().y, player.getWH().x, player.getWH().y, wear_run_animation.getKeyFrame(time), dir, batch);
+                } else {
+                    renderTextureRegion(wear_run_animation.getKeyFrame(time), player.getPosition(), player.getWH(), dir, batch);
+                }
             }
         }
 
         //arm
-        if(wear_body_item == null || (wear_body_item != null && wear_body_item.renderBasicItem()))
+        if(player.getWearBodyItem() == null || (player.getWearBodyItem().renderBasic()))
             renderArm(batch, basic_body_item.getArmRegion(), basic_body_item);
 
-        if(wear_body_item != null)
-            renderArm(batch, wear_body_item.getArmRegion(), wear_body_item);
+        if(player.getWearBodyItem() != null)
+            renderArm(batch, player.getWearBodyItem().getArmRegion(), player.getWearBodyItem());
     }
 
     private Affine2 transform = new Affine2();
@@ -200,9 +223,26 @@ public class PlayerRenderer1 {
 
         float arm_rotation = (dir == -1) ? (360 - arm_angle) : arm_angle;
 
-        //batch.draw(arm_region, arm_x, arm_y, arm_region.getRegionWidth() * ARM_SCALE, arm_region.getRegionHeight() * ARM_SCALE);
+        if(player.getSelectedItems() != null && player.getSelectedItems().getItem() != null) {
+            if (player.getSelectedItems().getItem() instanceof Item.InHandItemRenderer) {
+                if (!((Item.InHandItemRenderer) player.getSelectedItems().getItem()).firstArmThenTool()) {
+                    renderInHandItem(local_origin_x, local_origin_y, arm_x, arm_y, arm_origin_x, arm_origin_y, arm_rotation, arm_width, item, batch);
+                }
+            }
+        }
+
         batch.draw(arm_region, arm_x + ((dir == -1) ? (arm_width + arm_origin_x) : 0), arm_y, arm_origin_x, arm_origin_y, arm_width, arm_height, dir, 1, arm_rotation);
 
+        if(player.getSelectedItems() != null && player.getSelectedItems().getItem() != null) {
+            if (player.getSelectedItems().getItem() instanceof Item.InHandItemRenderer) {
+                if(((Item.InHandItemRenderer) player.getSelectedItems().getItem()).firstArmThenTool()) {
+                    renderInHandItem(local_origin_x, local_origin_y, arm_x, arm_y, arm_origin_x, arm_origin_y, arm_rotation, arm_width, item, batch);
+                }
+            }
+        }
+    }
+
+    private void renderInHandItem(float local_origin_x, float local_origin_y, float arm_x, float arm_y, float arm_origin_x, float arm_origin_y, float arm_rotation, float arm_width, BodyWearableItem item, SpriteBatch batch) {
         //try to render holding in arm item
         if(player.getSelectedItems() != null && player.getSelectedItems().getItem() != null) {
             if(player.getSelectedItems().getItem() instanceof Item.InHandItemRenderer) {
@@ -216,9 +256,16 @@ public class PlayerRenderer1 {
                 x += arm_x + arm_origin_x + ((dir == -1) ? (arm_width + arm_origin_x) : 0);
                 y += arm_y + arm_origin_y;
 
+                //calc transform
                 transform.idt();
                 transform.translate(x, y);
                 transform.rotate(arm_rotation);
+
+                //rotate and scale if player is turned to left
+                if(dir == -1) {
+                    transform.scale(-1, 1);
+                    transform.rotate(180);
+                }
 
                 ((Item.InHandItemRenderer) player.getSelectedItems().getItem()).render(x, y, arm_rotation, dir, player, transform, batch);
             }
@@ -290,15 +337,7 @@ public class PlayerRenderer1 {
         }
     }
 
-    public void setWearHeadItem(WearableItem head_item) {
-        this.wear_head_item = head_item;
-    }
-
-    public void setWearBodyItem(BodyWearableItem body_item) {
-        this.wear_body_item = body_item;
-    }
-
-    public void setWearLegsItem(WearableItem legs_item) {
-        this.wear_legs_item = legs_item;
+    public void setArmAngleUnchecked(float angle) {
+        this.arm_angle = angle;
     }
 }

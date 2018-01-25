@@ -4,6 +4,7 @@ import explorer.game.framework.Game;
 import explorer.world.inventory.item_types.WearableItem;
 
 /**
+ * Basic legs, this is not an normal item (but in fact is lol)!
  * Created by RYZEN on 22.01.2018.
  */
 

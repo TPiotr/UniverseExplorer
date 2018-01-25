@@ -165,7 +165,7 @@ public class TileHolderTools {
     public static synchronized TextureRegion getTileTexture(TileHolder[][] tiles_data,
                                         Block this_block, int i, int j, boolean background, WorldChunk chunk, World world) {
 
-        TextureRegion out = this_block.getTextureRegion((short) getTileTextureID(tiles_data, this_block, i, j, background, chunk, world));
+        TextureRegion out = this_block.getTextureRegion(getTileTextureID(tiles_data, this_block, i, j, background, chunk, world));
         return out;
 
         /*TextureRegion final_region = null;

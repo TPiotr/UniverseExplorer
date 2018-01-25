@@ -4,6 +4,7 @@ import explorer.game.framework.Game;
 import explorer.world.inventory.item_types.WearableItem;
 
 /**
+ * Basic head item, this is not a item in fact
  * Created by RYZEN on 20.01.2018.
  */
 

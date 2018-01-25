@@ -18,6 +18,7 @@ import explorer.world.inventory.ItemsContainer;
 import explorer.world.object.objects.player.Player;
 
 /**
+ * Class similar to PlayerInventoryRenderer but responsible for rendering tool bar, see that class to get comments on code
  * Created by RYZEN on 21.01.2018.
  */
 
@@ -38,6 +39,9 @@ public class PlayerToolBarGUIComponent extends GUIComponent {
 
     private static final Color SELECTED_COLOR = new Color(.8f, .8f, .8f, 1f);
 
+    /**
+     * Custom ItemRenderer which makes items floating, if some object is selected if floats faster to indicate that this item is selected
+     */
     private static class FloatingItemRenderer extends PlayerInventoryRenderer.ItemRenderer {
 
         private float time;
@@ -77,7 +81,7 @@ public class PlayerToolBarGUIComponent extends GUIComponent {
         this.planet_screen = planet_screen;
         this.items_renderers = new Array<PlayerInventoryRenderer.ItemRenderer>(Player.INVENTORY_SLOTS_COUNT);
 
-        //create input adapter for selecting acc item
+        //create input adapter for selecting items
         InputAdapter input = new InputAdapter() {
 
             @Override
@@ -88,25 +92,7 @@ public class PlayerToolBarGUIComponent extends GUIComponent {
                 Vector2 touch_pos = new Vector2(screenX, screenY);
                 viewport.unproject(touch_pos);
 
-                for(int i = 0; i < items_renderers.size; i++) {
-                    PlayerInventoryRenderer.ItemRenderer renderer = items_renderers.get(i);
-
-                    if(MathHelper.overlaps2Rectangles(touch_pos.x, touch_pos.y, 1, 1,
-                            renderer.getLocalPosition().x + OFFSET.x, renderer.getLocalPosition().y + OFFSET.y, renderer.getWH().x, renderer.getWH().y)) {
-
-                        if(selected_renderer != null)
-                            ((FloatingItemRenderer) selected_renderer).time_mul = 1f;
-
-                        selected_renderer = renderer;
-                        player.setSelectedItems(selected_renderer.getItemsStack());
-
-                        ((FloatingItemRenderer) selected_renderer).time_mul = 3f;
-
-                        return true;
-                    }
-                }
-
-                return false;
+                return check(touch_pos);
             }
 
             @Override
@@ -114,7 +100,10 @@ public class PlayerToolBarGUIComponent extends GUIComponent {
                 if(!isVisible() || !isPlanetGUIScreenVisible())
                     return false;
 
-                return false;
+                Vector2 touch_pos = new Vector2(screenX, screenY);
+                viewport.unproject(touch_pos);
+
+                return check(touch_pos);
             }
 
             @Override
@@ -122,6 +111,30 @@ public class PlayerToolBarGUIComponent extends GUIComponent {
                 if(!isVisible() || !isPlanetGUIScreenVisible())
                     return false;
 
+                return false;
+            }
+
+            private boolean check(Vector2 touch_pos) {
+                for(int i = 0; i < items_renderers.size; i++) {
+                    PlayerInventoryRenderer.ItemRenderer renderer = items_renderers.get(i);
+
+                    if(MathHelper.overlaps2Rectangles(touch_pos.x, touch_pos.y, 1, 1,
+                            renderer.getLocalPosition().x + OFFSET.x, renderer.getLocalPosition().y + OFFSET.y, renderer.getWH().x, renderer.getWH().y)) {
+
+                        //if previous renderer wasn't null set it's time multipler to normal one
+                        if(selected_renderer != null)
+                            ((FloatingItemRenderer) selected_renderer).time_mul = 1f;
+
+                        //set new selected renderer and update player
+                        selected_renderer = renderer;
+                        player.setSelectedItems(selected_renderer.getItemsStack());
+
+                        //to indicate that some renderer is selected make it floating effect faster
+                        ((FloatingItemRenderer) selected_renderer).time_mul = 3f;
+
+                        return true;
+                    }
+                }
                 return false;
             }
         };

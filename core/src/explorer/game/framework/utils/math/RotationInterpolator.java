@@ -1,7 +1,7 @@
 package explorer.game.framework.utils.math;
 
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
-import com.esotericsoftware.minlog.Log;
 
 import explorer.game.framework.Game;
 import explorer.network.NetworkClasses;
@@ -11,38 +11,29 @@ import explorer.world.World;
 import explorer.world.object.WorldObject;
 
 /**
- * Class used in interpolating position of object which is received from network with not high rate like 60Hz (most of the time freq of new position if like 10Hz)
- * so we have to interpolate position to achieve nice looking movement, not jagged one
- * This class handles all stuff to send/receive position of object
- * Created by RYZEN on 19.01.2018.
+ * Class used in interpolating rotation over network
+ * Created by RYZEN on 24.01.2018.
  */
 
-public class PositionInterpolator {
+public class RotationInterpolator {
 
     /**
-     * Simple interface to write custom method to send packets with updated position
-     */
-    public interface InterpolatorPacketSender {
-        void sendUpdatePacket();
-    }
-
-    /**
-     * Variable that stores time in milis which represents last time when new position packet or whatever was received
+     * Variable that stores time in milis which represents last time when new rotation packet or whatever was received
      */
     private long last_time_received;
 
     /**
-     * Variable that stores last time when position update packet was send
+     * Variable that stores last time when rotation update packet was send
      */
     private long last_time_send;
 
     /**
-     * Variable that represents probably time in which new packet or whatever containing position will be received
+     * Variable that represents probably time in which new packet or whatever containing rotation will be received
      */
     private long probably_next_time_packet;
 
     /**
-     * Position updates per second, when we are sending position (and used in probably_next_time_packet)
+     * rotation updates per second
      */
     private int UPS;
 
@@ -52,19 +43,19 @@ public class PositionInterpolator {
     private long time_step;
 
     /**
-     * Used in interpolating, this is position which we want to reach
+     * Used in interpolating, this is rotation which we want to reach
      */
-    private Vector2 target_position;
+    private float target_value;
 
     /**
-     * Used in interpolating, just last received target position
+     * Used in interpolating, just last received target rotation
      */
-    private Vector2 last_target_position;
+    private float last_target_value;
 
     /**
-     * World object to which we are making changes in position
+     * Product of interpolation
      */
-    private WorldObject object;
+    private float value;
 
     /**
      * Game instance (for sending packets stuff)
@@ -72,32 +63,29 @@ public class PositionInterpolator {
     private Game game;
 
     /**
-     * Update packets sender instance
+     * Update packets sender
      */
-    private InterpolatorPacketSender sender;
+    private PositionInterpolator.InterpolatorPacketSender sender;
 
     /**
-     * Booleans (default all false) represents 2 options in which PositionInterpolator can work:
-     * -only_send - interpolator will only send packets about new position independently if this client has to calculate work, will never interpolate position
-     * -only_receive - interpolator will only wait for new packet with new position and interpolate it to achieve smooth movement, will never send any packets
+     * Booleans (default all false) represents 2 options in which RotationInterpolator can work:
+     * -only_send - interpolator will only send packets about new rotation independently if this client has to calculate work, will never interpolate rotation
+     * -only_receive - interpolator will only wait for new packet with new rotation and interpolate it to achieve smooth movement, will never send any packets
      */
     private boolean only_send, only_receive;
 
-    public PositionInterpolator(WorldObject object, InterpolatorPacketSender sender, Game game) {
-        this.object = object;
+    public RotationInterpolator(PositionInterpolator.InterpolatorPacketSender sender, Game game) {
         this.game = game;
         this.sender = sender;
 
         this.UPS = 10; //10Hz
-        this.target_position = new Vector2();
-        this.last_target_position = new Vector2();
 
         this.time_step = (long) ((1f / UPS) * 1000f);
     }
 
-    public void interpolate(float x, float y, long time_received) {
-        last_target_position.set(target_position);
-        target_position.set(x, y);
+    public void interpolate(float value, long time_received) {
+        last_target_value = target_value;
+        target_value = value;
 
         last_time_received = time_received;
         probably_next_time_packet = time_received + time_step;
@@ -124,25 +112,9 @@ public class PositionInterpolator {
             } else {
                 //here we have to interpolate position to received one
                 float progress = 1.0f - (float) (probably_next_time_packet - System.currentTimeMillis()) / time_step;
-                object.getPosition().set(last_target_position).lerp(target_position, progress);
+                value = MathUtils.lerpAngleDeg(last_target_value, target_value, progress);
             }
         }
-    }
-
-    /**
-     * Getter for target position
-     * @return target position in vector2 instance
-     */
-    public Vector2 getTargetPosition() {
-        return target_position;
-    }
-
-    /**
-     * Getter for last target position
-     * @return last target position in vector2 instance
-     */
-    public Vector2 getLastTargetPosition() {
-        return last_target_position;
     }
 
     /**
@@ -184,16 +156,16 @@ public class PositionInterpolator {
     }
 
     /**
-     * Frequency of sending update position packets
-     * @return sending update position packets frequency
+     * Frequency of sending update packets
+     * @return sending update packets frequency
      */
     public int getUPS() {
         return UPS;
     }
 
     /**
-     * Set frequency of sending update position packets
-     * @param ups new frequency of sending update position packets
+     * Set frequency of sending update packets
+     * @param ups new frequency of sending update packets
      */
     public void setUPS(int ups) {
         this.UPS = ups;
@@ -203,4 +175,11 @@ public class PositionInterpolator {
         this.probably_next_time_packet = last_time_received + time_step;
     }
 
+    /**
+     * Getter for interpolated value of angle, int one word final product
+     * @return interpolated value of angle, world final product
+     */
+    public float getValue() {
+        return value;
+    }
 }

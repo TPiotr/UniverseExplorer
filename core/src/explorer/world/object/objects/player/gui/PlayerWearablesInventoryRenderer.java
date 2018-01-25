@@ -69,24 +69,24 @@ public class PlayerWearablesInventoryRenderer extends GUIComponent {
         if(planet_screen.getWorld() != null && planet_screen.getWorld().getPlayer() != null) {
             Item head = (getItemsContainer().getItems().get(0) != null) ? getItemsContainer().getItems().get(0).getItem() : null;
             if(head != null) {
-                planet_screen.getWorld().getPlayer().getPlayerRenderer().setWearHeadItem((WearableItem) head);
+                planet_screen.getWorld().getPlayer().setWearHeadItem((WearableItem) head);
             } else {
-                planet_screen.getWorld().getPlayer().getPlayerRenderer().setWearHeadItem(null);
+                planet_screen.getWorld().getPlayer().setWearHeadItem(null);
             }
 
             Item body = (getItemsContainer().getItems().get(1) != null) ? getItemsContainer().getItems().get(0).getItem() : null;
             if(body != null) {
-                planet_screen.getWorld().getPlayer().getPlayerRenderer().setWearBodyItem((BodyWearableItem) body);
+                planet_screen.getWorld().getPlayer().setWearBodyItem((BodyWearableItem) body);
             } else {
-                planet_screen.getWorld().getPlayer().getPlayerRenderer().setWearBodyItem(null);
+                planet_screen.getWorld().getPlayer().setWearBodyItem(null);
             }
 
             Item legs = (getItemsContainer().getItems().get(2) != null) ? getItemsContainer().getItems().get(0).getItem() : null;
             if(legs != null) {
-                planet_screen.getWorld().getPlayer().getPlayerRenderer().setWearLegsItem((WearableItem) legs);
+                planet_screen.getWorld().getPlayer().setWearLegsItem((WearableItem) legs);
                 planet_screen.getWorld().getPlayer().getPlayerRenderer().updateLegs();
             } else {
-                planet_screen.getWorld().getPlayer().getPlayerRenderer().setWearLegsItem(null);
+                planet_screen.getWorld().getPlayer().setWearLegsItem(null);
             }
         }
     }

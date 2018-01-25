@@ -719,8 +719,23 @@ public class WorldChunk extends StaticWorldObject {
                 if(holder.getBackgroundBlock().getBlockID() == AIR_ID)
                     continue;
 
+                boolean render = true;
+                if(holder.getForegroundBlock().getBlockID() != AIR_ID)
+                    render = false;
+
+                if(holder.getForegroundBlock().needBackgroundBlockRendered()) {
+                    render = true;
+                } else if(holder.getForegroundBlock().needBackgroundBlockRenderedIfNotFullySurrounded()) {
+                    if(holder.getForegroundBlockTextureID() != Block.COLLIDE_ALL_SIDES) {
+                        render = true;
+                    }
+                }
+
+                if(!render)
+                    continue;
+
                 //first check if this background block don't have flag set to true that forces its rendering independently on others blocks
-                if(!holder.getBackgroundBlock().needBackgroundBlockRendered()) {
+                /*if(!holder.getBackgroundBlock().needBackgroundBlockRendered()) {
 
                     //in this moment we know that this background tile is not an air block
                     if (holder.getForegroundBlock().needBackgroundBlockRenderedIfNotFullySurrounded() && holder.getForegroundBlock().getBlockID() != AIR_ID) {
@@ -781,7 +796,7 @@ public class WorldChunk extends StaticWorldObject {
                     else if (!holder.getForegroundBlock().needBackgroundBlockRenderedIfNotFullySurrounded() && holder.getForegroundBlock().getBlockID() != AIR_ID) {
                         continue;
                     }
-                }
+                }*/
 
                 Block block = holder.getBackgroundBlock();
                 if(block instanceof CustomColorBlock) {

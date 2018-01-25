@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import java.util.HashMap;
 
 import explorer.game.framework.Game;
+import explorer.world.inventory.item_types.ToolItem;
 
 /**
  * Created by RYZEN on 07.10.2017.
@@ -78,6 +79,16 @@ public class Block {
     protected boolean need_background_block_rendered = false;
 
     /**
+     * Hardness of block, read how much we have to use some tool to break it
+     */
+    protected float hardness = 1f;
+
+    /**
+     * Tool type which is preffered for this block to break it
+     */
+    protected ToolItem.ToolType proffered_tool_type = ToolItem.ToolType.PICKAXE;
+
+    /**
      * @param game game instance for assets loading
      */
     public Block(Game game) {
@@ -130,5 +141,21 @@ public class Block {
      */
     public boolean isCollidable() {
         return collidable;
+    }
+
+    /**
+     * Getter for block hardness value
+     * @return block hardness
+     */
+    public float getHardness() {
+        return hardness;
+    }
+
+    /**
+     * Getter for proffered tool type to break this block
+     * @return proffered tool type to break this block (so tool type that will be the most effective while destroying that block)
+     */
+    public ToolItem.ToolType getProfferedToolType() {
+        return proffered_tool_type;
     }
 }

@@ -87,8 +87,15 @@ public class FileChunkDataProvider extends ChunkDataProvider {
                 }
 
                 //try to load data from file until loading data process is successful
+                int failed_times = 0;
                 while(!loadData(data, handle, chunk_position, world, game)) {
                     data.objects.clear();
+                    failed_times++;
+
+                    if(failed_times > 10) {
+                        //TODO that means our chunks file is corrupted or something, so we have to regenerate this chunk or ask player if he want to regenerate or quit game or whatever
+                        //maybe restarting game will be enough (file is just temporary out of access or really broken)
+                    }
                 }
 
                 Log.debug("(FileChunkDataProvider) Reading file time: " + TimeUtils.timeSinceMillis(file_loading_start) + "ms");

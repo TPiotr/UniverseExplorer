@@ -374,7 +374,7 @@ public class World extends StaticWorldObject {
                             NetworkClasses.UpdateCurrentIDAssignerValuePacket update_index_packet = new NetworkClasses.UpdateCurrentIDAssignerValuePacket();
                             update_index_packet.new_current_id = IDAssigner.accValue();
                             game.getGameServer().getServer().sendToTCP(connection.getID(), update_index_packet);
-                            System.err.println("(Network server) Player " + connection.getID() + " had wrong IDAssigner value (" + update_value_packet.new_current_id + ") proper is: " + current_value);
+                            Log.error("(Network server) Player " + connection.getID() + " had wrong IDAssigner value (" + update_value_packet.new_current_id + ") proper is: " + current_value);
                         }
                     }
 
@@ -421,6 +421,23 @@ public class World extends StaticWorldObject {
                         NetworkClasses.UpdateGameTimePacket update_time_packet = new NetworkClasses.UpdateGameTimePacket();
                         update_time_packet.new_time = World.TIME;
                         game.getGameServer().getServer().sendToTCP(connection.getID(), update_time_packet);
+
+                        //force this player to send info about what he wears and holds
+                        Runnable update_player = new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    //1 sec to just make sure this new player will have this player as a clone
+                                    Thread.sleep(1000);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+
+                                getPlayer().updateSelectedItemNetwork(true);
+                                getPlayer().updateWearItemsNetwork(true);
+                            }
+                        };
+                        new Thread(update_player).start();
 
                     } else if(o instanceof NetworkClasses.PlayerBoundPacket) {
                         NetworkClasses.PlayerBoundPacket packet = (NetworkClasses.PlayerBoundPacket) o;
@@ -520,7 +537,7 @@ public class World extends StaticWorldObject {
                                     }
 
                                     boolean added =  World.this.addObject(instance, false);
-                                    Log.debug("(World NetworkClient) Placing object from network! " + added + " player pos: " + world.getPlayer().getPosition() + " this pos: " + instance.getPosition());
+                                    Log.debug("(World NetworkClient) Placing object from network! " + added);
                                 }
                             }
                         };
@@ -582,6 +599,23 @@ public class World extends StaticWorldObject {
 
                         int con_id = new_player_info.connection_id;
                         new_player.setRepresentingPlayer(game.getGameClient().getPlayerInstanceByConnectionID(con_id));
+
+                        //force this player to send info what he wears and holds
+                        Runnable update_player = new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    //1 sec to just make sure this new player will have this player as a clone
+                                    Thread.sleep(1000);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+
+                                getPlayer().updateSelectedItemNetwork(true);
+                                getPlayer().updateWearItemsNetwork(true);
+                            }
+                        };
+                        new Thread(update_player).start();
                     }
 
                     //destroy player clone
@@ -915,6 +949,9 @@ public class World extends StaticWorldObject {
             SIMULATE_LOGIC = true;
             for (int i = 0; i < server_players.size; i++) {
                 Player clone = server_players.get(i);
+
+                if(clone == null)
+                    continue;
 
                 if (clone.isClone()) {
                     //host has priority to calculate local region logic

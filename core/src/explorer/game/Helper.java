@@ -8,6 +8,12 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+
+import explorer.game.framework.Game;
+import explorer.network.server.GameServer;
+
 /**
  * Created by RYZEN on 07.10.2017.
  */
@@ -94,4 +100,23 @@ public class Helper {
         return out;
     }
 
+    /**
+     * Construct instance from class name, find constructor by in_constructor_arguments array (proper order here!) and as these arguments pass object from constructor_arguments array
+     * @param class_name name of the class
+     * @param constructor_arguments arguments instances to push to class instance
+     * @param in_constructor_types types in proper order from constructor, used to find proper constructor
+     * @return new object
+     * @throws ClassNotFoundException
+     * @throws NoSuchMethodException
+     * @throws IllegalAccessException
+     * @throws InvocationTargetException
+     * @throws InstantiationException
+     */
+    public static Object objectFromClassName(String class_name, Object[] constructor_arguments, Class<?>... in_constructor_types) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+        Class<?> clazz = Class.forName(class_name);
+        Constructor<?> ctor = clazz.getConstructor(in_constructor_types);
+        Object object = ctor.newInstance(constructor_arguments);
+
+        return object;
+    }
 }

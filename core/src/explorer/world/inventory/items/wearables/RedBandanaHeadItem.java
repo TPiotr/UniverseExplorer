@@ -4,6 +4,7 @@ import explorer.game.framework.Game;
 import explorer.world.inventory.item_types.WearableItem;
 
 /**
+ * Test wearable for head, red bandana
  * Created by RYZEN on 22.01.2018.
  */
 

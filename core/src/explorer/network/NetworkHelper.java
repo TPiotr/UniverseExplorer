@@ -1,6 +1,7 @@
 package explorer.network;
 
 import explorer.game.framework.Game;
+import explorer.network.server.GameServer;
 
 /**
  * Created by RYZEN on 12.01.2018.
@@ -39,5 +40,17 @@ public class NetworkHelper {
                 game.getGameServer().getServer().sendToAllUDP(packet);
             }
         }
+    }
+
+    /**
+     * Simple function to get connection id while sending PlayerBoundPacket, ObjectBoundPacket or when you just need it
+     * @param game game instance to get access to GameClient instance
+     * @return connection id, -2 means that game is not even in network mode, to check if returned value is host compare with GameServer.SERVER_CONNECTION_ID
+     */
+    public static int getConnectionID(Game game) {
+        if(!Game.IS_HOST && !Game.IS_CLIENT)
+            return -2;
+
+        return (Game.IS_HOST) ? GameServer.SERVER_CONNECTION_ID : game.getGameClient().getClient().getID();
     }
 }

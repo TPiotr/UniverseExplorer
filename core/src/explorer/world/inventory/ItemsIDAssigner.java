@@ -9,13 +9,13 @@ import java.util.HashMap;
 public class ItemsIDAssigner {
 
     /**
-     * Class for automated giving items id to don't in future have situation where 2 items have same id
+     * Class for automated giving items id to prevent from situation where 2 items have same id
      */
 
     private static HashMap<Class<?>, Integer> ids = new HashMap<Class<?>, Integer>();
     private static int acc_id = 1;
 
-    public static int getID(Class<?> item_class) {
+    public static synchronized int getID(Class<?> item_class) {
         if(!ids.containsKey(item_class)) {
             ids.put(item_class, acc_id);
             acc_id++;

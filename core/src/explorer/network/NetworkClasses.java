@@ -3,6 +3,7 @@ package explorer.network;
 import com.badlogic.gdx.math.Vector2;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.Connection;
+import com.esotericsoftware.minlog.Log;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,6 +11,7 @@ import java.util.HashMap;
 import explorer.game.framework.Game;
 import explorer.world.ChunkDataProvider;
 import explorer.world.object.WorldObject;
+import explorer.world.object.objects.player.Player;
 
 /**
  * Created by RYZEN on 27.12.2017.
@@ -196,9 +198,15 @@ public class NetworkClasses {
         kryo.register(PlayerPositionUpdatePacket.class);
         kryo.register(PlayerBoundPacket.class);
 
+        //CLASSES FROM DIFFERENT OBJECTS
+        kryo.register(Player.ArmAngleUpdatePacket.class);
+        kryo.register(Player.UpdateWearItemPacket.class);
+        kryo.register(Player.UpdateHoldingItemPacket.class);
+
         //register pending classes
-        for(Class<?> c : pending_classes)
+        for(Class<?> c : pending_classes) {
             kryo.register(c);
+        }
 
         pending_classes.clear();
     }
@@ -208,8 +216,9 @@ public class NetworkClasses {
      * @param c packet class
      */
     public static void register(Class<?> c) {
-        if(!Game.IS_CLIENT && !Game.IS_HOST)
+        if(Game.IS_CLIENT || Game.IS_HOST) {
             return;
+        }
 
         //if register(kryo, game) wasn't called yet queue class and when register(kryo, game) will be called all pending classes will be also registered
         if(game == null) {
