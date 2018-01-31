@@ -10,6 +10,7 @@ import explorer.game.framework.AssetsManager;
 import explorer.game.framework.Game;
 import explorer.game.screen.Screen;
 import explorer.game.screen.screens.Screens;
+import explorer.game.screen.screens.universe.UniverseScreen;
 import explorer.world.World;
 import explorer.world.object.WorldObject;
 
@@ -53,6 +54,24 @@ public class PlanetScreen extends Screen {
             }
         };
         Gdx.app.postRunnable(r);
+    }
+
+    /**
+     * Function that cleans up after disconnection (disposes world and restores back game multiplayer flags)
+     * Also returns to main menu screen
+     */
+    public void cleanUpAfterDisconnection() {
+        world.dispose();
+
+        Game.IS_HOST = false;
+        Game.IS_CONNECTED = false;
+        Game.IS_CLIENT = false;
+
+        game.getScreen(Screens.UNIVERSE_SCREEN_NAME, UniverseScreen.class).reset();
+        game.setAllScreensInvisible();
+        game.getScreen(Screens.MAIN_MENU_SCREEN_NAME).setVisible(true);
+
+        Log.info("(PlanetScreen) Cleaned up after disconnection!");
     }
 
     @Override

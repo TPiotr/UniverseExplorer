@@ -15,10 +15,14 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
 import explorer.game.framework.Game;
+import explorer.game.screen.gui.dialog.DialogHandler;
+import explorer.game.screen.gui.dialog.YesNoDialog;
+import explorer.game.screen.screens.Screens;
 import explorer.world.chunk.WorldChunk;
 import explorer.world.object.WorldObject;
 
@@ -93,13 +97,56 @@ public class FileChunkDataProvider extends ChunkDataProvider {
                     failed_times++;
 
                     if(failed_times > 10) {
-                        //TODO that means our chunks file is corrupted or something, so we have to regenerate this chunk or ask player if he want to regenerate or quit game or whatever
-                        //maybe restarting game will be enough (file is just temporary out of access or really broken)
+                        //show dialog which allows player to regenerate chunk or quit the game (quitting game may work some time because file can be just out of access for some time)
+
+                        final AtomicBoolean yes_option = new AtomicBoolean();
+                        final AtomicBoolean no_option = new AtomicBoolean();
+
+                        //show loading screen
+                        game.getScreen(Screens.PLANET_SCREEN_NAME).setVisible(false);
+                        game.getScreen(Screens.WORLD_LOADING_SCREEN_NAME).setVisible(true);
+
+                        //show dialog on gl thread to prevent from some assets problems
+                        Runnable r = new Runnable() {
+                            @Override
+                            public void run() {
+                                Log.info("(FileChunkDataProvider) Showing corrupted chunk file option dialog!");
+                                game.getDialogHandler().showDialog(new YesNoDialog("Looks like your chunk file is corrupted would you like to regenerate it? (Yes - regenerate, No - quit game)", game.getGUIViewport(), game).setListener(new YesNoDialog.YesNoDialogListener() {
+                                    @Override
+                                    public void yesOption() {
+                                        world.getPlanetProperties().PLANET_TYPE.PLANET_GENERATOR.generateAndSaveChunk(path, chunk_position);
+                                        yes_option.set(true);
+                                    }
+
+                                    @Override
+                                    public void noOption() {
+                                        no_option.set(true);
+                                    }
+                                }));
+                            }
+                        };
+                        Gdx.app.postRunnable(r);
+
+                        //wait until some decision from player will be made
+                        while(!(yes_option.get() || no_option.get()));
+
+                        Log.debug("(FileChunkDataProvider) Decision = " + yes_option.get());
+
+                        if(yes_option.get()) {
+                            //just load chunk again, because new one was generated
+                            failed_times = 0;
+                        } else if(no_option.get()) {
+                            //quit the game
+                            Gdx.app.exit();
+                        }
+
+                        Log.error("Loading chunk (chunk_path: " + path + ") failed, file is corrupted, chunk regenerated");
                     }
                 }
 
                 Log.debug("(FileChunkDataProvider) Reading file time: " + TimeUtils.timeSinceMillis(file_loading_start) + "ms");
 
+                //return loaded data to this method caller
                 callback.loaded(data);
             }
         };
@@ -108,7 +155,7 @@ public class FileChunkDataProvider extends ChunkDataProvider {
 
     private boolean loadData(ChunkData data, FileHandle handle, Vector2 chunk_position, World world, Game game) {
         try {
-            InflaterInputStream input = new InflaterInputStream(handle.read(1024));
+            InflaterInputStream input = new InflaterInputStream(handle.read(2048));
             DataInputStream data_input = new DataInputStream(input);
 
             int chunk_x = data_input.readInt() * World.CHUNK_WORLD_SIZE;
@@ -282,7 +329,12 @@ public class FileChunkDataProvider extends ChunkDataProvider {
                     }
 
                     //objects part
-                    data_output.writeInt(objects.size);
+                    int objects_count = 0;
+                    for(int i = 0; i < objects.size; i++)
+                        if(objects.get(i).isSaveable())
+                            objects_count++;
+
+                    data_output.writeInt(objects_count);
 
                     for(WorldObject object : objects) {
                         if(!object.isSaveable())
@@ -309,8 +361,9 @@ public class FileChunkDataProvider extends ChunkDataProvider {
                             //write info about amount of properties
                             data_output.writeInt(object.getObjectProperties().size());
 
-                            for(String key : object.getObjectProperties().keySet()) {
-                                String val = object.getObjectProperties().get(key);
+                            HashMap<String, String> properties = object.getObjectProperties();
+                            for(String key : properties.keySet()) {
+                                String val = properties.get(key);
 
                                 //save key, val couple
                                 data_output.writeUTF(key);

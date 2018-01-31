@@ -2,15 +2,12 @@ package explorer.game.screen.gui.dialog;
 
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.NinePatch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.esotericsoftware.minlog.Log;
 
 import explorer.game.framework.Game;
 import explorer.game.screen.gui.GUIComponent;
@@ -18,15 +15,10 @@ import explorer.game.screen.gui.TextButton;
 import explorer.game.screen.gui.TextureButton;
 
 /**
- * Created by RYZEN on 06.01.2018.
+ * Created by RYZEN on 30.01.2018.
  */
 
-public class YesNoDialog extends DialogHandler.Dialog {
-
-    public interface YesNoDialogListener {
-        void yesOption();
-        void noOption();
-    }
+public class InfoDialog extends DialogHandler.Dialog {
 
     private NinePatch background;
 
@@ -45,12 +37,12 @@ public class YesNoDialog extends DialogHandler.Dialog {
     private BitmapFont font;
     private String message;
 
-    private TextButton yes_button, no_button;
+    private TextButton ok_button;
 
     private InputAdapter blocking_adapter;
-    private YesNoDialogListener listener;
+    private YesNoDialog.YesNoDialogListener listener;
 
-    public YesNoDialog(String message, Viewport component_game_viewport, Game game) {
+    public InfoDialog(String message, Viewport component_game_viewport, Game game) {
         super(component_game_viewport, game);
 
         this.message = message;
@@ -63,32 +55,14 @@ public class YesNoDialog extends DialogHandler.Dialog {
 
         OFFSET = new Vector2(-MAX_TEXT_WIDTH / 2f, 0);
 
-        Vector2 yes_size = getTextSize(font, "Yes");
-        Vector2 no_size = getTextSize(font, "No");
-        yes_button = new TextButton(font, "Yes", new Vector2((MAX_TEXT_WIDTH * 1/4f) - (yes_size.x / 2f), (BUTTONS_PLACE_HEIGHT / 2f) - (yes_size.y / 2f)).add(OFFSET), component_game_viewport, game);
-        no_button = new TextButton(font, "No", new Vector2((MAX_TEXT_WIDTH * 3/4f) - (no_size.x / 2f), (BUTTONS_PLACE_HEIGHT / 2f) - (no_size.y / 2f)).add(OFFSET), component_game_viewport, game);
+        Vector2 ok_size = getTextSize(font, "Ok");
+        ok_button = new TextButton(font, "Ok", new Vector2(MAX_TEXT_WIDTH * 1/2f - (ok_size.x / 2f), (BUTTONS_PLACE_HEIGHT / 2f) - (ok_size.y / 2f)).add(OFFSET), component_game_viewport, game);
 
         background = new NinePatch(game.getAssetsManager().getTextureRegion("gui/dialog_background"), 5, 5, 5, 5);
 
-        yes_button.setButtonListener(new TextureButton.ButtonListener() {
+        ok_button.setButtonListener(new TextureButton.ButtonListener() {
             @Override
             public void touched(GUIComponent instance) {
-                if(listener != null)
-                    listener.yesOption();
-
-                destroySelf();
-            }
-
-            @Override
-            public void released(GUIComponent instance) {}
-        });
-
-        no_button.setButtonListener(new TextureButton.ButtonListener() {
-            @Override
-            public void touched(GUIComponent instance) {
-                if(listener != null)
-                    listener.noOption();
-
                 destroySelf();
             }
 
@@ -105,11 +79,8 @@ public class YesNoDialog extends DialogHandler.Dialog {
         };
         game.getInputEngine().addInputProcessor(blocking_adapter, 0);
 
-        game.getInputEngine().remove(yes_button.getClickableInputAdapter());
-        game.getInputEngine().addInputProcessor(yes_button.getClickableInputAdapter(), 0);
-
-        game.getInputEngine().remove(no_button.getClickableInputAdapter());
-        game.getInputEngine().addInputProcessor(no_button.getClickableInputAdapter(), 0);
+        game.getInputEngine().remove(ok_button.getClickableInputAdapter());
+        game.getInputEngine().addInputProcessor(ok_button.getClickableInputAdapter(), 0);
     }
 
     private Vector2 getTextSize(BitmapFont font, String text) {
@@ -118,17 +89,11 @@ public class YesNoDialog extends DialogHandler.Dialog {
         return new Vector2(layout.width, layout.height);
     }
 
-    public YesNoDialog setListener(YesNoDialogListener listener) {
-        this.listener = listener;
-        return this;
-    }
-
     @Override
     public void setVisible(boolean visible) {
         super.setVisible(visible);
 
-        yes_button.setVisible(visible);
-        no_button.setVisible(visible);
+        ok_button.setVisible(visible);
     }
 
     @Override
@@ -136,8 +101,7 @@ public class YesNoDialog extends DialogHandler.Dialog {
         if(!isVisible())
             return;
 
-        yes_button.tick(delta);
-        no_button.tick(delta);
+        ok_button.tick(delta);
     }
 
 
@@ -155,14 +119,13 @@ public class YesNoDialog extends DialogHandler.Dialog {
 
         font.draw(batch, message, OFFSET.x + (BORDER_SIZE * 1.5f), OFFSET.y + (MAX_TEXT_HEIGHT + BUTTONS_PLACE_HEIGHT - (FONT_SIZE * 2f)), MAX_TEXT_WIDTH - (BORDER_SIZE * 4f), 10, true);
 
-        yes_button.render(batch);
-        no_button.render(batch);
+        ok_button.render(batch);
     }
 
     @Override
     public void dispose() {
         game.getInputEngine().remove(blocking_adapter);
-        game.getInputEngine().remove(yes_button.getClickableInputAdapter());
-        game.getInputEngine().remove(no_button.getClickableInputAdapter());
+        game.getInputEngine().remove(ok_button.getClickableInputAdapter());
     }
 }
+

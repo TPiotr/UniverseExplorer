@@ -32,7 +32,7 @@ public class AssetsManager {
 	 */
 	public static BitmapFont font;
 
-	//create custom class fontkey for fonts loading process
+	//create custom class fontkey for assets.fonts loading process
 	private class FontKey {
 		public String font_path;
 		public int font_size;
@@ -43,7 +43,7 @@ public class AssetsManager {
 		}
 	}
 	
-	//fonts
+	//assets.fonts
 	private HashMap<FontKey, BitmapFont> fonts;
 	
 	//in most cases for animations
@@ -51,7 +51,7 @@ public class AssetsManager {
 	
 	//callback class to handle assets loading on other threads
 	public static interface AssetCallback {
-		//objects because we will use it for fonts, old_assets.textures, textureregions, textureregions arrays etc. (user will know what he is loading)
+		//objects because we will use it for assets.fonts, old_assets.textures, textureregions, textureregions arrays etc. (user will know what he is loading)
 		public void loaded(Object asset);
 	}
 	
@@ -97,7 +97,7 @@ public class AssetsManager {
 		texture_atlases_to_load = new HashMap<TextureAtlasKey, AssetCallback>();
 
 		//load main assets.atlas
-		main_atlas = getTextureAtlas("assets/atlas/main_atlas.atlas");
+		main_atlas = getTextureAtlas("atlas/main_atlas.atlas");
 
 		default_min_filter = TextureFilter.Nearest;
 		default_mag_filter = TextureFilter.Nearest;

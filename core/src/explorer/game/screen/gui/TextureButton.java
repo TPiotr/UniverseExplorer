@@ -1,5 +1,6 @@
 package explorer.game.screen.gui;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
@@ -21,12 +22,12 @@ public class TextureButton extends ClickableGUIComponent {
         /**
          * Fired when button is pressed
          */
-        void touched();
+        void touched(GUIComponent instance);
 
         /**
          * Fires when button is released
          */
-        void released();
+        void released(GUIComponent instance);
     }
 
     /**
@@ -38,6 +39,16 @@ public class TextureButton extends ClickableGUIComponent {
      * Instance of button listener, could be null
      */
     private ButtonListener button_listener;
+
+    /**
+     * Rotation of this texture button
+     */
+    private float rotation;
+
+    /**
+     * Color of this button
+     */
+    private Color color;
 
     /**
      * Make new texture button instance
@@ -54,6 +65,8 @@ public class TextureButton extends ClickableGUIComponent {
         this.wh = wh;
 
         this.texture = texture;
+
+        this.color = new Color(Color.WHITE);
 
         //create input adapter
         createClickableInputAdapter(true);
@@ -79,15 +92,15 @@ public class TextureButton extends ClickableGUIComponent {
     }
 
     @Override
-    public void touched() {
+    public void touched(GUIComponent instance) {
         if(button_listener != null)
-            button_listener.touched();
+            button_listener.touched(instance);
     }
 
     @Override
-    public void released() {
+    public void released(GUIComponent instance) {
         if(button_listener != null)
-            button_listener.released();
+            button_listener.released(instance);
     }
 
     @Override
@@ -98,7 +111,9 @@ public class TextureButton extends ClickableGUIComponent {
         if(!isVisible())
             return;
 
-        batch.draw(getTextureRegion(), getPosition().x, getPosition().y, getWH().x, getWH().y);
+        batch.setColor(getColor());
+        batch.draw(getTextureRegion(), getPosition().x, getPosition().y, getWH().x * .5f, getWH().y * .5f, getWH().x, getWH().y, 1, 1, getRotation());
+        batch.setColor(Color.WHITE);
     }
 
     /**
@@ -123,5 +138,29 @@ public class TextureButton extends ClickableGUIComponent {
      */
     public ButtonListener getButtonListener() {
         return button_listener;
+    }
+
+    /**
+     * Getter for color instance
+     * @return color instance
+     */
+    public Color getColor() {
+        return color;
+    }
+
+    /**
+     * Getter for button rotation
+     * @return button rotation in degree
+     */
+    public float getRotation() {
+        return rotation;
+    }
+
+    /**
+     * Setter for button rotation
+     * @param rotation new button rotation in degree
+     */
+    public void setRotation(float rotation) {
+        this.rotation = rotation;
     }
 }

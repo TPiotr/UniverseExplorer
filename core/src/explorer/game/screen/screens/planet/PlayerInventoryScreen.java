@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import explorer.game.framework.Game;
 import explorer.game.framework.utils.math.MathHelper;
 import explorer.game.screen.Screen;
+import explorer.game.screen.gui.GUIComponent;
 import explorer.game.screen.gui.TextButton;
 import explorer.game.screen.gui.TextureButton;
 import explorer.game.screen.screens.Screens;
@@ -52,7 +53,7 @@ public class PlayerInventoryScreen extends Screen {
 
         dragging_position = new Vector2();
 
-        pattern_texture = game.getAssetsManager().getTexturee("assets/textures/pattern.png", Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        pattern_texture = game.getAssetsManager().getTexturee("textures/pattern.png", Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         pattern_texture.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
 
         inventory_renderer = new PlayerInventoryRenderer(planet_screen, game.getGUIViewport(), game);
@@ -69,13 +70,13 @@ public class PlayerInventoryScreen extends Screen {
 
         back_button.setButtonListener(new TextureButton.ButtonListener() {
             @Override
-            public void touched() {
+            public void touched(GUIComponent instance) {
                 setVisible(false);
                 game.getScreen(Screens.PLANET_SCREEN_NAME).setVisible(true);
             }
 
             @Override
-            public void released() {}
+            public void released(GUIComponent instance) {}
         });
 
         InputAdapter input = new InputAdapter() {
@@ -288,6 +289,8 @@ public class PlayerInventoryScreen extends Screen {
         if (!isVisible())
             return;
 
+        game.getScreen(Screens.PLANET_SCREEN_NAME).tick(delta);
+
         super.tickComponents(delta);
     }
 
@@ -313,5 +316,17 @@ public class PlayerInventoryScreen extends Screen {
     @Override
     public void dispose() {
 
+    }
+
+    public PlayerInventoryRenderer getInventoryRenderer() {
+        return inventory_renderer;
+    }
+
+    public PlayerWearablesInventoryRenderer getWearablesInventoryRenderer() {
+        return wearables_renderer;
+    }
+
+    public PlayerToolBarGUIComponent getPlayerToolBarRenderer() {
+        return toolbar_renderer;
     }
 }

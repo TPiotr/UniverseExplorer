@@ -57,7 +57,7 @@ public class GameServer {
 
     public void start(GameServerCreatedCallback callback, final PlanetScreen planet_screen, final Game game) {
         server = new Server(65536 * 5, 65536 * 5);
-        server.start();
+        new Thread(server).start();
 
         voting_handler = new VotingHandler(game);
 

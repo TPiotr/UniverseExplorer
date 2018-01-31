@@ -95,7 +95,7 @@ public class TestWorldGenerator extends WorldGenerator {
                 } else if (this_y == y) {
                     out.foreground_blocks[i][j] = world.getBlocks().GRASS.getBlockID();
                 } else {
-                    out.foreground_blocks[i][j] = world.getBlocks().GRASS.getBlockID();
+                    out.foreground_blocks[i][j] = world.getBlocks().DIRT.getBlockID();
 
                     //this part of code makes that grass is everywhere on ground line
                     if((this_y > last_y || this_y > next_y) && this_y < y) {
@@ -147,7 +147,12 @@ public class TestWorldGenerator extends WorldGenerator {
             }
 
             //objects part
-            data_output.writeInt(data.objects.size);
+            int objects_count = 0;
+            for(int i = 0; i < data.objects.size; i++)
+                if(data.objects.get(i).isSaveable())
+                    objects_count++;
+
+            data_output.writeInt(objects_count);
 
             for(WorldObject object : data.objects) {
                 if(!object.isSaveable())

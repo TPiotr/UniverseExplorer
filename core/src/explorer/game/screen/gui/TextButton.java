@@ -80,15 +80,15 @@ public class TextButton extends ClickableGUIComponent {
     }
 
     @Override
-    public void touched() {
+    public void touched(GUIComponent instance) {
         if(button_listener != null)
-            button_listener.touched();
+            button_listener.touched(instance);
     }
 
     @Override
-    public void released() {
+    public void released(GUIComponent instance) {
         if(button_listener != null)
-            button_listener.released();
+            button_listener.released(instance);
     }
 
     /**

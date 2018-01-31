@@ -16,34 +16,37 @@ import com.esotericsoftware.minlog.Log;
 
 import org.apache.commons.lang3.SerializationUtils;
 
-import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import explorer.game.framework.AssetsManager;
 import explorer.game.framework.Game;
-import explorer.game.Helper;
+import explorer.game.framework.utils.ShaderFactory;
+import explorer.game.screen.gui.dialog.InfoDialog;
 import explorer.game.screen.screens.planet.PlanetGUIScreen;
 import explorer.game.screen.screens.planet.PlanetScreen;
 import explorer.game.screen.screens.Screens;
 import explorer.game.screen.screens.planet.WorldGeneratingScreen;
 import explorer.game.screen.screens.planet.WorldLoadingScreen;
 import explorer.network.NetworkClasses;
+import explorer.network.NetworkHelper;
 import explorer.network.client.ServerPlayer;
-import explorer.network.server.NetworkChunkDataProvider;
+import explorer.network.server.GameServer;
+import explorer.network.world.ChunkDataSaveRequestsHandler;
+import explorer.network.world.HostNetworkChunkDataProvider;
+import explorer.network.world.NetworkChunkDataProvider;
 import explorer.network.world.CanReceivePacketWorldObject;
 import explorer.network.world.ChunkDataRequestsHandler;
+import explorer.network.world.ClientChunkDataRequestsHandler;
 import explorer.world.block.Blocks;
 import explorer.world.chunk.WorldChunk;
 import explorer.world.lighting.LightEngine;
 import explorer.world.object.StaticWorldObject;
 import explorer.world.object.WorldObject;
-import explorer.world.object.objects.TreeObject;
 import explorer.world.object.objects.player.Player;
 import explorer.world.physics.PhysicsEngine;
 import explorer.world.planet.PlanetProperties;
@@ -162,6 +165,16 @@ public class World extends StaticWorldObject {
     private ChunkDataRequestsHandler server_request_handler;
 
     /**
+     * Server bound instance, responsible for receiving ChunkDataSaveRequestPacket and save received data to file
+     */
+    private ChunkDataSaveRequestsHandler server_save_request_handler;
+
+    /**
+     * Handles ChunkDataRequest when not loading from file but grabbing data from some player
+     */
+    private ClientChunkDataRequestsHandler client_request_handler;
+
+    /**
      * Array that contains array of players that are just clones to renderer other players on client
      */
     private Array<Player> server_players;
@@ -192,7 +205,7 @@ public class World extends StaticWorldObject {
         light_engine = new LightEngine(this, game);
 
         //load combine shader
-        combine_shader = Helper.createShaderProgram("shaders/basic_vertex_shader.vs", "shaders/combine_shader.fs", "COMBINE SHADER");
+        combine_shader = ShaderFactory.createShaderProgram("shaders/basic_vertex_shader.vs", "shaders/combine_shader.fs", "COMBINE SHADER");
 
         combine_shader.begin();
         combine_shader.setUniformf("viewport_size", new Vector2(Gdx.graphics.getWidth(), Gdx.graphics.getHeight()));
@@ -207,16 +220,21 @@ public class World extends StaticWorldObject {
         blocks = new Blocks(this, game);
 
         //create chunk data provider
-        if(!Game.IS_CLIENT) {
+        if(Game.IS_CLIENT) {
+            data_provider = new NetworkChunkDataProvider(game, this);
+        } else if(Game.IS_HOST) {
+            data_provider = new HostNetworkChunkDataProvider(game, this);
+        } else {
             data_provider = new FileChunkDataProvider();
             ((FileChunkDataProvider) data_provider).setWorldDir(getWorldDirectory(planet_seed));
-        } else {
-            data_provider = new NetworkChunkDataProvider(game, this);
         }
+
+        client_request_handler = new ClientChunkDataRequestsHandler(this, game);
 
         //create server listener if is host for things combined with world, like sending chunk data, block updates etc.
         if(Game.IS_HOST) {
             server_request_handler = new ChunkDataRequestsHandler(this, game);
+            server_save_request_handler = new ChunkDataSaveRequestsHandler(this, game);
 
             //create players clones
             for(int i = 0; i < game.getGameServer().getPlayers().size; i++) {
@@ -227,6 +245,11 @@ public class World extends StaticWorldObject {
 
                 new_player.setRepresentingPlayer(server_player);
             }
+
+            //inform all players about current IDAssigner value
+            NetworkClasses.UpdateCurrentIDAssignerValuePacket id_assigner_packet = new NetworkClasses.UpdateCurrentIDAssignerValuePacket();
+            id_assigner_packet.new_current_id = IDAssigner.accValue();
+            game.getGameServer().getServer().sendToAllTCP(id_assigner_packet);
 
             //here is listener that receives packets on server side which concerns about handling chunk data requests, sending world changes through server to other players from another etc.
             listener = new Listener() {
@@ -245,6 +268,18 @@ public class World extends StaticWorldObject {
                 public void received(Connection connection, Object o) {
                     if(o instanceof NetworkClasses.ChunkDataRequestPacket) {
                         server_request_handler.handleRequest((NetworkClasses.ChunkDataRequestPacket) o);
+                    } else if(o instanceof NetworkClasses.ChunkDataSaveRequestPacket) {
+                        server_save_request_handler.handleRequest((NetworkClasses.ChunkDataSaveRequestPacket) o);
+                    } else if(o instanceof NetworkClasses.ChunkDataPacket) {
+                        //send through data packet to proper client
+                        NetworkClasses.ChunkDataPacket packet = (NetworkClasses.ChunkDataPacket) o;
+
+                        if(packet.connection_id != GameServer.SERVER_CONNECTION_ID) {
+                            game.getGameServer().getServer().sendToTCP(packet.connection_id, packet);
+                        } else {
+                            //parse new data
+                            ((HostNetworkChunkDataProvider) getChunksDataProvider()).parseChunkDataPacket(packet);
+                        }
                     }
 
                     else if(o instanceof NetworkClasses.BlockChangedPacket) {
@@ -254,6 +289,7 @@ public class World extends StaticWorldObject {
                         game.getGameServer().getServer().sendToAllExceptTCP(connection.getID(), info);
 
                         //handle new data
+                        search_loop:
                         for(int i = 0; i < world.getWorldChunks().length; i++) {
                             for(int j = 0; j < world.getWorldChunks()[0].length; j++) {
                                 WorldChunk chunk = world.getWorldChunks()[i][j];
@@ -262,6 +298,8 @@ public class World extends StaticWorldObject {
                                 if(chunk.getGlobalChunkXIndex() == info.chunk_x && chunk.getGlobalChunkYIndex() == info.chunk_y) {
                                     //don't notify network because we are there because of some other notify from network
                                     chunk.setBlock(info.block_x, info.block_y, info.new_block_id, info.background, false);
+
+                                    break search_loop;
                                 }
                             }
                         }
@@ -272,6 +310,7 @@ public class World extends StaticWorldObject {
                         game.getGameServer().getServer().sendToAllExceptUDP(connection.getID(), o);
 
                         //parse it like client
+                        search_loop:
                         for(int i = 0; i < world.getWorldChunks().length; i++) {
                             for (int j = 0; j < world.getWorldChunks()[0].length; j++) {
                                 WorldChunk chunk = world.getWorldChunks()[i][j];
@@ -282,6 +321,7 @@ public class World extends StaticWorldObject {
                                     WorldObject object = chunk.getObjects().get(k);
                                     if(object != null && object.OBJECT_ID == removed_object_packet.removed_object_id) {
                                         world.removeObject(object, false);
+                                        break search_loop;
                                     }
                                 }
                             }
@@ -302,12 +342,15 @@ public class World extends StaticWorldObject {
                             //send packet to this client to update this object id on client side to proper one
                             NetworkClasses.UpdateObjectIDPacket update_object_id_packet = new NetworkClasses.UpdateObjectIDPacket();
                             update_object_id_packet.acc_id = object_id;
-                            update_object_id_packet.new_id = IDAssigner.accValue();
+                            update_object_id_packet.new_id = IDAssigner.next();
                             game.getGameServer().getServer().sendToTCP(connection.getID(), update_object_id_packet);
+
+                            //correct object id and send packet to all other players
+                            new_object_packet.OBJECT_ID = update_object_id_packet.new_id;
                         }
 
                         //send this packet to all other players
-                        game.getGameServer().getServer().sendToAllExceptTCP(connection.getID(), o);
+                        game.getGameServer().getServer().sendToAllExceptTCP(connection.getID(), new_object_packet);
 
                         //try to deserialize properties hashmap
                         final HashMap<String, String> object_properties = (new_object_packet.properties_bytes != null) ? (HashMap<String, String>) SerializationUtils.deserialize(new_object_packet.properties_bytes) : null;
@@ -360,7 +403,7 @@ public class World extends StaticWorldObject {
 
                         int current_value = IDAssigner.accValue();
 
-                        //decide here if new id is proper if not send to player which sended this information about acc proper id
+                        //decide here if new id is proper if not send to client which sended this information about acc proper id
                         if(update_value_packet.new_current_id - 1 == current_value) {
                             //proper value
 
@@ -391,14 +434,14 @@ public class World extends StaticWorldObject {
                         ServerPlayer representing_player = game.getGameServer().getPlayerInstanceByConnectionID(con_id);
 
                         if(representing_player == null) {
-                            //create new server player if it wasn't created yet, we need this because problem was order of registered listener, sometimes this listener recives info about new player
+                            //create new server player if it wasn't created yet, we need this because problem is order of registered listeners, sometimes this listener recives info about new player
                             //faster than listener in GameServer.java and we get null reference here
                             game.getGameServer().getPlayers().add(new ServerPlayer(connection.getID(), new_player_info.username, false));
                         }
 
                         new_player.setRepresentingPlayer(game.getGameServer().getPlayerInstanceByConnectionID(con_id));
 
-                        //if some player connected to server when host world is not null we force that player to go to this planet
+                        //if some player connected to server when host world is not null we force that player to go to current planet
                         Runnable r = new Runnable() {
                             @Override
                             public void run() {
@@ -422,22 +465,10 @@ public class World extends StaticWorldObject {
                         update_time_packet.new_time = World.TIME;
                         game.getGameServer().getServer().sendToTCP(connection.getID(), update_time_packet);
 
-                        //force this player to send info about what he wears and holds
-                        Runnable update_player = new Runnable() {
-                            @Override
-                            public void run() {
-                                try {
-                                    //1 sec to just make sure this new player will have this player as a clone
-                                    Thread.sleep(1000);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-
-                                getPlayer().updateSelectedItemNetwork(true);
-                                getPlayer().updateWearItemsNetwork(true);
-                            }
-                        };
-                        new Thread(update_player).start();
+                        //send current IDAssigner value
+                        NetworkClasses.UpdateCurrentIDAssignerValuePacket update_id_assigner_packet = new NetworkClasses.UpdateCurrentIDAssignerValuePacket();
+                        update_id_assigner_packet.new_current_id = IDAssigner.accValue();
+                        game.getGameServer().getServer().sendToTCP(connection.getID(), update_id_assigner_packet);
 
                     } else if(o instanceof NetworkClasses.PlayerBoundPacket) {
                         NetworkClasses.PlayerBoundPacket packet = (NetworkClasses.PlayerBoundPacket) o;
@@ -448,12 +479,20 @@ public class World extends StaticWorldObject {
                         else
                             game.getGameServer().getServer().sendToAllExceptUDP(connection.getID(), o);
 
+                        boolean found = false;
                         for(int i = 0; i < server_players.size; i++) {
                             Player player_clone = server_players.get(i);
 
                             if(player_clone.getRepresentingPlayer().connection_id == packet.player_connection_id) {
-                                player_clone.processPacket(o);
+                                player_clone.processToClonePacket(o);
+                                found = true;
                                 break;
+                            }
+                        }
+
+                        if(!found) {
+                            if(NetworkHelper.getConnectionID(game) == packet.player_connection_id) {
+                                getPlayer().processToPlayerPacket(packet);
                             }
                         }
                     }
@@ -463,7 +502,6 @@ public class World extends StaticWorldObject {
             game.getGameServer().getServer().addListener(listener);
             Log.info("(World) Listener made");
         } else if(Game.IS_CLIENT) {
-
             //create players clones
             for(int i = 0; i < game.getGameClient().getPlayers().size; i++) {
                 ServerPlayer server_player = game.getGameClient().getPlayers().get(i);
@@ -481,7 +519,9 @@ public class World extends StaticWorldObject {
                     if(!isInitializated())
                         return;
 
-                    if(o instanceof NetworkClasses.BlockChangedPacket) {
+                    if(o instanceof NetworkClasses.ChunkDataRequestPacket) {
+                        client_request_handler.handleRequest((NetworkClasses.ChunkDataRequestPacket) o);
+                    } else if(o instanceof NetworkClasses.BlockChangedPacket) {
                         NetworkClasses.BlockChangedPacket info = (NetworkClasses.BlockChangedPacket) o;
 
                         //handle packet
@@ -594,28 +634,19 @@ public class World extends StaticWorldObject {
                     else if(o instanceof NetworkClasses.NewPlayerPacket) {
                         NetworkClasses.NewPlayerPacket new_player_info = (NetworkClasses.NewPlayerPacket) o;
 
-                        Player new_player = new Player(new Vector2(), World.this, true, game);
-                        server_players.add(new_player);
-
                         int con_id = new_player_info.connection_id;
-                        new_player.setRepresentingPlayer(game.getGameClient().getPlayerInstanceByConnectionID(con_id));
 
-                        //force this player to send info what he wears and holds
-                        Runnable update_player = new Runnable() {
-                            @Override
-                            public void run() {
-                                try {
-                                    //1 sec to just make sure this new player will have this player as a clone
-                                    Thread.sleep(1000);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
+                        //if new player is not registered by GameClient yet register it
+                        if(game.getGameClient().getPlayerInstanceByConnectionID(con_id) == null) {
+                            game.getGameClient().newPlayerPacket(new_player_info);
+                        }
 
-                                getPlayer().updateSelectedItemNetwork(true);
-                                getPlayer().updateWearItemsNetwork(true);
-                            }
-                        };
-                        new Thread(update_player).start();
+                        ServerPlayer server_player = game.getGameClient().getPlayerInstanceByConnectionID(con_id);
+                        Player new_player = new Player(new Vector2(), World.this, true, game);
+
+                        new_player.setRepresentingPlayer(server_player);
+
+                        server_players.add(new_player);
                     }
 
                     //destroy player clone
@@ -636,15 +667,39 @@ public class World extends StaticWorldObject {
                         //handle packet
                         NetworkClasses.PlayerBoundPacket packet = (NetworkClasses.PlayerBoundPacket) o;
 
+                        boolean found = false;
                         for(int i = 0; i < server_players.size; i++) {
                             Player player_clone = server_players.get(i);
 
+                            if(player_clone.getRepresentingPlayer() == null)
+                                continue;
+
                             if(player_clone.getRepresentingPlayer().connection_id == packet.player_connection_id) {
-                                player_clone.processPacket(o);
+                                player_clone.processToClonePacket(o);
+                                found = true;
                                 break;
                             }
                         }
+
+                        if(!found) {
+                            if(NetworkHelper.getConnectionID(game) == packet.player_connection_id) {
+                                player.processToPlayerPacket(o);
+                            }
+                        }
                     }
+                }
+
+                @Override
+                public void disconnected(Connection connection) {
+                    Runnable r = new Runnable() {
+                        @Override
+                        public void run() {
+                            game.getDialogHandler().showDialog(new InfoDialog("Disconnected!", game.getGUIViewport(), game));
+                            game.getScreen(Screens.PLANET_SCREEN_NAME, PlanetScreen.class).cleanUpAfterDisconnection();
+                        }
+                    };
+                    Gdx.app.postRunnable(r);
+
                 }
             };
 
@@ -681,7 +736,7 @@ public class World extends StaticWorldObject {
      * @return
      */
     public static String getWorldDirectory(int seed) {
-        return "universe/planets/" + seed + "/";
+        return "game_data/universe/planets/" + seed + "/";
     }
 
 
@@ -797,7 +852,8 @@ public class World extends StaticWorldObject {
             }
         } else {
             //if there is no need for generating world or we are client just force chunks to load themselves and load world properties file
-            loadWorldInfoFromFile();
+            if(!Game.IS_CLIENT)
+                loadWorldInfoFromFile();
 
             for(int i = 0; i < chunks.length; i++) {
                 for(int j = 0; j < chunks[0].length; j++) {
@@ -908,7 +964,19 @@ public class World extends StaticWorldObject {
 
             //if more than 70% of chunks are generating stop the game and wait
             if (dirty_count >= (chunks.length * chunks.length) * .75f) {
-                Log.info("(World) >= 70% of chunks dirty showing loading screen!");
+                Log.info("(World) >= 75% of chunks dirty showing loading screen!");
+
+                PlanetScreen game_screen = game.getScreen(Screens.PLANET_SCREEN_NAME, PlanetScreen.class);
+                WorldLoadingScreen loading_screen = game.getScreen(Screens.WORLD_LOADING_SCREEN_NAME, WorldLoadingScreen.class);
+
+                game_screen.setVisible(false);
+                loading_screen.setVisible(true);
+                return;
+            }
+
+            //if 1, 1 chunk is dirty we have to stop the game because chunk 1,1 is chunk where player is so we have to stop game to prevent from bugs
+            if(chunks[1][1].isDirty()) {
+                Log.info("(World) Showing loading screen because (1, 1) chunk is dirty");
 
                 PlanetScreen game_screen = game.getScreen(Screens.PLANET_SCREEN_NAME, PlanetScreen.class);
                 WorldLoadingScreen loading_screen = game.getScreen(Screens.WORLD_LOADING_SCREEN_NAME, WorldLoadingScreen.class);
@@ -919,14 +987,14 @@ public class World extends StaticWorldObject {
             }
 
             //every 10 seconds resend info about current world.Time to have everything in sync
-            if(((int) TIME) % 10 == 0 && last_time_send < ((int) TIME) % 10) {
+            if((((int) TIME) - last_time_send >= 10) && Game.IS_HOST) {
                 Log.info("(World, Host) Sending time update packet to players (TIME: " + TIME);
 
                 NetworkClasses.UpdateGameTimePacket update_time_packet = new NetworkClasses.UpdateGameTimePacket();
                 update_time_packet.new_time = TIME;
                 game.getGameServer().getServer().sendToAllTCP(update_time_packet);
 
-                last_time_send = ((int) TIME) % 10;
+                last_time_send = ((int) TIME);
             }
         }
 
@@ -953,7 +1021,7 @@ public class World extends StaticWorldObject {
                 if(clone == null)
                     continue;
 
-                if (clone.isClone()) {
+                if (clone.isClone() && clone.getRepresentingPlayer() != null) {
                     //host has priority to calculate local region logic
                     if (clone.getRepresentingPlayer().is_host) {
                         if (clone.getPosition().dst(getPlayer().getPosition()) < PhysicsEngine.DYNAMIC_WORK_RANGE) {
@@ -1431,19 +1499,31 @@ public class World extends StaticWorldObject {
 
     @Override
     public void dispose() {
+        if(isInitializated() && player != null)
+            player.dispose();
+
         if(isInitializated() && (Game.IS_HOST || (!Game.IS_HOST || !Game.IS_CLIENT)))
             saveWorldInfoToFile();
 
         if(light_engine != null)
             light_engine.dispose();
 
-        if(combine_shader != null)
-            combine_shader.dispose();
-
-        if(Game.IS_HOST && listener != null)
+        if(Game.IS_HOST && listener != null) {
             game.getGameServer().getServer().removeListener(listener);
-        else if(Game.IS_CLIENT && listener != null)
+
+            if(getServerSaveChunkDataRequestsHandler() != null) {
+                getServerSaveChunkDataRequestsHandler().dispose();
+            }
+        } else if(Game.IS_CLIENT && listener != null) {
             game.getGameClient().getClient().removeListener(listener);
+
+            //send back all pending chunk data requests
+            for (int i = 0; i < getClientChunkDataRequestHandler().getPendingRequests().size; i++) {
+                getClientChunkDataRequestHandler().getPendingRequests().get(i).rejected_id = NetworkHelper.getConnectionID(game);
+                game.getGameClient().getClient().sendTCP(getClientChunkDataRequestHandler().getPendingRequests().get(i));
+            }
+            getClientChunkDataRequestHandler().getPendingRequests().clear();
+        }
     }
 
     /**
@@ -1523,5 +1603,29 @@ public class World extends StaticWorldObject {
      */
     public Array<Player> getClonedPlayers() {
         return server_players;
+    }
+
+    /**
+     * Getter for ClientChunkDataRequestsHandler
+     * @return instance
+     */
+    public ClientChunkDataRequestsHandler getClientChunkDataRequestHandler() {
+        return client_request_handler;
+    }
+
+    /**
+     * Getter for chunk data requests handle when game instance is server
+     * @return instance
+     */
+    public ChunkDataRequestsHandler getServerChunkDataRequestsHandler() {
+        return server_request_handler;
+    }
+
+    /**
+     * Getter for save chunk data requests handler not null when game is server
+     * @return instance
+     */
+    public ChunkDataSaveRequestsHandler getServerSaveChunkDataRequestsHandler() {
+        return server_save_request_handler;
     }
 }

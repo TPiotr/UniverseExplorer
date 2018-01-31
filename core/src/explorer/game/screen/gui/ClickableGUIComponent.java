@@ -42,7 +42,7 @@ public abstract class ClickableGUIComponent extends GUIComponent {
                         p = pointer;
 
                         //call touched event
-                        touched();
+                        touched(ClickableGUIComponent.this);
 
                         return block_input_when_pressed_relased;
                     }
@@ -54,7 +54,7 @@ public abstract class ClickableGUIComponent extends GUIComponent {
             @Override
             public boolean touchUp(int screenX, int screenY, int pointer, int button) {
                 if(pointer == p) {
-                    released();
+                    released(ClickableGUIComponent.this);
                     p = -1;
                 }
 
@@ -68,12 +68,20 @@ public abstract class ClickableGUIComponent extends GUIComponent {
     /**
      * Event fired when user touched component bounding rectangle
      */
-    public abstract void touched();
+    public abstract void touched(GUIComponent instance);
 
     /**
      * Event fired at the moment when player release component
      */
-    public abstract void released();
+    public abstract void released(GUIComponent instance);
+
+    /**
+     * Dispose component
+     */
+    public void dispose() {
+        if(clickable_adapter != null)
+            game.getInputEngine().remove(clickable_adapter);
+    }
 
     /**
      * Getter for input adapter instance from ClickableGUIComponent

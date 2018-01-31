@@ -4,6 +4,7 @@ import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.tools.texturepacker.TexturePacker;
+import com.esotericsoftware.minlog.Log;
 
 import explorer.game.ExplorerGame;
 
@@ -23,9 +24,9 @@ public class DesktopLauncher {
 		settings.limitMemory = false;
 		settings.fast = true;
 
-		settings.combineSubdirectories = false;
+		settings.combineSubdirectories = true;
 
-		TexturePacker.processIfModified(settings,"assets_to_pack", "assets/atlas", "main_atlas");
+		TexturePacker.processIfModified(settings,"assets_to_pack", "atlas", "main_atlas");
 
 		//run game like normally
 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();

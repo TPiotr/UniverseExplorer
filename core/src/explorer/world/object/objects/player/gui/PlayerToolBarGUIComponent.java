@@ -14,7 +14,9 @@ import explorer.game.framework.utils.math.MathHelper;
 import explorer.game.screen.gui.GUIComponent;
 import explorer.game.screen.screens.Screens;
 import explorer.game.screen.screens.planet.PlanetScreen;
+import explorer.world.inventory.Item;
 import explorer.world.inventory.ItemsContainer;
+import explorer.world.inventory.item_types.BlockItem;
 import explorer.world.object.objects.player.Player;
 
 /**
@@ -65,8 +67,12 @@ public class PlayerToolBarGUIComponent extends GUIComponent {
 
             batch.setColor(item_color);
 
-            if(item != null) {
-                batch.draw(item.getItem().getItemIcon(), position.x + offset.x, position.y + offset.y + (MathUtils.cos(time) * 3), wh.x, wh.y);
+            if(item != null && item.getItem() != null) {
+                if(!(item.getItem() instanceof Item.InInventoryRenderer)) {
+                    batch.draw(item.getItem().getItemIcon(), position.x + offset.x, position.y + offset.y + (MathUtils.cos(time) * 3), wh.x, wh.y);
+                } else {
+                    ((Item.InInventoryRenderer) item.getItem()).renderInInventory(position.x + offset.x, position.y + offset.y + (MathUtils.cos(time) * 3), wh.x, wh.y, batch);
+                }
 
                 if(item.getItem().isStackable()) {
                     item_count_font.draw(batch, "x" + item.getInStack(), position.x + offset.x + 15, position.y + offset.y + 25);
@@ -159,11 +165,13 @@ public class PlayerToolBarGUIComponent extends GUIComponent {
             return;
 
         if(!initialized) {
+            TextureRegion background_texture = game.getAssetsManager().getTextureRegion("inventory/slot_background");
+
             //create items renderers
             for(int i = 0; i < Player.TOOLBAR_INVENTORY_SLOTS_COUNT; i++) {
                 float x = i * (RENDERER_WIDTH + RENDERERS_SPACING);
 
-                FloatingItemRenderer renderer = new FloatingItemRenderer(new Vector2(x, 0), new Vector2(RENDERER_WIDTH, RENDERER_HEIGHT), i, player.getToolbarItemsContainer(), game.getAssetsManager().getTextureRegion("inventory/slot_background"), game);
+                FloatingItemRenderer renderer = new FloatingItemRenderer(new Vector2(x, 0), new Vector2(RENDERER_WIDTH, RENDERER_HEIGHT), i, player.getToolbarItemsContainer(), background_texture, game);
                 renderer.setItemsStack(player.getToolbarItemsContainer().getItems().get(i), player.getToolbarItemsContainer());
                 items_renderers.add(renderer);
             }

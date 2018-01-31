@@ -246,6 +246,14 @@ public class UniverseScreen extends Screen {
 
     }
 
+    /**
+     * Called when player disconnects from server, so we have to reset this screen to default values
+     */
+    public void reset() {
+        game.getMainCamera().zoom = max_zoom;
+        game.getMainCamera().update();
+    }
+
     public Universe getUniverse() {
         return universe;
     }

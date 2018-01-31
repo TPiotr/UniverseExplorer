@@ -8,6 +8,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.esotericsoftware.minlog.Log;
 
 import java.lang.reflect.InvocationTargetException;
 
@@ -15,13 +16,19 @@ import explorer.game.Helper;
 import explorer.game.framework.Game;
 import explorer.game.framework.utils.math.PositionInterpolator;
 import explorer.game.framework.utils.math.RotationInterpolator;
+import explorer.game.screen.gui.dialog.InfoDialog;
 import explorer.game.screen.screens.Screens;
+import explorer.game.screen.screens.menu.SelectPlayerScreen;
+import explorer.game.screen.screens.planet.PlanetGUIScreen;
+import explorer.game.screen.screens.planet.PlanetScreen;
+import explorer.game.screen.screens.planet.PlayerInventoryScreen;
 import explorer.network.NetworkClasses;
 import explorer.network.NetworkHelper;
 import explorer.network.client.ServerPlayer;
 import explorer.network.server.GameServer;
 import explorer.world.World;
 import explorer.world.block.Block;
+import explorer.world.chunk.TileHolder;
 import explorer.world.chunk.WorldChunk;
 import explorer.world.inventory.Item;
 import explorer.world.inventory.ItemsContainer;
@@ -35,6 +42,8 @@ import explorer.world.inventory.items.wearables.RedBandanaHeadItem;
 import explorer.world.object.DynamicWorldObject;
 import explorer.world.object.objects.LayingItemObject;
 import explorer.world.object.objects.TorchObject;
+import explorer.world.object.objects.player.gui.PlayerBlockSelectorGUIComponent;
+import explorer.world.object.objects.player.gui.PlayerWearablesInventoryRenderer;
 import explorer.world.physics.shapes.RectanglePhysicsShape;
 
 /**
@@ -53,6 +62,10 @@ public class Player extends DynamicWorldObject {
     private ServerPlayer representing_player;
     private Vector2 last_position_clone;
 
+    //current center chunk pos
+    private Vector2 current_center_chunk_pos;
+    private float on_current_chunk_time;
+
     //interpolating
     private PositionInterpolator interpolator;
     private RotationInterpolator arm_interpolator;
@@ -62,6 +75,9 @@ public class Player extends DynamicWorldObject {
     private ItemsContainer toolbar_items_container;
     public static final int INVENTORY_SLOTS_COUNT = 30;
     public static final int TOOLBAR_INVENTORY_SLOTS_COUNT = 6;
+
+    //player data handler
+    private PlayerData player_data;
 
     //finding parent chunk vars
     private Rectangle chunk_rect;
@@ -74,11 +90,23 @@ public class Player extends DynamicWorldObject {
     private BodyWearableItem wear_body_item, last_wear_body_item;
     private WearableItem wear_legs_item, last_wear_legs_item;
 
-    //arm animation states
+    //breaking, placing blocks & arm animation
     private boolean hitting_block, block_loot_spawned;
+    private boolean placing_block;
     private int last_x, last_y, x, y;
     private float block_hardness, last_arm_angle;
+    private boolean is_foreground_placing = true, last_is_foreground_placing = true;
     private WorldChunk chunk;
+    public static final int ARM_RANGE = World.BLOCK_SIZE * 5;
+
+    //blocks/tools pointing system
+    private boolean pointing;
+    private int last_pointed_block_x, last_pointed_block_y;
+    private WorldChunk last_pointed_chunk;
+
+    private boolean pickaxe_button_pressed, placeblock_button_pressed;
+
+    private InputAdapter input_adapter;
 
     /* PACKETS */
     public static class ArmAngleUpdatePacket extends NetworkClasses.PlayerBoundPacket {
@@ -87,6 +115,7 @@ public class Player extends DynamicWorldObject {
 
     public static class UpdateWearItemPacket extends NetworkClasses.PlayerBoundPacket {
         public String item_class_name;
+        public String item_property;
 
         /**
          * Slot index 0 = helmet, 1 = torso, 2 = legs; if -1 just skip
@@ -96,12 +125,13 @@ public class Player extends DynamicWorldObject {
 
     public static class UpdateHoldingItemPacket extends NetworkClasses.PlayerBoundPacket {
         public String item_class_name;
-
-        /**
-         * Used only if item_class_name == BlockItem.class.getName() to reconstruct it properly
-         */
-        public int block_id = -1;
+        public String item_property;
     }
+
+    /**
+     * Empty packet acts like interface marker
+     */
+    public static class UpdateWearablesAndHoldingItemsRequest extends NetworkClasses.PlayerBoundPacket {}
 
     public Player(Vector2 position, World w, boolean clone, final Game game) {
         super(position, w, game);
@@ -113,18 +143,36 @@ public class Player extends DynamicWorldObject {
         getWH().set(player_renderer.getPlayerWH());
         this.physics_shape = new RectanglePhysicsShape(new Vector2(), new Vector2(getWH()), this);
 
+        this.current_center_chunk_pos = new Vector2();
+
         chunk_rect = new Rectangle();
         last_position_clone = new Vector2();
 
         //create interpolators
         interpolator = new PositionInterpolator(this, new PositionInterpolator.InterpolatorPacketSender() {
+
+            float last_center_chunk_x, last_center_chunk_y;
+
             @Override
             public void sendUpdatePacket() {
                 NetworkClasses.PlayerPositionUpdatePacket position_update_packet = new NetworkClasses.PlayerPositionUpdatePacket();
                 position_update_packet.player_connection_id = (Game.IS_HOST) ? GameServer.SERVER_CONNECTION_ID : game.getGameClient().getClient().getID();
                 position_update_packet.x = getPosition().x;
                 position_update_packet.y = getPosition().y;
+                position_update_packet.direction = getPlayerRenderer().getDirection();
                 position_update_packet.tcp = false;
+                position_update_packet.on_current_chunk_time = on_current_chunk_time;
+
+                if(!world.getWorldChunks()[1][1].isDirty()) {
+                    position_update_packet.center_chunk_x = world.getWorldChunks()[1][1].getPosition().x;
+                    position_update_packet.center_chunk_y = world.getWorldChunks()[1][1].getPosition().y;
+
+                    last_center_chunk_x = position_update_packet.center_chunk_x;
+                    last_center_chunk_y = position_update_packet.center_chunk_y;
+                } else {
+                    position_update_packet.center_chunk_x = last_center_chunk_x;
+                    position_update_packet.center_chunk_y = last_center_chunk_y;
+                }
 
                 NetworkHelper.send(position_update_packet);
             }
@@ -160,15 +208,36 @@ public class Player extends DynamicWorldObject {
         items_container = new ItemsContainer(INVENTORY_SLOTS_COUNT);
         toolbar_items_container = new ItemsContainer(TOOLBAR_INVENTORY_SLOTS_COUNT);
 
-        for(int i = 0; i < INVENTORY_SLOTS_COUNT - 5; i++) {
-            items_container.getItems().set(i, new ItemsContainer.ItemsStack(new BlockItem(game, world.getBlocks().DIRT.getBlockID(), world), MathUtils.random(1, 64), items_container));
+        //load inventory
+        player_data = new PlayerData(SelectPlayerScreen.selected_username, this, game);
+        player_data.loadData();
+
+        //update wearables worn items
+        PlayerWearablesInventoryRenderer wearables_inv_renderer = game.getScreen(Screens.PLAYER_INVENTORY_SCREEN, PlayerInventoryScreen.class).getWearablesInventoryRenderer();
+
+        if(getWearHeadItem() != null) {
+            wearables_inv_renderer.getItemsContainer().getItems().set(0, new ItemsContainer.ItemsStack(getWearHeadItem(), 1, wearables_inv_renderer.getItemsContainer()));
+        }
+        if(getWearBodyItem() != null) {
+            wearables_inv_renderer.getItemsContainer().getItems().set(1, new ItemsContainer.ItemsStack(getWearBodyItem(), 1, wearables_inv_renderer.getItemsContainer()));
+        }
+        if(getWearLegsItem() != null) {
+            wearables_inv_renderer.getItemsContainer().getItems().set(2, new ItemsContainer.ItemsStack(getWearLegsItem(), 1, wearables_inv_renderer.getItemsContainer()));
+        }
+
+        /* debug adding item */
+        /*for(int i = 0; i < INVENTORY_SLOTS_COUNT - 10; i++) {
+            items_container.getItems().set(i, new ItemsContainer.ItemsStack(new BlockItem(game).setBlock(world.getBlocks().DIRT.getBlockID(), world), MathUtils.random(1, 64), items_container));
         }
         items_container.addItem(new RedBandanaHeadItem(game), 1);
         items_container.addItem(new TestPickaxeItem(game), 1);
 
-        for(int i = 0; i < TOOLBAR_INVENTORY_SLOTS_COUNT - 1; i++) {
-            toolbar_items_container.getItems().set(i, new ItemsContainer.ItemsStack(new BlockItem(game, world.getBlocks().STONE.getBlockID(), world), MathUtils.random(1, 64), toolbar_items_container));
-        }
+        for(int i = 0; i < TOOLBAR_INVENTORY_SLOTS_COUNT - 4; i++) {
+            toolbar_items_container.getItems().set(i, new ItemsContainer.ItemsStack(new BlockItem(game).setBlock(world.getBlocks().STONE.getBlockID(), world), MathUtils.random(1, 64), toolbar_items_container));
+        }*/
+
+        //create blocks pointer listener
+        makeBlockPointerListener();
 
         //because player is always on center of map
         setParentChunk(w.getWorldChunks()[1][1]);
@@ -180,100 +249,33 @@ public class Player extends DynamicWorldObject {
         makeDebugInput();
     }
 
-    /**
-     * This function is only called if player is an clone
-     * @param packet packet that come from network from client which this cloned player is normal player to update his state
-     */
-    public void processPacket(Object packet) {
-        if(packet instanceof NetworkClasses.PlayerPositionUpdatePacket) {
-            NetworkClasses.PlayerPositionUpdatePacket pos_update = (NetworkClasses.PlayerPositionUpdatePacket) packet;
+    private void makeBlockPointerListener() {
+        PlayerBlockSelectorGUIComponent.SelectorListener listener = new PlayerBlockSelectorGUIComponent.SelectorListener() {
+            @Override
+            public void start() {
+                pointing = true;
 
-            final float teleport_after_distance = 200;
-            if(Vector2.dst(pos_update.x, pos_update.y, getPosition().x, getPosition().y) > teleport_after_distance) {
-                getPosition().set(pos_update.x, pos_update.y);
             }
 
-            interpolator.interpolate(pos_update.x, pos_update.y, System.currentTimeMillis());
-        } else if(packet instanceof ArmAngleUpdatePacket) {
-            ArmAngleUpdatePacket arm_update = (ArmAngleUpdatePacket) packet;
-
-            arm_interpolator.interpolate(arm_update.angle, System.currentTimeMillis());
-        } else if(packet instanceof UpdateWearItemPacket) {
-            UpdateWearItemPacket wear_update = (UpdateWearItemPacket) packet;
-
-            try {
-                WearableItem new_item = (WearableItem) Helper.objectFromClassName(wear_update.item_class_name, new Object[] { game }, Game.class);
-
-                //finally update worn item
-                switch(wear_update.slot) {
-                    case 0:
-                        wear_head_item = new_item;
-                        break;
-                    case 1:
-                        wear_body_item = (BodyWearableItem) new_item;
-                        break;
-                    case 2:
-                        wear_legs_item = new_item;
-                        break;
-                }
-
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            } catch (NoSuchMethodException e) {
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
-            } catch (InstantiationException e) {
-                e.printStackTrace();
-            }
-        } else if(packet instanceof UpdateHoldingItemPacket) {
-            UpdateHoldingItemPacket holding_update = (UpdateHoldingItemPacket) packet;
-
-            Item item = null;
-            if(holding_update.block_id != -1) {
-                Object[] arguments = new Object[] { game, holding_update.block_id, world };
-                try {
-                    item = (Item) Helper.objectFromClassName(holding_update.item_class_name, arguments, Game.class, int.class, World.class);
-                } catch (ClassNotFoundException e) {
-                    e.printStackTrace();
-                } catch (NoSuchMethodException e) {
-                    e.printStackTrace();
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                } catch (InvocationTargetException e) {
-                    e.printStackTrace();
-                } catch (InstantiationException e) {
-                    e.printStackTrace();
-                }
-
-            } else {
-                Object[] arguments = new Object[] { game };
-                try {
-                    item = (Item) Helper.objectFromClassName(holding_update.item_class_name, arguments, Game.class);
-                } catch (ClassNotFoundException e) {
-                    e.printStackTrace();
-                } catch (NoSuchMethodException e) {
-                    e.printStackTrace();
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                } catch (InvocationTargetException e) {
-                    e.printStackTrace();
-                } catch (InstantiationException e) {
-                    e.printStackTrace();
-                }
+            @Override
+            public void stop() {
+                pointing = false;
             }
 
-            if(item != null) {
-                //well here we don't really care how to make new items stack because if we are here we are 100% sure that this is an clone
-                selected_items = new ItemsContainer.ItemsStack(item, 1, null);
+            @Override
+            public void changed(int new_block_x, int new_block_y, WorldChunk chunk, Vector2 pointer_world_pos) {
+                calculateArmAngle(pointer_world_pos, true);
+
+                last_pointed_block_x = new_block_x;
+                last_pointed_block_y = new_block_y;
+                last_pointed_chunk = chunk;
             }
-        }
+        };
+        game.getScreen(Screens.PLANET_GUI_SCREEN_NAME, PlanetGUIScreen.class).getBlockPointerGUIComponent().setSelectorListener(listener);
     }
 
     private void makeDebugInput() {
-        InputAdapter input = new InputAdapter() {
+        input_adapter = new InputAdapter() {
 
             boolean c_button = false;
 
@@ -389,7 +391,7 @@ public class Player extends DynamicWorldObject {
             public boolean scrolled(int amount) {
                 game.getMainCamera().zoom += amount * .1f * game.getMainCamera().zoom;
                 game.getMainCamera().update();
-                System.out.println(game.getMainCamera().zoom);
+                Log.debug("(Player) zoom: "  + game.getMainCamera().zoom);
 
                 return false;
             }
@@ -418,6 +420,10 @@ public class Player extends DynamicWorldObject {
                     jump = true;
                 }
 
+                if(keycode == Input.Keys.F && Game.IS_CLIENT) {
+                    game.getGameClient().disconnect();
+                }
+
                 return false;
             }
 
@@ -438,44 +444,174 @@ public class Player extends DynamicWorldObject {
                 return false;
             }
         };
-        game.getInputEngine().addInputProcessor(input);
+        game.getInputEngine().addInputProcessor(input_adapter);
     }
 
-    private void calculateArmAngle(Vector2 touch_pos) {
+    /**
+     * This function is only called if some packet from network comes to player as normal player not a clone (so this method can be called only if player is not an clone)
+     * @param packet packet
+     */
+    public void processToPlayerPacket(Object packet) {
+        if(packet instanceof UpdateWearablesAndHoldingItemsRequest) {
+            updateWearItemsNetwork(true);
+            updateSelectedItemNetwork(true);
+        }
+    }
+
+    /**
+     * This function is only called if player is an clone
+     * @param packet packet that come from network from client which this cloned player is normal player to update his state
+     */
+    public void processToClonePacket(Object packet) {
+        if(packet instanceof NetworkClasses.PlayerPositionUpdatePacket) {
+            NetworkClasses.PlayerPositionUpdatePacket pos_update = (NetworkClasses.PlayerPositionUpdatePacket) packet;
+
+            final float teleport_after_distance = 200;
+            if(Vector2.dst(pos_update.x, pos_update.y, getPosition().x, getPosition().y) > teleport_after_distance) {
+                getPosition().set(pos_update.x, pos_update.y);
+            }
+
+            getPlayerRenderer().setDirection(pos_update.direction);
+            current_center_chunk_pos.set(pos_update.center_chunk_x, pos_update.center_chunk_y);
+            on_current_chunk_time = pos_update.on_current_chunk_time;
+
+            interpolator.interpolate(pos_update.x, pos_update.y, System.currentTimeMillis());
+        } else if(packet instanceof ArmAngleUpdatePacket) {
+            ArmAngleUpdatePacket arm_update = (ArmAngleUpdatePacket) packet;
+
+            arm_interpolator.interpolate(arm_update.angle, System.currentTimeMillis());
+        } else if(packet instanceof UpdateWearItemPacket) {
+            UpdateWearItemPacket wear_update = (UpdateWearItemPacket) packet;
+
+            try {
+                WearableItem new_item = null;
+
+                if(!wear_update.item_class_name.equals("null")) {
+                    new_item = (WearableItem) Helper.objectFromClassName(wear_update.item_class_name, new Object[]{game}, Game.class);
+                    new_item.setItemProperty(wear_update.item_property);
+                }
+
+                //finally update worn item
+                switch(wear_update.slot) {
+                    case 0:
+                        wear_head_item = new_item;
+                        break;
+                    case 1:
+                        wear_body_item = (BodyWearableItem) new_item;
+                        break;
+                    case 2:
+                        wear_legs_item = new_item;
+                        break;
+                }
+
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            }
+        } else if(packet instanceof UpdateHoldingItemPacket) {
+            UpdateHoldingItemPacket holding_update = (UpdateHoldingItemPacket) packet;
+
+            Item item = null;
+
+            if(!holding_update.item_class_name.equals("null")) {
+                Object[] arguments = new Object[]{game};
+                try {
+                    item = (Item) Helper.objectFromClassName(holding_update.item_class_name, arguments, Game.class);
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                } catch (NoSuchMethodException e) {
+                    e.printStackTrace();
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                } catch (InvocationTargetException e) {
+                    e.printStackTrace();
+                } catch (InstantiationException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            if(item != null) {
+                item.setItemProperty(holding_update.item_property);
+
+                //well here we don't really care how to make new items stack because if we are here we are 100% sure that this is an clone
+                selected_items = new ItemsContainer.ItemsStack(item, 1, null);
+            } else {
+                selected_items = new ItemsContainer.ItemsStack(null, 1, null);
+            }
+        }
+    }
+
+    private void calculateArmAngle(Vector2 touch_pos, boolean y_axis_up) {
         Vector2 pos = new Vector2(getPosition()).add(getWH().x / 2f, getWH().y / 2f);
-        float angle = MathUtils.radiansToDegrees * (MathUtils.atan2((touch_pos.x - pos.x), touch_pos.y - pos.y));
+
+        float angle = MathUtils.radiansToDegrees * (MathUtils.atan2((pos.x - touch_pos.x), pos.y - touch_pos.y)) * -1f;
 
         player_renderer.setArmAngle(angle);
+
+        //calc player dir
+        if(touch_pos.x > getPosition().x + getWH().x / 2f) {
+            getPlayerRenderer().setDirection(1);
+        } else if(touch_pos.x < getPosition().x + getWH().x / 2f) {
+            getPlayerRenderer().setDirection(-1);
+        }
     }
 
     public void updateWearItemsNetwork(boolean dont_check) {
         if(!Game.IS_HOST && !Game.IS_CLIENT)
             return;
 
-        if(wear_head_item != null && (last_wear_head_item != wear_head_item || dont_check)) {
+        if((last_wear_head_item != wear_head_item || dont_check)) {
             UpdateWearItemPacket packet = new UpdateWearItemPacket();
             packet.tcp = true;
-            packet.item_class_name = wear_head_item.getClass().getName();
+
+            if(wear_head_item != null) {
+                packet.item_class_name = wear_head_item.getClass().getName();
+                packet.item_property = wear_head_item.getItemProperty();
+            } else {
+                packet.item_class_name = "null";
+            }
+
             packet.slot = 0;
             packet.player_connection_id = NetworkHelper.getConnectionID(game);
 
             NetworkHelper.send(packet);
         }
 
-        if(wear_body_item != null && (last_wear_body_item != wear_body_item || dont_check)) {
+        if((last_wear_body_item != wear_body_item || dont_check)) {
             UpdateWearItemPacket packet = new UpdateWearItemPacket();
             packet.tcp = true;
-            packet.item_class_name = wear_body_item.getClass().getName();
+
+            if(wear_body_item != null) {
+                packet.item_class_name = wear_body_item.getClass().getName();
+                packet.item_property = wear_body_item.getItemProperty();
+            } else {
+                packet.item_class_name = "null";
+            }
+
             packet.slot = 1;
             packet.player_connection_id = NetworkHelper.getConnectionID(game);
 
             NetworkHelper.send(packet);
         }
 
-        if(wear_legs_item != null && (last_wear_legs_item != wear_legs_item || dont_check)) {
+        if((last_wear_legs_item != wear_legs_item || dont_check)) {
             UpdateWearItemPacket packet = new UpdateWearItemPacket();
             packet.tcp = true;
-            packet.item_class_name = wear_legs_item.getClass().getName();
+
+            if(wear_legs_item != null) {
+                packet.item_class_name = wear_legs_item.getClass().getName();
+                packet.item_property = wear_legs_item.getItemProperty();
+            } else {
+                packet.item_class_name = "null";
+            }
+
             packet.slot = 2;
             packet.player_connection_id = NetworkHelper.getConnectionID(game);
 
@@ -491,16 +627,18 @@ public class Player extends DynamicWorldObject {
         if(!Game.IS_HOST && !Game.IS_CLIENT)
             return;
 
-        if((selected_items != null && selected_items.getItem() != null) && (last_selected_items != selected_items || dont_check)) {
+        if((last_selected_items != selected_items || dont_check)) {
             UpdateHoldingItemPacket packet = new UpdateHoldingItemPacket();
             packet.tcp = true;
-            packet.item_class_name = selected_items.getItem().getClass().getName();
-            packet.player_connection_id = NetworkHelper.getConnectionID(game);
 
-            if(selected_items.getItem().getClass() == BlockItem.class) {
-                packet.block_id = ((BlockItem) selected_items.getItem()).getRepresentingBlockID();
+            if(selected_items != null && selected_items.getItem() != null) {
+                packet.item_class_name = selected_items.getItem().getClass().getName();
+                packet.item_property = selected_items.getItem().getItemProperty();
+            } else {
+                packet.item_class_name = "null";
             }
 
+            packet.player_connection_id = NetworkHelper.getConnectionID(game);
             NetworkHelper.send(packet);
         }
 
@@ -521,11 +659,15 @@ public class Player extends DynamicWorldObject {
 
     private float animation_time = 0;
 
+    private WorldChunk last_parent_chunk;
+
     @Override
     public void tick(float delta) {
-        animation_time += delta * 20;
+        animation_time += delta * 20f;
 
-        //find parent chunk (because chunk[1][1] is now always players parent chunk because of delayed loading chunks system)
+        on_current_chunk_time += delta * 1000f;
+
+        //find parent chunk (because chunk[1][1] is not always players parent chunk because of delayed loading chunks system)
         for(int i = 0; i < world.getWorldChunks().length; i++) {
             for(int j = 0; j < world.getWorldChunks()[0].length; j++) {
                 WorldChunk chunk = world.getWorldChunks()[i][j];
@@ -533,6 +675,11 @@ public class Player extends DynamicWorldObject {
 
                 if(chunk_rect.contains(getPosition().x + getWH().x / 2f, getPosition().y + getWH().y / 2f)) {
                     setParentChunk(chunk);
+
+                    if(chunk == world.getWorldChunks()[1][1] && chunk != last_parent_chunk) {
+                        on_current_chunk_time = 0;
+                    }
+                    last_parent_chunk = chunk;
                     break;
                 }
             }
@@ -560,20 +707,39 @@ public class Player extends DynamicWorldObject {
             return;
         }
 
+        //calculate to which direction player is pointing
+        if(getVelocity().x > 0)
+            getPlayerRenderer().setDirection(1);
+        else if(getVelocity().x < 0)
+            getPlayerRenderer().setDirection(-1);
+
         //arm following cursor animation
-        Vector2 mouse_pos = new Vector2(Gdx.input.getX(), Gdx.graphics.getHeight() - Gdx.input.getY());
-        game.getMainViewport().unproject(mouse_pos);
-        calculateArmAngle(mouse_pos);
+        if(!pointing) {
+            Vector2 mouse_pos = new Vector2(Gdx.input.getX(), Gdx.input.getY());
+            game.getMainViewport().unproject(mouse_pos);
+            calculateArmAngle(mouse_pos, false);
+        }
+
+        //read ui from planetGuiScreen
+        if(pickaxe_button_pressed) {
+            setHittingBlock(true, last_pointed_block_x, last_pointed_block_y, last_pointed_chunk);
+        } else if(placeblock_button_pressed) {
+            placing_block = true;
+        }
 
         //hitting block system & animation
         if(hitting_block) {
-            if(last_x != x || last_y != y) {
-                block_hardness = chunk.getBlocks()[x][y].getForegroundBlock().getHardness();
+            if(last_x != x || last_y != y || is_foreground_placing != last_is_foreground_placing) {
+                if(is_foreground_placing)
+                    block_hardness = chunk.getBlocks()[x][y].getForegroundBlock().getHardness();
+                else
+                    block_hardness = chunk.getBlocks()[x][y].getBackgroundBlock().getHardness();
+
                 last_arm_angle = getPlayerRenderer().getArmAngle();
                 block_loot_spawned = false;
             }
 
-            float strenght = 1f;
+            float strenght = 1f; //so 1 if arm power
             if(selected_items != null && selected_items.getItem() != null)
                 strenght = (selected_items.getItem() instanceof ToolItem) ? ((ToolItem) selected_items.getItem()).getToolPower() : 1f;
 
@@ -581,23 +747,54 @@ public class Player extends DynamicWorldObject {
 
             if(block_hardness <= 0f) {
                 //so here block is broken
-                int block_id = chunk.getBlocks()[x][y].getForegroundBlock().getBlockID();
+                int block_id;
+                if (is_foreground_placing)
+                    block_id = chunk.getBlocks()[x][y].getForegroundBlock().getBlockID();
+                else
+                    block_id = chunk.getBlocks()[x][y].getBackgroundBlock().getBlockID();
+
                 chunk.setBlock(x, y, world.getBlocks().AIR.getBlockID(), false, true);
 
                 //create object that represents broken block
                 if(!block_loot_spawned && block_id != world.getBlocks().AIR.getBlockID()) {
                     LayingItemObject loot_object = new LayingItemObject(new Vector2(x * World.BLOCK_SIZE, y * World.BLOCK_SIZE).add(chunk.getPosition()), world, game);
-                    loot_object.setItem(new BlockItem(game, block_id, world));
+                    loot_object.setItem(new BlockItem(game).setBlock(block_id, world));
                     world.addObject(loot_object, true);
                     block_loot_spawned = true;
                 }
             }
 
-            //animation
+            //arm animation
             getPlayerRenderer().setArmAngleUnchecked(last_arm_angle + (MathUtils.cos(animation_time) * 5));
 
             last_x = x;
             last_y = y;
+        } else if(placing_block) {
+            int in_hand_block = -1;
+
+            //first check if player is even holding some block
+            if(getSelectedItems() != null && getSelectedItems().getItem() != null) {
+                if(getSelectedItems().getItem() instanceof BlockItem) {
+                    in_hand_block = ((BlockItem) getSelectedItems().getItem()).getRepresentingBlockID();
+                }
+            }
+
+            if(in_hand_block != -1) {
+                //now check if we can place block if true place it and remove one from holding blocks stack
+                if(last_pointed_chunk != null) {
+                    TileHolder holder = last_pointed_chunk.getBlocks()[last_pointed_block_x][last_pointed_block_y];
+                    int acc_block = (is_foreground_placing) ? holder.getForegroundBlock().getBlockID() : holder.getBackgroundBlock().getBlockID();
+
+                    if(acc_block == world.getBlocks().AIR.getBlockID()) {
+                        boolean placed = last_pointed_chunk.setBlockPlayerChecks(last_pointed_block_x, last_pointed_block_y, in_hand_block, !is_foreground_placing, true);
+
+                        if(placed)
+                            getSelectedItems().removeOneFromStack();
+                    }
+                }
+            }
+
+            placing_block = false;
         }
 
         //run this code only if this is not a clone
@@ -624,7 +821,11 @@ public class Player extends DynamicWorldObject {
 
     @Override
     public void dispose() {
-
+        if(!isClone()) {
+            Log.info("(Player) Disposing player!");
+            player_data.saveData();
+            game.getInputEngine().remove(input_adapter);
+        }
     }
 
     public void setWearHeadItem(WearableItem head_item) {
@@ -683,6 +884,34 @@ public class Player extends DynamicWorldObject {
 
     public void setRepresentingPlayer(ServerPlayer player) {
         representing_player = player;
+
+        //send request for updating what this clone on client side (where this clone is an normal player) is wearing and holding
+        Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                UpdateWearablesAndHoldingItemsRequest update_request = new UpdateWearablesAndHoldingItemsRequest();
+                update_request.player_connection_id = getRepresentingPlayer().connection_id;
+                update_request.tcp = true;
+                NetworkHelper.send(update_request);
+            }
+        };
+        Gdx.app.postRunnable(r);
+    }
+
+    public void setForegroundPlacing(boolean foregroundPlacing) {
+        this.is_foreground_placing = foregroundPlacing;
+    }
+
+    public void setPickaxeButtonPressed(boolean pressed) {
+        pickaxe_button_pressed = pressed;
+    }
+
+    public void setPlaceBlockButtonPressed(boolean pressed) {
+        placeblock_button_pressed = pressed;
+    }
+
+    public boolean isPointing() {
+        return pointing;
     }
 
     public ServerPlayer getRepresentingPlayer() {
@@ -703,5 +932,21 @@ public class Player extends DynamicWorldObject {
 
     public PlayerRenderer1 getPlayerRenderer() {
         return player_renderer;
+    }
+
+    /**
+     * Float used on server side when deciding which player should send chunk data packet
+     * @return how long this player wasn't changing current chunk to another (= how long ago player was loading some chunk)
+     */
+    public float getOnCurrentChunkTime() {
+        return on_current_chunk_time;
+    }
+
+    /**
+     * Vector used on server side when deciding which player should send chunk data packet
+     * @return current center chunk position stored in vector instance
+     */
+    public Vector2 getCurrentCenterChunkPosition() {
+        return current_center_chunk_pos;
     }
 }

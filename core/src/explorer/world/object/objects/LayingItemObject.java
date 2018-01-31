@@ -56,7 +56,7 @@ public class LayingItemObject extends DynamicWorldObject implements SensorObject
                 //create new item instance
                 Object item = null;
                 try {
-                    item = Helper.objectFromClassName(item_class_name, new Object[] { game, block_id, world }, Game.class, int.class, World.class);
+                    item = Helper.objectFromClassName(item_class_name, new Object[] { game }, Game.class);
                 } catch (ClassNotFoundException e) {
                     e.printStackTrace();
                 } catch (NoSuchMethodException e) {
@@ -71,6 +71,7 @@ public class LayingItemObject extends DynamicWorldObject implements SensorObject
 
                 if(item != null) {
                     this.item = (BlockItem) item;
+                    ((BlockItem) item).setBlock(block_id, world);
                 }
             } else {
                 Object item = null;
@@ -129,7 +130,11 @@ public class LayingItemObject extends DynamicWorldObject implements SensorObject
     @Override
     public void render(SpriteBatch batch) {
         if(item != null && item.getItemOnGroundTexture() != null) {
-            batch.draw(item.getItemOnGroundTexture(), getPosition().x, getPosition().y, getWH().x, getWH().y);
+            if(!(item instanceof Item.InInventoryRenderer)) {
+                batch.draw(item.getItemOnGroundTexture(), getPosition().x, getPosition().y, getWH().x, getWH().y);
+            } else {
+                ((Item.InInventoryRenderer) item).renderInInventory(getPosition().x, getPosition().y, getWH().x, getWH().y, batch);
+            }
         }
     }
 

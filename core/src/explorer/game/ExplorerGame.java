@@ -3,10 +3,13 @@ package explorer.game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Select;
 import com.esotericsoftware.minlog.Log;
 
+import explorer.game.screen.gui.dialog.YesNoDialog;
 import explorer.game.screen.screens.menu.ClientServerChooseScreen;
 import explorer.game.screen.screens.menu.MainMenuScreen;
+import explorer.game.screen.screens.menu.SelectPlayerScreen;
 import explorer.game.screen.screens.planet.PlanetGUIScreen;
 import explorer.game.screen.screens.planet.PlanetScreen;
 import explorer.game.screen.screens.planet.PlayerInventoryScreen;
@@ -27,7 +30,7 @@ public class ExplorerGame extends explorer.game.framework.Game {
 
     @Override
     protected void initGame() {
-        Log.set(Log.LEVEL_DEBUG);
+        Log.set(Log.LEVEL_INFO);
 
         //make game render thread as one with max priority to avoid lags from threads working in background
         Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
@@ -40,6 +43,10 @@ public class ExplorerGame extends explorer.game.framework.Game {
         ClientServerChooseScreen main_menu_client_server_choose_screen = new ClientServerChooseScreen(this);
         main_menu_client_server_choose_screen.setVisible(false);
         addScreen(main_menu_client_server_choose_screen);
+
+        SelectPlayerScreen select_player_screen = new SelectPlayerScreen(this);
+        select_player_screen.setVisible(false);
+        addScreen(select_player_screen);
 
         //game screens
 
@@ -82,7 +89,7 @@ public class ExplorerGame extends explorer.game.framework.Game {
                 Vector2 gui_touch = new Vector2(screenX, screenY);
                 getGUIViewport().unproject(gui_touch);
 
-                Log.debug("GUI COORDS: " + gui_touch);
+                Log.debug("GUI CORDS: " + gui_touch);
                 return false;
             }
         };

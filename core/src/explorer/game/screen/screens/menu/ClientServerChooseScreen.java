@@ -53,7 +53,7 @@ public class ClientServerChooseScreen extends Screen {
 
         found_lan_server_button.setButtonListener(new TextureButton.ButtonListener() {
             @Override
-            public void touched() {
+            public void touched(GUIComponent instance) {
                 if(isVisible()) {
                     //if server wasn't found or searching wasn't started yet, start searching for local servers
                     if(found_lan_server_button.getText().equals(server_not_found_text) || found_lan_server_button.getText().equals(search_for_server_text) || found_lan_server_button.getText().equals(failed_to_connect_text)) {
@@ -82,7 +82,7 @@ public class ClientServerChooseScreen extends Screen {
             }
 
             @Override
-            public void released() {}
+            public void released(GUIComponent instance) {}
         });
 
         //button to connect directly to localhost ip
@@ -92,7 +92,7 @@ public class ClientServerChooseScreen extends Screen {
 
         localhost_button.setButtonListener(new TextureButton.ButtonListener() {
             @Override
-            public void touched() {
+            public void touched(GUIComponent instance) {
                 try {
                     InetAddress address = InetAddress.getByName("localhost");
 
@@ -118,7 +118,7 @@ public class ClientServerChooseScreen extends Screen {
             }
 
             @Override
-            public void released() {}
+            public void released(GUIComponent instance) {}
         });
 
         //back button
@@ -128,13 +128,13 @@ public class ClientServerChooseScreen extends Screen {
 
         back_button.setButtonListener(new TextureButton.ButtonListener() {
             @Override
-            public void touched() {
+            public void touched(GUIComponent instance) {
                 setVisible(false);
                 game.getScreen(Screens.MAIN_MENU_SCREEN_NAME).setVisible(true);
             }
 
             @Override
-            public void released() {
+            public void released(GUIComponent instance) {
 
             }
         });

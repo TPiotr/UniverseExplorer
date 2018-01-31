@@ -42,16 +42,16 @@ public class MainMenuScreen extends Screen {
 
         start_single.setButtonListener(new TextureButton.ButtonListener() {
             @Override
-            public void touched() {
+            public void touched(GUIComponent instance) {
                 if(!isVisible())
                     return;
 
-                game.getScreen(Screens.UNIVERSE_SCREEN_NAME, UniverseScreen.class).setVisible(true);
+                game.getScreen(Screens.SELECT_PLAYER_SCREEN, SelectPlayerScreen.class).next(game.getScreen(Screens.UNIVERSE_SCREEN_NAME)).setVisible(true);
                 setVisible(false);
             }
 
             @Override
-            public void released() {}
+            public void released(GUIComponent instance) {}
         });
 
         start_host = new TextButton(font, "Start local server and play", new Vector2(0, 100), game.getGUIViewport(), game);
@@ -60,14 +60,14 @@ public class MainMenuScreen extends Screen {
 
         start_host.setButtonListener(new TextureButton.ButtonListener() {
             @Override
-            public void touched() {
+            public void touched(GUIComponent instance) {
                 if(!isVisible())
                     return;
 
                 game.hostServer(new GameServer.GameServerCreatedCallback() {
                     @Override
                     public void created() {
-                        game.getScreen(Screens.UNIVERSE_SCREEN_NAME, UniverseScreen.class).setVisible(true);
+                        game.getScreen(Screens.SELECT_PLAYER_SCREEN, SelectPlayerScreen.class).next(game.getScreen(Screens.UNIVERSE_SCREEN_NAME)).setVisible(true);
                         setVisible(false);
                     }
 
@@ -79,7 +79,7 @@ public class MainMenuScreen extends Screen {
             }
 
             @Override
-            public void released() {}
+            public void released(GUIComponent instance) {}
         });
 
         start_client = new TextButton(font, "Connect to server", new Vector2(0, 0), game.getGUIViewport(), game);
@@ -88,16 +88,16 @@ public class MainMenuScreen extends Screen {
 
         start_client.setButtonListener(new TextureButton.ButtonListener() {
             @Override
-            public void touched() {
+            public void touched(GUIComponent instance) {
                 if(!isVisible())
                     return;
 
                 setVisible(false);
-                game.getScreen(Screens.MAIN_MENU_CLIENT_SERVER_CHOOSE_SCREEN_NAME).setVisible(true);
+                game.getScreen(Screens.SELECT_PLAYER_SCREEN, SelectPlayerScreen.class).next(game.getScreen(Screens.MAIN_MENU_CLIENT_SERVER_CHOOSE_SCREEN_NAME)).setVisible(true);
             }
 
             @Override
-            public void released() {}
+            public void released(GUIComponent instance) {}
         });
     }
 

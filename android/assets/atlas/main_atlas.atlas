@@ -1,210 +1,216 @@
 
 main_atlas.png
-size: 512,512
-format: RGBA8888
-filter: Nearest,Nearest
-repeat: none
-badlogic
-  rotate: false
-  xy: 2, 20
-  size: 256, 256
-  orig: 256, 256
-  offset: 0, 0
-  index: -1
-star
-  rotate: false
-  xy: 2, 2
-  size: 16, 16
-  orig: 16, 16
-  offset: 0, 0
-  index: -1
-white_texture
-  rotate: false
-  xy: 260, 260
-  size: 16, 16
-  orig: 16, 16
-  offset: 0, 0
-  index: -1
-
-main_atlas2.png
-size: 1024,1024
+size: 2048,2048
 format: RGBA8888
 filter: Nearest,Nearest
 repeat: none
 background/sky_day
   rotate: false
-  xy: 2, 2
+  xy: 2, 362
   size: 512, 512
   orig: 512, 512
   offset: 0, 0
   index: -1
-
-main_atlas3.png
-size: 512,512
-format: RGBA8888
-filter: Nearest,Nearest
-repeat: none
+badlogic
+  rotate: false
+  xy: 1028, 1644
+  size: 256, 256
+  orig: 256, 256
+  offset: 0, 0
+  index: -1
 blocks/dirt_colorpack
   rotate: false
-  xy: 260, 326
+  xy: 752, 855
   size: 16, 1
   orig: 16, 1
   offset: 0, 0
   index: -1
 blocks/dirt_spritesheet
   rotate: false
-  xy: 2, 71
+  xy: 1028, 1578
   size: 64, 64
   orig: 64, 64
   offset: 0, 0
   index: -1
 blocks/grass_colorpack
   rotate: false
-  xy: 326, 392
+  xy: 786, 873
   size: 16, 1
   orig: 16, 1
   offset: 0, 0
   index: -1
 blocks/grass_spritesheet
   rotate: false
-  xy: 260, 329
+  xy: 1286, 1836
   size: 64, 64
   orig: 64, 64
   offset: 0, 0
   index: -1
 blocks/light
   rotate: false
-  xy: 2, 137
+  xy: 2, 104
   size: 256, 256
   orig: 256, 256
   offset: 0, 0
   index: -1
 blocks/stone_colorpack
   rotate: false
-  xy: 2, 2
+  xy: 1094, 1607
   size: 16, 1
   orig: 16, 1
   offset: 0, 0
   index: -1
 blocks/stone_spritesheet
   rotate: false
-  xy: 2, 5
+  xy: 2, 38
   size: 64, 64
   orig: 64, 64
   offset: 0, 0
   index: -1
 blocks/wooden_planks_colorpack
   rotate: false
-  xy: 68, 68
+  xy: 1286, 1809
   size: 16, 1
   orig: 16, 1
   offset: 0, 0
   index: -1
 blocks/wooden_planks_spritesheet
   rotate: false
-  xy: 68, 71
+  xy: 260, 296
   size: 64, 64
   orig: 64, 64
   offset: 0, 0
   index: -1
-
-main_atlas4.png
-size: 32,32
-format: RGBA8888
-filter: Nearest,Nearest
-repeat: none
-inventory/slot_background
+gui/background_selected_switch
   rotate: false
-  xy: 2, 2
+  xy: 516, 822
+  size: 32, 16
+  orig: 32, 16
+  offset: 0, 0
+  index: -1
+gui/blocks_pointer
+  rotate: false
+  xy: 516, 804
   size: 16, 16
   orig: 16, 16
   offset: 0, 0
   index: -1
-
-main_atlas5.png
-size: 64,64
-format: RGBA8888
-filter: Nearest,Nearest
-repeat: none
+gui/blocks_pointer_block
+  rotate: false
+  xy: 550, 822
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: -1
+gui/dialog_background
+  rotate: false
+  xy: 260, 275
+  size: 19, 19
+  orig: 19, 19
+  offset: 0, 0
+  index: -1
+gui/foreground_selected_switch
+  rotate: false
+  xy: 752, 858
+  size: 32, 16
+  orig: 32, 16
+  offset: 0, 0
+  index: -1
+gui/right_arrow
+  rotate: false
+  xy: 1028, 1544
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
 inventory/items/red_bandana_item_icon
   rotate: false
-  xy: 36, 46
+  xy: 1317, 1822
   size: 12, 12
   orig: 12, 12
   offset: 0, 0
   index: -1
 inventory/items/test_pickaxe_item
   rotate: false
-  xy: 2, 2
+  xy: 1286, 1812
   size: 29, 22
   orig: 29, 22
   offset: 0, 0
   index: -1
 inventory/items/test_pickaxe_item_icon
   rotate: false
-  xy: 2, 26
+  xy: 1094, 1610
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
-
-main_atlas6.png
-size: 2048,2048
-format: RGBA8888
-filter: Nearest,Nearest
-repeat: none
+inventory/slot_background
+  rotate: false
+  xy: 1028, 1526
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: -1
 objects/torch_texture
   rotate: false
-  xy: 2, 2
+  xy: 326, 346
   size: 18, 14
   orig: 18, 14
   offset: 0, 0
   index: -1
 objects/tree_earth1
   rotate: false
-  xy: 2, 18
+  xy: 2, 876
   size: 1024, 1024
   orig: 1024, 1024
   offset: 0, 0
   index: -1
-
-main_atlas7.png
-size: 512,64
-format: RGBA8888
-filter: Nearest,Nearest
-repeat: none
 player/base_body
   rotate: false
-  xy: 238, 2
+  xy: 1352, 1866
   size: 26, 34
   orig: 26, 34
   offset: 0, 0
   index: -1
 player/base_head
   rotate: false
-  xy: 266, 2
+  xy: 2, 2
   size: 26, 34
   orig: 26, 34
   offset: 0, 0
   index: -1
 player/basic_arm
   rotate: false
-  xy: 322, 10
+  xy: 1352, 1838
   size: 12, 26
   orig: 12, 26
   offset: 0, 0
   index: -1
 player/basic_legs
   rotate: false
-  xy: 2, 2
+  xy: 516, 840
   size: 234, 34
   orig: 234, 34
   offset: 0, 0
   index: -1
 player/red_bandana_head
   rotate: false
-  xy: 294, 2
+  xy: 68, 68
   size: 26, 34
   orig: 26, 34
+  offset: 0, 0
+  index: -1
+star
+  rotate: false
+  xy: 1062, 1560
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: -1
+white_texture
+  rotate: false
+  xy: 1128, 1626
+  size: 16, 16
+  orig: 16, 16
   offset: 0, 0
   index: -1

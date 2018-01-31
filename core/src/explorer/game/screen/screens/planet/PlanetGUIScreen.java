@@ -15,6 +15,7 @@ import explorer.game.framework.Game;
 import explorer.game.framework.utils.math.MathHelper;
 import explorer.game.screen.Screen;
 import explorer.game.screen.ScreenComponent;
+import explorer.game.screen.gui.GUIComponent;
 import explorer.game.screen.gui.TextButton;
 import explorer.game.screen.gui.TextureButton;
 import explorer.game.screen.screens.Screens;
@@ -23,7 +24,12 @@ import explorer.world.World;
 import explorer.world.block.Block;
 import explorer.world.block.CustomColorBlock;
 import explorer.world.block.CustomRenderingBlock;
+import explorer.world.inventory.Item;
+import explorer.world.inventory.item_types.BlockItem;
+import explorer.world.inventory.item_types.ToolItem;
 import explorer.world.object.WorldObject;
+import explorer.world.object.objects.player.gui.BackgroundForegroundSwitch;
+import explorer.world.object.objects.player.gui.PlayerBlockSelectorGUIComponent;
 import explorer.world.object.objects.player.gui.PlayerInventoryRenderer;
 import explorer.world.object.objects.player.gui.PlayerToolBarGUIComponent;
 
@@ -33,142 +39,15 @@ import explorer.world.object.objects.player.gui.PlayerToolBarGUIComponent;
 
 public class PlanetGUIScreen extends Screen {
 
-    /**
-     * Little GUI component that allows player to select what block to place
-     * It reads data from Blocks database so it don't have to be updated
-     */
-    private class BlockPlacingSelector implements ScreenComponent {
-
-        private Vector2 position;
-
-        private final float block_render_size = 64;
-        private final float spacing = 5;
-        private final int max_in_column = 10;
-        private int selected = 0;
-
-        private PlanetScreen planet_screen;
-        private boolean visible = true;
-
-        private TextureRegion white_texture;
-
-        private TextButton background_checkbox;
-        private boolean background_placing = false;
-
-        public BlockPlacingSelector(final Vector2 position, final PlanetScreen planet_screen) {
-            this.position = position;
-
-            //copy blocks references
-            this.planet_screen = planet_screen;
-
-            //placeholder texture for invisible blocks like air
-            white_texture = game.getAssetsManager().getTextureRegion("white_texture");
-
-            //create background checkbox
-            background_checkbox = new TextButton(AssetsManager.font, "Foreground", new Vector2(position.x - 120, position.y + 20), game.getGUIViewport(), game);
-            background_checkbox.setButtonListener(new TextureButton.ButtonListener() {
-                @Override
-                public void touched() {
-                    background_placing = !background_placing;
-                    background_checkbox.setText((background_placing) ? "Background" : "Foreground");
-
-                    //planet_screen.getWorld().getPlayer().setBackgroundPlacing(background_placing);
-                }
-
-                @Override
-                public void released() {
-
-                }
-            });
-
-            InputAdapter input = new InputAdapter() {
-                @Override
-                public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-                    if(!visible)
-                        return false;
-
-                    Vector2 unproj = new Vector2(screenX, screenY);
-                    game.getGUIViewport().unproject(unproj);
-
-                    if(planet_screen.getWorld().getBlocks() == null)
-                        return false;
-
-                    int i = 0;
-                    for(Block block : planet_screen.getWorld().getBlocks().getAllBlocksMap().values()) {
-                        int column = i / max_in_column;
-                        int row = i % max_in_column;
-
-                        if(MathHelper.overlaps2Rectangles(position.x + (column * (block_render_size + spacing)), position.y - (row * (block_render_size + spacing)), block_render_size, block_render_size, unproj.x, unproj.y, 1, 1)) {
-                            selected = i;
-                            //planet_screen.getWorld().getPlayer().setSelectedBlock(block);
-
-                            return true;
-                        }
-
-                        i++;
-                    }
-
-                    return false;
-                }
-            };
-
-            game.getInputEngine().addInputProcessor(input);
-        }
-
-        public void setVisible(boolean visible) {
-            background_checkbox.setVisible(visible);
-            this.visible = visible;
-        }
-
-        @Override
-        public void tick(float delta) {
-            background_checkbox.tick(delta);
-        }
-
-        @Override
-        public void render(SpriteBatch batch) {
-            int i = 0;
-
-            if(planet_screen.getWorld() == null || planet_screen.getWorld().getBlocks() == null)
-                return;
-
-            for(Block block : planet_screen.getWorld().getBlocks().getAllBlocksMap().values()) {
-                int column = i / max_in_column;
-                int row = i % max_in_column;
-
-                if(block.getTextureRegion(Block.COLLIDE_NONE) != null) {
-                    if(block instanceof CustomColorBlock) {
-                        batch.setColor(((CustomColorBlock) block).getBlockColor());
-                        batch.draw(block.getTextureRegion(Block.COLLIDE_NONE), position.x + (column * (block_render_size + spacing)), position.y - (row * (block_render_size + spacing)), block_render_size, block_render_size);
-                    } else if(block instanceof CustomRenderingBlock) {
-                        CustomRenderingBlock cr_block = (CustomRenderingBlock) block;
-                        cr_block.render(batch, Block.COLLIDE_NONE, position.x + (column * (block_render_size + spacing)), position.y - (row * (block_render_size + spacing)), block_render_size, block_render_size, false);
-                    } else {
-                        batch.draw(block.getTextureRegion(Block.COLLIDE_NONE), position.x + (column * (block_render_size + spacing)), position.y - (row * (block_render_size + spacing)), block_render_size, block_render_size);
-                    }
-                } else {
-                    //just draw white texture as placeholder because it is probably air or other invisible block
-                    batch.draw(white_texture, position.x + (column * (block_render_size + spacing)), position.y - (row * (block_render_size + spacing)), block_render_size, block_render_size);
-                }
-
-                if(i == selected) {
-                    batch.setColor(.5f, .5f, .5f, .5f);
-                    batch.draw(white_texture, position.x + (column * (block_render_size + spacing)), position.y - (row * (block_render_size + spacing)), block_render_size, block_render_size);
-                }
-
-                batch.setColor(Color.WHITE);
-
-                i++;
-            }
-
-            background_checkbox.render(batch);
-        }
-    }
-
     private TextureButton left_button, right_button, jump_button, inventory_button;
+
+    private TextureButton pickaxe_button, placeblock_button;
+    private BackgroundForegroundSwitch placing_switch;
 
     //private BlockPlacingSelector blocks_selector;
 
     private PlayerToolBarGUIComponent toolbar_renderer;
+    private PlayerBlockSelectorGUIComponent block_pointer;
 
     private BitmapFont debug_font;
 
@@ -188,72 +67,125 @@ public class PlanetGUIScreen extends Screen {
 
         NAME = Screens.PLANET_GUI_SCREEN_NAME;
 
+        block_pointer = new PlayerBlockSelectorGUIComponent(game.getGUIViewport(), planet_screen, game);
+        addScreenComponent(block_pointer);
+
+        placing_switch = new BackgroundForegroundSwitch(new Vector2(450, -10), game.getGUIViewport(), planet_screen, game);
+        addScreenComponent(placing_switch);
+
         toolbar_renderer = new PlayerToolBarGUIComponent(planet_screen, game.getGUIViewport(), game);
         addScreenComponent(toolbar_renderer);
 
-        TextureRegion white_texture = game.getAssetsManager().getTextureRegion("white_texture");
+        TextureRegion white_texture = game.getAssetsManager().getTextureRegion("gui/right_arrow");
         left_button = new TextureButton(new Vector2(-550, -300), new Vector2(128, 128), new TextureRegion(white_texture), game.getGUIViewport(), game);
+        left_button.setRotation(180);
         addScreenComponent(left_button);
 
-        right_button = new TextureButton(new Vector2(-200, -300), new Vector2(128, 128), new TextureRegion(white_texture), game.getGUIViewport(), game);
+        right_button = new TextureButton(new Vector2(-300, -300), new Vector2(128, 128), new TextureRegion(white_texture), game.getGUIViewport(), game);
         addScreenComponent(right_button);
 
         jump_button = new TextureButton(new Vector2(450, -300), new Vector2(128, 128), new TextureRegion(white_texture), game.getGUIViewport(), game);
+        jump_button.setRotation(90);
         addScreenComponent(jump_button);
 
         inventory_button = new TextureButton(new Vector2(450, 200), new Vector2(64, 64), new TextureRegion(white_texture), game.getGUIViewport(), game);
         addScreenComponent(inventory_button);
 
+        pickaxe_button = new TextureButton(new Vector2(450, -150), new Vector2(128, 128), new TextureRegion(white_texture), game.getGUIViewport(), game);
+        addScreenComponent(pickaxe_button);
+        pickaxe_button.setVisible(false);
+
+        placeblock_button = new TextureButton(new Vector2(450, -150), new Vector2(128, 128), new TextureRegion(white_texture), game.getGUIViewport(), game);
+        addScreenComponent(placeblock_button);
+        placeblock_button.setVisible(false);
+
         //create listeners
         left_button.setButtonListener(new TextureButton.ButtonListener() {
             @Override
-            public void touched() {
+            public void touched(GUIComponent instance) {
                 planet_screen.getWorld().getPlayer().setLeft(true);
             }
 
             @Override
-            public void released() {
+            public void released(GUIComponent instance) {
                 planet_screen.getWorld().getPlayer().setLeft(false);
             }
         });
 
         right_button.setButtonListener(new TextureButton.ButtonListener() {
             @Override
-            public void touched() {
+            public void touched(GUIComponent instance) {
                 planet_screen.getWorld().getPlayer().setRight(true);
             }
 
             @Override
-            public void released() {
+            public void released(GUIComponent instance) {
                 planet_screen.getWorld().getPlayer().setRight(false);
             }
         });
 
         jump_button.setButtonListener(new TextureButton.ButtonListener() {
             @Override
-            public void touched() {
+            public void touched(GUIComponent instance) {
                 planet_screen.getWorld().getPlayer().setJump(true);
             }
 
             @Override
-            public void released() {
+            public void released(GUIComponent instance) {
                 planet_screen.getWorld().getPlayer().setJump(false);
             }
         });
 
         inventory_button.setButtonListener(new TextureButton.ButtonListener() {
             @Override
-            public void touched() {
+            public void touched(GUIComponent instance) {
                 planet_screen.setVisible(false);
                 game.getScreen(Screens.PLAYER_INVENTORY_SCREEN).setVisible(true);
             }
 
             @Override
-            public void released() {}
+            public void released(GUIComponent instance) {}
+        });
+
+        pickaxe_button.setButtonListener(new TextureButton.ButtonListener() {
+            @Override
+            public void touched(GUIComponent instance) {
+                if(planet_screen.getWorld() != null && planet_screen.getWorld().getPlayer() != null) {
+                    planet_screen.getWorld().getPlayer().setPickaxeButtonPressed(true);
+                }
+            }
+
+            @Override
+            public void released(GUIComponent instance) {
+                if(planet_screen.getWorld() != null && planet_screen.getWorld().getPlayer() != null) {
+                    planet_screen.getWorld().getPlayer().setPickaxeButtonPressed(false);
+                }
+            }
+        });
+
+        placeblock_button.setButtonListener(new TextureButton.ButtonListener() {
+            @Override
+            public void touched(GUIComponent instance) {
+                if(planet_screen.getWorld() != null && planet_screen.getWorld().getPlayer() != null) {
+                    planet_screen.getWorld().getPlayer().setPlaceBlockButtonPressed(true);
+                }
+            }
+
+            @Override
+            public void released(GUIComponent instance) {
+                if(planet_screen.getWorld() != null && planet_screen.getWorld().getPlayer() != null) {
+                    planet_screen.getWorld().getPlayer().setPlaceBlockButtonPressed(false);
+                }
+            }
         });
 
         //blocks_selector = new BlockPlacingSelector(new Vector2(500, 290), planet_screen);
         //addScreenComponent(blocks_selector);
+    }
+
+    @Override
+    public void setVisible(boolean visible) {
+        super.setVisible(visible);
     }
 
     @Override
@@ -262,6 +194,28 @@ public class PlanetGUIScreen extends Screen {
             return;
 
         tickComponents(delta);
+
+        //check which buttons should be visible
+        pickaxe_button.setVisible(false);
+        placeblock_button.setVisible(false);
+        placing_switch.setVisible(false);
+        if(planet_screen.getWorld() != null && planet_screen.getWorld().getPlayer() != null
+                && planet_screen.getWorld().getPlayer().isPointing()) {
+
+            if(planet_screen.getWorld().getPlayer().getSelectedItems() != null){
+                Item item = planet_screen.getWorld().getPlayer().getSelectedItems().getItem();
+                if (item instanceof ToolItem) {
+                    pickaxe_button.setVisible(true);
+                } else if (item instanceof BlockItem) {
+                    placeblock_button.setVisible(true);
+                }
+
+                placing_switch.setVisible(true);
+            } else {
+                pickaxe_button.setVisible(true);
+                placing_switch.setVisible(true);
+            }
+        }
     }
 
     @Override
@@ -312,6 +266,10 @@ public class PlanetGUIScreen extends Screen {
 
     public PlayerToolBarGUIComponent getPlayerToolbarGUIComponent() {
         return toolbar_renderer;
+    }
+
+    public PlayerBlockSelectorGUIComponent getBlockPointerGUIComponent() {
+        return block_pointer;
     }
 
     @Override

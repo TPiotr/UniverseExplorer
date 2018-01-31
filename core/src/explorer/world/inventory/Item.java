@@ -15,6 +15,23 @@ import explorer.world.object.objects.player.Player;
 public abstract class Item {
 
 	/**
+	 * Interface that allows item type to be customly rendered when shown in inventory, useful when some item is rendering from some textures layers and have custom color on different planets so there is no problem
+	 * to represent it in inventory
+	 */
+	public interface InInventoryRenderer {
+
+		/**
+		 * Render in custom way item in some inventory slot or wherever
+		 * @param x x cord
+		 * @param y y cord
+		 * @param w width
+		 * @param h height
+		 * @param batch batch instance, take care about color after custom rendering! (just set to Color.WHITE)
+		 */
+		void renderInInventory(float x, float y, float w, float h, SpriteBatch batch);
+	}
+
+	/**
 	 * Interface that when is implemented to some item type allows item type to be rendered in an hand
 	 * f.e. holding block in an hand, weapon etc.
 	 */
@@ -66,6 +83,11 @@ public abstract class Item {
 	 * TextureRegion used in rendering item when it lays on an ground
 	 */
 	protected TextureRegion item_on_ground_texture;
+
+	/**
+	 * Custom item property or properties
+	 */
+	protected String item_property = "";
 
 	/**
 	 * Unique per item type ID of an object
@@ -129,5 +151,21 @@ public abstract class Item {
 	 */
 	public TextureRegion getItemOnGroundTexture() {
 		return item_on_ground_texture;
+	}
+
+	/**
+	 * Getter for custom item property which is stored in string
+	 * @return string which contains item property
+	 */
+	public String getItemProperty() {
+		return item_property;
+	}
+
+	/**
+	 * Setter for custom item property
+	 * @param item_property new item property
+	 */
+	public void setItemProperty(String item_property) {
+		this.item_property = item_property;
 	}
 }

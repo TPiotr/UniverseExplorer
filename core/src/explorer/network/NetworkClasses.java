@@ -132,6 +132,9 @@ public class NetworkClasses {
 
     public static class PlayerPositionUpdatePacket extends PlayerBoundPacket {
         public float x, y;
+        public int direction;
+        public float center_chunk_x, center_chunk_y;
+        public float on_current_chunk_time;
     }
 
     //CHUNKS PACKETS
@@ -142,6 +145,15 @@ public class NetworkClasses {
         public int connection_id;
 
         public int request_id;
+
+        public int rejected_id = -21;
+    }
+
+    public static class ChunkDataSaveRequestPacket {
+        public Vector2 position;
+        public int connection_id;
+
+        public byte[] chunk_data;
     }
 
     public static class BlockChangedPacket {
@@ -158,6 +170,7 @@ public class NetworkClasses {
     public static class ChunkDataPacket {
         public byte[] file_bytes;
         public int request_id;
+        public int connection_id;
     }
 
     private static Game game;
@@ -179,6 +192,7 @@ public class NetworkClasses {
 
         kryo.register(Vector2.class);
         kryo.register(ChunkDataRequestPacket.class);
+        kryo.register(ChunkDataSaveRequestPacket.class);
 
         kryo.register(String.class);
 
@@ -202,6 +216,7 @@ public class NetworkClasses {
         kryo.register(Player.ArmAngleUpdatePacket.class);
         kryo.register(Player.UpdateWearItemPacket.class);
         kryo.register(Player.UpdateHoldingItemPacket.class);
+        kryo.register(Player.UpdateWearablesAndHoldingItemsRequest.class);
 
         //register pending classes
         for(Class<?> c : pending_classes) {

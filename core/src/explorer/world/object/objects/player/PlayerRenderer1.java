@@ -103,11 +103,6 @@ public class PlayerRenderer1 {
 
     public void tick(float delta) {
         time += delta;
-
-        if(player.getVelocity().x > 0)
-            dir = 1;
-        else if(player.getVelocity().x < 0)
-            dir = -1;
     }
 
     private WearableItem last_legs = null;
@@ -339,5 +334,13 @@ public class PlayerRenderer1 {
 
     public void setArmAngleUnchecked(float angle) {
         this.arm_angle = angle;
+    }
+
+    public int getDirection() {
+        return dir;
+    }
+
+    public void setDirection(int dir) {
+        this.dir = dir;
     }
 }

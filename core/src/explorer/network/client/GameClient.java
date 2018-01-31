@@ -73,7 +73,7 @@ public class GameClient {
     public void connect(InetAddress address, final ConnectedToServerCallback connected_callback) {
         try {
             if(!started) {
-                client.start();
+                new Thread(client).start();
                 started = true;
             }
 
@@ -122,12 +122,7 @@ public class GameClient {
 
                 //read info about new player or when connected to server and server sends us whole list of players
                 if(o instanceof NetworkClasses.NewPlayerPacket) {
-                    NetworkClasses.NewPlayerPacket new_player_info = (NetworkClasses.NewPlayerPacket) o;
-
-                    ServerPlayer new_player = new ServerPlayer(new_player_info.connection_id, new_player_info.username, new_player_info.is_host);
-                    players.add(new_player);
-
-                    Log.debug("New player info: " + new_player.username + " cid: " + new_player.connection_id + " is_host: " + new_player.is_host);
+                    newPlayerPacket((NetworkClasses.NewPlayerPacket) o);
                 }
                 //info received when some player left server
                 else if(o instanceof NetworkClasses.PlayerDisconnectedPacket) {
@@ -190,6 +185,37 @@ public class GameClient {
 
             }
         });
+    }
+
+    /**
+     * Called from listeners, just handles when NewPlayerPacket comes and checks if new player is not registered yet is so this method does nothing
+     * @param packet packet
+     */
+    public void newPlayerPacket(NetworkClasses.NewPlayerPacket packet) {
+        if(getPlayerInstanceByConnectionID(packet.connection_id) != null)
+            return;
+
+        ServerPlayer new_player = new ServerPlayer(packet.connection_id, packet.username, packet.is_host);
+        players.add(new_player);
+
+        Log.info("(GameClient) Registering new server player: " + new_player.username + " cid: " + new_player.connection_id + " is_host: " + new_player.is_host);
+    }
+
+    /**
+     * Method to disconnect from server
+     */
+    public void disconnect() {
+        //send back all pending chunk data requests
+        PlanetScreen planet_screen = game.getScreen(Screens.PLANET_SCREEN_NAME, PlanetScreen.class);
+        if(planet_screen.getWorld() != null) {
+            for(int i = 0; i < planet_screen.getWorld().getClientChunkDataRequestHandler().getPendingRequests().size; i++) {
+                client.sendTCP(planet_screen.getWorld().getClientChunkDataRequestHandler().getPendingRequests().get(i));
+            }
+            planet_screen.getWorld().getClientChunkDataRequestHandler().getPendingRequests().clear();
+        }
+
+        client.stop();
+        started = false;
     }
 
     /**

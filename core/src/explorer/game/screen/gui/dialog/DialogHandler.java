@@ -1,8 +1,10 @@
 package explorer.game.screen.gui.dialog;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.esotericsoftware.minlog.Log;
 
 import explorer.game.framework.Game;
 import explorer.game.screen.gui.GUIComponent;

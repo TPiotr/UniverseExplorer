@@ -13,6 +13,7 @@ import java.net.InetAddress;
 import java.util.HashMap;
 
 import explorer.game.framework.utils.RenderCallsCounterSpriteBatch;
+import explorer.game.framework.utils.ShaderFactory;
 import explorer.game.screen.Screen;
 import explorer.game.screen.gui.dialog.DialogHandler;
 import explorer.game.screen.screens.Screens;
@@ -212,6 +213,17 @@ public abstract class Game extends ApplicationAdapter {
 		//dispose network stuff
 		getGameClient().dispose();
 		getGameServer().dispose();
+
+		//dispose shaders
+		ShaderFactory.disposeAll();
+	}
+
+	/**
+	 * Simple method which makes all screens invisible
+	 */
+	public synchronized void setAllScreensInvisible() {
+		for(String key : screens.keySet())
+			screens.get(key).setVisible(false);
 	}
 
 	/**
@@ -328,6 +340,14 @@ public abstract class Game extends ApplicationAdapter {
 	 */
 	public String getUsername() {
 		return username;
+	}
+
+	/**
+	 * Set current username to new one (note that this only sets local variable, it do not send packet about new username over network)
+	 * @param username new username
+	 */
+	public void setUsername(String username) {
+		this.username = username;
 	}
 
 	/**

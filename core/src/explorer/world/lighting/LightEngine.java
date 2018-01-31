@@ -13,6 +13,7 @@ import com.badlogic.gdx.utils.Array;
 
 import explorer.game.framework.Game;
 import explorer.game.Helper;
+import explorer.game.framework.utils.ShaderFactory;
 import explorer.game.framework.utils.math.MathHelper;
 import explorer.world.World;
 import explorer.world.chunk.WorldChunk;
@@ -108,9 +109,9 @@ public class LightEngine {
         //init rect for culling
         screen_bounds = new Rectangle();
 
-        //load shaders
-        lights_shader = Helper.createShaderProgram("shaders/basic_vertex_shader.vs", "shaders/light_shader.fs", "LIGHT SHADER");
-        solid_color_mask_shader = Helper.createShaderProgram("shaders/basic_vertex_shader.vs", "shaders/solid_light_shader.fs", "SOLID COLOR LIGHT SHADER");
+        //load assets.shaders
+        lights_shader = ShaderFactory.createShaderProgram("shaders/basic_vertex_shader.vs", "shaders/light_shader.fs", "LIGHT SHADER");
+        solid_color_mask_shader = ShaderFactory.createShaderProgram("shaders/basic_vertex_shader.vs", "shaders/solid_light_shader.fs", "SOLID COLOR LIGHT SHADER");
     }
 
     /**
@@ -368,7 +369,7 @@ public class LightEngine {
     }
 
     /**
-     * Dispose shaders
+     * Dispose assets.shaders
      */
     public void dispose() {
         screen_space_light_map.dispose();
