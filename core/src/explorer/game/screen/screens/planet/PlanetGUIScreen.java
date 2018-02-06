@@ -202,6 +202,24 @@ public class PlanetGUIScreen extends Screen {
         if(planet_screen.getWorld() != null && planet_screen.getWorld().getPlayer() != null
                 && planet_screen.getWorld().getPlayer().isPointing()) {
 
+            if(block_pointer.isMirror()) {
+                int offset = 720;
+                float offset2 = 720f * 4f/3f + 70;
+                left_button.getPosition().set(-550 + offset, -300);
+                right_button.getPosition().set(-300 + offset, -300);
+                jump_button.getPosition().set(450 - offset2, -300);
+                pickaxe_button.getPosition().set(450 - offset2, -150);
+                placeblock_button.getPosition().set(450 - offset2, -150);
+                placing_switch.getPosition().set(450 - offset2, -10);
+            } else {
+                left_button.getPosition().set(-550, -300);
+                right_button.getPosition().set(-300, -300);
+                jump_button.getPosition().set(450, -300);
+                pickaxe_button.getPosition().set(450, -150);
+                placeblock_button.getPosition().set(450, -150);
+                placing_switch.getPosition().set(450, -10);
+            }
+
             if(planet_screen.getWorld().getPlayer().getSelectedItems() != null){
                 Item item = planet_screen.getWorld().getPlayer().getSelectedItems().getItem();
                 if (item instanceof ToolItem) {

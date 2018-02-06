@@ -9,6 +9,7 @@ import explorer.game.framework.Game;
 import explorer.world.World;
 import explorer.world.block.blocks.AirBlock;
 import explorer.world.block.blocks.GrassBlock;
+import explorer.world.block.blocks.GrassPlantBlock;
 import explorer.world.block.blocks.StoneBlock;
 import explorer.world.block.blocks.WoodenPlanksBlock;
 
@@ -28,6 +29,8 @@ public class Blocks {
 
     public WoodenPlanksBlock WOODEN_PLANKS_BLOCK;
 
+    public GrassPlantBlock GRASS_PLANT_BLOCK;
+
     public Blocks(World world, Game game) {
         all_blocks_instances = new ConcurrentHashMap<Integer, Block>();
 
@@ -46,6 +49,9 @@ public class Blocks {
 
         WOODEN_PLANKS_BLOCK = new WoodenPlanksBlock(world, game);
         all_blocks_instances.put(WOODEN_PLANKS_BLOCK.getBlockID(), WOODEN_PLANKS_BLOCK);
+
+        GRASS_PLANT_BLOCK = new GrassPlantBlock(this, game);
+        all_blocks_instances.put(GRASS_PLANT_BLOCK.getBlockID(), GRASS_PLANT_BLOCK);
     }
 
     /**

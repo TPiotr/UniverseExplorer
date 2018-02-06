@@ -1,61 +1,49 @@
 package explorer.world.object.objects;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
-import com.esotericsoftware.minlog.Log;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import explorer.game.Helper;
 import explorer.game.framework.Game;
-import explorer.network.NetworkClasses;
 import explorer.world.World;
-import explorer.world.lighting.CustomWorldObjectLight;
 import explorer.world.lighting.SolidColorWorldObjectLight;
-import explorer.world.object.StaticWorldObject;
 import explorer.world.object.WorldObject;
-import explorer.world.physics.shapes.RectanglePhysicsShape;
 
 /**
- * Created by RYZEN on 11.01.2018.
+ * Created by RYZEN on 01.02.2018.
  */
 
-public class TreeObject extends WorldObject implements SolidColorWorldObjectLight {
+public class TreeObject extends WorldObject {
 
-    private static TextureRegion texture;
-    private final float SCALE = .5f;
-
-    private static final Color object_light_mask_color = new Color(Color.WHITE);
-
+    private static TextureRegion trunk, top;
     private Vector2 render_position;
 
-    //register packets
-    static {
-        //NetworkClasses.register();
-        Log.debug("Registering tree packets!");
-    }
+    private static final float SCALE = 8f;
 
-    public TreeObject(Vector2 position, World world, final Game game) {
+    private Color grass_color;
+
+    /**
+     * The most basic constructor that every object have to have!
+     *
+     * @param position position of new object
+     * @param world    world instance
+     * @param game     game instance
+     */
+    public TreeObject(Vector2 position, World world, Game game) {
         super(position, world, game);
 
-        can_place_block_over = true;
-
-        synchronized (this) {
-            texture = game.getAssetsManager().getTextureRegion("objects/tree_earth1");
-            getWH().set(texture.getRegionWidth(), texture.getRegionHeight()).scl(SCALE);
-
-            render_position = new Vector2(position);
-            render_position.x -= (((int) (getWH().x / 2f) / World.BLOCK_SIZE) - 1) * World.BLOCK_SIZE;
+        if(trunk == null) {
+            trunk = game.getAssetsManager().getTextureRegion("objects/tree/tree_trunk2");
+            top = game.getAssetsManager().getTextureRegion("objects/tree/tree_top2");
         }
-    }
 
-    @Override
-    public Color getSolidColorOfLightMask() {
-        return object_light_mask_color;
+        grass_color = world.getBlocks().GRASS.getGrassColor();
+
+        getWH().set(trunk.getRegionWidth(), trunk.getRegionHeight()).scl(SCALE);
+
+        render_position = new Vector2(position);
+        render_position.x -= (((int) (getWH().x / 2f) / World.BLOCK_SIZE) - 1) * World.BLOCK_SIZE;
     }
 
     @Override
@@ -66,7 +54,17 @@ public class TreeObject extends WorldObject implements SolidColorWorldObjectLigh
     @Override
     public void render(SpriteBatch batch) {
         batch.setColor(Color.WHITE);
-        batch.draw(texture, render_position.x, render_position.y, getWH().x, getWH().y);
+        batch.draw(trunk, render_position.x, render_position.y, getWH().x, getWH().y);
+
+        //batch.setColor(grass_color);
+       // batch.draw(top, render_position.x, render_position.y, getWH().x, getWH().y);
+
+//        batch.setColor(Color.WHITE);
+    }
+
+    //@Override
+    public Color getSolidColorOfLightMask() {
+        return Color.WHITE;
     }
 
     @Override

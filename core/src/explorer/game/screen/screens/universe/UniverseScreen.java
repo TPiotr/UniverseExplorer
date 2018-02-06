@@ -153,7 +153,7 @@ public class UniverseScreen extends Screen {
 
                 zoom_in = false;
 
-                Log.debug("(UniverseScreen) zoom: " + game.getMainCamera().zoom);
+                //Log.debug("(UniverseScreen) zoom: " + game.getMainCamera().zoom);
 
                 return false;
             }

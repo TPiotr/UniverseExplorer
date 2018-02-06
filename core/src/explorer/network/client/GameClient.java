@@ -180,9 +180,7 @@ public class GameClient {
 
             @Override
             public void disconnected(Connection connection) {
-                //TODO this method is called when server will this kick player or some internet problems etc.
-                //just connection lost and we have to handle it
-
+                disconnect();
             }
         });
     }

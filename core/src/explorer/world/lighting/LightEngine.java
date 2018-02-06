@@ -74,10 +74,8 @@ public class LightEngine {
     private int drawn_lights_count;
 
     /**
-     * How much frames can be skipped while rendering
-     * f.e render every second frame so we have 100% performance boost in light engine rendering times per seconds
-     * if you have >=50fps (or 10 and you want more) skipping every second frame looks almost same
-     * so skipping frames works well when you travel slowly
+     * Frames skipping system light engine will render all lights to light map every skip_frames_count frames
+     * With value 2 and FPS on 60 level it looks almost same as with value 1
      */
     private int skip_frames_count = 1;
     /**

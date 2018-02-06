@@ -124,4 +124,8 @@ public class GrassBlock extends CustomRenderingBlock {
             batch.setColor(temp_color.set(grass_color).sub(WorldChunk.BACKGROUND_COLOR_OFFSET));
         batch.draw(grass_regions.get(connection_info), x, y, w, h);
     }
+
+    public Color getGrassColor() {
+        return grass_color;
+    }
 }

@@ -23,6 +23,8 @@ public class AirBlock extends Block {
 
         this.block_group = BlockGroup.CONNECT_WITH_NOTHING;
         this.tile_positions = new HashMap<Short, TextureRegion>();
+        this.blocks_ground_light = false;
+        this.can_place_other_block_on = true;
 
         this.collidable = false;
     }

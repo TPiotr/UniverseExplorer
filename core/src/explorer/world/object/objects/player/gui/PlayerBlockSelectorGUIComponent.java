@@ -59,7 +59,10 @@ public class PlayerBlockSelectorGUIComponent extends GUIComponent {
     private Vector2 pointer_gui_cords;
     private Vector2 pointer_world_cords;
 
-    private TextureRegion pointer_texture, pointer_texture1;
+    private TextureRegion pointer_texture;
+
+    //flag determining if buttons like left, right, use tool etc should be mirrored on y axis
+    private boolean mirror;
 
     public PlayerBlockSelectorGUIComponent(Viewport component_game_viewport, final PlanetScreen planet_screen, final Game game) {
         super(component_game_viewport, game);
@@ -70,7 +73,6 @@ public class PlayerBlockSelectorGUIComponent extends GUIComponent {
         this.pointer_world_cords = new Vector2();
 
         this.pointer_texture = game.getAssetsManager().getTextureRegion("gui/blocks_pointer");
-        this.pointer_texture1 = game.getAssetsManager().getTextureRegion("gui/blocks_pointer_block");
 
         InputAdapter input = new InputAdapter() {
             int p = -1;
@@ -171,6 +173,7 @@ public class PlayerBlockSelectorGUIComponent extends GUIComponent {
 
             Vector2 touch = new Vector2();
             Vector2 player_center = new Vector2();
+            final float mirror_after_distance = -50;
             private void calculatePointerPositions(int screenX, int screenY) {
                 //calculate player center in gui cords system
                 player_center.set(player.getPosition().x + player.getWH().x / 2f, player.getPosition().y + player.getWH().y / 2f);
@@ -184,6 +187,12 @@ public class PlayerBlockSelectorGUIComponent extends GUIComponent {
                 //calculate pointer position in gui cords system
                 pointer_gui_cords.x = (2f * player_center.x) - touch.x;
                 pointer_gui_cords.y = (2f * player_center.y) - touch.y;
+
+                //check if we should mirror gui comps
+                mirror = false;
+                if(pointer_gui_cords.x < mirror_after_distance) {
+                    mirror = true;
+                }
 
                 //also calc pointer in world cords system
                 pointer_world_cords.set(pointer_gui_cords);
@@ -226,5 +235,9 @@ public class PlayerBlockSelectorGUIComponent extends GUIComponent {
 
     public boolean isPointing() {
         return pointing;
+    }
+
+    public boolean isMirror() {
+        return mirror;
     }
 }

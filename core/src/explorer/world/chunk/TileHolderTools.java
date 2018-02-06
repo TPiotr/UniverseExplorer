@@ -23,8 +23,8 @@ public class TileHolderTools {
      */
     public static synchronized boolean canPlaceLight(int x, int y, int move_x, int move_y, World world, TileHolder[][] tiles_data) {
         if(inChunkBounds(x + move_x, y + move_y)) {
-            if(tiles_data[x][y].getForegroundBlock().getBlockID() == world.getBlocks().AIR.getBlockID() && tiles_data[x][y].getBackgroundBlock().getBlockID() == world.getBlocks().AIR.getBlockID()) {
-                if (tiles_data[x + move_x][y + move_y].getForegroundBlock().getBlockID() != world.getBlocks().AIR.getBlockID() || tiles_data[x + move_x][y + move_y].getBackgroundBlock().getBlockID() != world.getBlocks().AIR.getBlockID()) {
+            if(!tiles_data[x][y].getForegroundBlock().isBlockingGroundLight() && !tiles_data[x][y].getBackgroundBlock().isBlockingGroundLight()) {
+                if (tiles_data[x + move_x][y + move_y].getForegroundBlock().isBlockingGroundLight() || tiles_data[x + move_x][y + move_y].getBackgroundBlock().isBlockingGroundLight()) {
                     return true;
                 }
             }

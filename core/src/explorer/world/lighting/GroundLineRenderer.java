@@ -46,14 +46,14 @@ public class GroundLineRenderer {
 
         lights_positions = new DelayedRemovalArray<Vector2>();
 
-        point_light = new PointLight(new Vector2(), new Vector3(1, 1, 1), 100, game);
+        point_light = new PointLight(new Vector2(), new Vector3(1, 1, 1), 150, game);
 
         chunks_rectangle = new Rectangle();
         chunk_rectangle = new Rectangle();
     }
 
     /**
-     * Remove lights that are out of actuall world
+     * Remove lights that are out of loaded world
      */
     public void filterOut() {
         //first calc new chunks rect

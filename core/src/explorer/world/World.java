@@ -748,8 +748,8 @@ public class World extends StaticWorldObject {
         final String world_dir = getWorldDirectory(getPlanetProperties().PLANET_SEED);
 
         FileHandle handle = Gdx.files.local(world_dir);
-        if((!handle.exists()) && !Game.IS_CLIENT) {
-            //so we have to generate our world :), first create dir for this planet
+        if((!handle.exists()) && !Game.IS_CLIENT || true) {
+            //so we have to generate our world, first create dir for this planet
             handle.mkdirs();
 
             //set generating flag

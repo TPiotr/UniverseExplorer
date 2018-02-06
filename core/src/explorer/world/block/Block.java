@@ -16,7 +16,7 @@ public class Block {
     /**
      * This enum determines how block is connected (graphically) with other blocks
      */
-    public static enum BlockGroup {
+    public enum BlockGroup {
         CONNECT_WITH_EVERYTHING, CONNECT_WITH_NOTHING, CONNECT_WITH_SAME_BLOCK;
     }
 
@@ -26,7 +26,7 @@ public class Block {
     protected Game game;
 
     /**
-     * Unique per block id
+     * Unique per block type id
      */
     protected int block_id;
 
@@ -68,8 +68,7 @@ public class Block {
     protected boolean collidable = true;
 
     /**
-     * Flag that determines if background block on this foreground block position should be rendered if this block texture used to be rendered is not COLLIDE_ALL_SIDES
-     * F.e when we have block that f.e texture COLLIDE_LEFT_RIGHT have some pixels with alpha = 0
+     * Flag that determines if background block under this foreground block should be rendered if this block texture used to be rendered is not COLLIDE_ALL_SIDES
      */
     protected boolean need_background_block_rendered_if_not_fully_surrounded = false;
 
@@ -79,14 +78,39 @@ public class Block {
     protected boolean need_background_block_rendered = false;
 
     /**
-     * Hardness of block, read how much we have to use some tool to break it
+     * Hardness of block, how much we have to use some tool to break it
      */
     protected float hardness = 1f;
 
     /**
-     * Tool type which is preffered for this block to break it
+     * Tool type which is proffered for this block to break it
      */
     protected ToolItem.ToolType proffered_tool_type = ToolItem.ToolType.PICKAXE;
+
+    /**
+     * Flag determining if this block can be dropped by just destroying it
+     */
+    protected boolean dropable = true;
+
+    /**
+     * Flag determining if this block blocks ground light (useful when some block is like Grass plant and he have to pass through light)
+     */
+    protected boolean blocks_ground_light = true;
+
+    /**
+     * Flag determining if this block need some block under
+     */
+    protected boolean need_block_under;
+
+    /**
+     * Flag determining if this block need some block over
+     */
+    protected boolean need_block_over;
+
+    /**
+     * Flag determining if some other block can be just placed on this block (f.e. GrassPlant sets this to true so player don't have to first destroy grass and then place other block)
+     */
+    protected boolean can_place_other_block_on;
 
     /**
      * @param game game instance for assets loading
@@ -157,5 +181,45 @@ public class Block {
      */
     public ToolItem.ToolType getProfferedToolType() {
         return proffered_tool_type;
+    }
+
+    /**
+     * Getter for dropable flag, if true we can collect this block as item just by breaking him
+     * @return dropable flag
+     */
+    public boolean isDropable() {
+        return dropable;
+    }
+
+    /**
+     * Getter for blocks ground light flag, if true this block will block ground light (so ground light will be spawned on top of this block)
+     * @return blocking ground light flag
+     */
+    public boolean isBlockingGroundLight() {
+        return blocks_ground_light;
+    }
+
+    /**
+     * Getter for flag that tells if this block need some block under when placing
+     * @return need block under flag
+     */
+    public boolean needBlockUnder() {
+        return need_block_under;
+    }
+
+    /**
+     * Getter for flag that tells if this block need some block over when placing
+     * @return need block over flag
+     */
+    public boolean needBlockOver() {
+        return need_block_over;
+    }
+
+    /**
+     * Getter for a flag that if is true allows player to replace this block with some other without need to break this block first
+     * @return can place other block on flag
+     */
+    public boolean canPlaceOtherBlockOn() {
+        return can_place_other_block_on;
     }
 }

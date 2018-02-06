@@ -155,9 +155,12 @@ public class LayingItemObject extends DynamicWorldObject implements SensorObject
         if(other instanceof Player && !removed) {
             Player player = (Player) other;
             if(!player.isClone()) {
-                player.getItemsContainer().addItem(item, 1);
-                world.removeObject(this, true);
-                removed = true;
+                boolean added = player.getItemsContainer().addItem(item, 1);
+
+                if(added) {
+                    world.removeObject(this, true);
+                    removed = true;
+                }
             }
         }
     }

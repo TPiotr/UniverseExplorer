@@ -324,18 +324,15 @@ public class Player extends DynamicWorldObject {
                                     int local_x = (int) (touch.x - chunk_rect.getX()) / World.BLOCK_SIZE;
                                     int local_y = (int) (touch.y - chunk_rect.getY()) / World.BLOCK_SIZE;
 
-                                    //set block only if current one is an air
-                                    if(chunk.getBlocks()[local_x][local_y].getForegroundBlock().getBlockID() == world.getBlocks().AIR.getBlockID()) {
-                                        //we have to notify network if game is using network(game checks it itself)
-                                        boolean result = chunk.setBlockPlayerChecks(local_x, local_y, ((BlockItem) selected_items.getItem()).getRepresentingBlockID(), false, true);
+                                    //we have to notify network if game is using network(game checks it itself)
+                                    boolean result = chunk.setBlockPlayerChecks(local_x, local_y, ((BlockItem) selected_items.getItem()).getRepresentingBlockID(), false, true);
 
-                                        //if block was placed removed one from stack and check if stack don't ended
-                                        if(result) {
-                                            selected_items.removeOneFromStack();
+                                    //if block was placed removed one from stack and check if stack don't ended
+                                    if(result) {
+                                        selected_items.removeOneFromStack();
 
-                                            if (selected_items.getInStack() <= 0)
-                                                selected_items = null;
-                                        }
+                                        if (selected_items.getInStack() <= 0)
+                                            selected_items = null;
                                     }
                                 }
                             }
@@ -665,7 +662,8 @@ public class Player extends DynamicWorldObject {
     public void tick(float delta) {
         animation_time += delta * 20f;
 
-        on_current_chunk_time += delta * 1000f;
+        if(!getParentChunk().isDirty())
+            on_current_chunk_time += delta * 1000f;
 
         //find parent chunk (because chunk[1][1] is not always players parent chunk because of delayed loading chunks system)
         for(int i = 0; i < world.getWorldChunks().length; i++) {
@@ -753,13 +751,15 @@ public class Player extends DynamicWorldObject {
                 else
                     block_id = chunk.getBlocks()[x][y].getBackgroundBlock().getBlockID();
 
-                chunk.setBlock(x, y, world.getBlocks().AIR.getBlockID(), false, true);
+                chunk.setBlock(x, y, world.getBlocks().AIR.getBlockID(), !is_foreground_placing, true);
 
                 //create object that represents broken block
                 if(!block_loot_spawned && block_id != world.getBlocks().AIR.getBlockID()) {
-                    LayingItemObject loot_object = new LayingItemObject(new Vector2(x * World.BLOCK_SIZE, y * World.BLOCK_SIZE).add(chunk.getPosition()), world, game);
-                    loot_object.setItem(new BlockItem(game).setBlock(block_id, world));
-                    world.addObject(loot_object, true);
+                    if(world.getBlocks().getBlock(block_id).isDropable()) {
+                        LayingItemObject loot_object = new LayingItemObject(new Vector2(x * World.BLOCK_SIZE, y * World.BLOCK_SIZE).add(chunk.getPosition()), world, game);
+                        loot_object.setItem(new BlockItem(game).setBlock(block_id, world));
+                        world.addObject(loot_object, true);
+                    }
                     block_loot_spawned = true;
                 }
             }
@@ -780,17 +780,12 @@ public class Player extends DynamicWorldObject {
             }
 
             if(in_hand_block != -1) {
-                //now check if we can place block if true place it and remove one from holding blocks stack
+                //try to place a block
                 if(last_pointed_chunk != null) {
-                    TileHolder holder = last_pointed_chunk.getBlocks()[last_pointed_block_x][last_pointed_block_y];
-                    int acc_block = (is_foreground_placing) ? holder.getForegroundBlock().getBlockID() : holder.getBackgroundBlock().getBlockID();
+                    boolean placed = last_pointed_chunk.setBlockPlayerChecks(last_pointed_block_x, last_pointed_block_y, in_hand_block, !is_foreground_placing, true);
 
-                    if(acc_block == world.getBlocks().AIR.getBlockID()) {
-                        boolean placed = last_pointed_chunk.setBlockPlayerChecks(last_pointed_block_x, last_pointed_block_y, in_hand_block, !is_foreground_placing, true);
-
-                        if(placed)
-                            getSelectedItems().removeOneFromStack();
-                    }
+                    if(placed)
+                        getSelectedItems().removeOneFromStack();
                 }
             }
 

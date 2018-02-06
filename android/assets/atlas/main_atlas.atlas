@@ -6,210 +6,322 @@ filter: Nearest,Nearest
 repeat: none
 background/sky_day
   rotate: false
-  xy: 2, 362
+  xy: 2, 462
   size: 512, 512
   orig: 512, 512
   offset: 0, 0
   index: -1
 badlogic
   rotate: false
-  xy: 1028, 1644
+  xy: 1028, 1744
   size: 256, 256
   orig: 256, 256
   offset: 0, 0
   index: -1
 blocks/dirt_colorpack
   rotate: false
-  xy: 752, 855
+  xy: 1286, 1746
   size: 16, 1
   orig: 16, 1
   offset: 0, 0
   index: -1
 blocks/dirt_spritesheet
   rotate: false
-  xy: 1028, 1578
+  xy: 1028, 1548
   size: 64, 64
   orig: 64, 64
   offset: 0, 0
   index: -1
 blocks/grass_colorpack
   rotate: false
-  xy: 786, 873
+  xy: 399, 459
   size: 16, 1
   orig: 16, 1
   offset: 0, 0
   index: -1
+blocks/grass_plants_spritesheet
+  rotate: false
+  xy: 752, 958
+  size: 64, 16
+  orig: 64, 16
+  offset: 0, 0
+  index: -1
 blocks/grass_spritesheet
   rotate: false
-  xy: 1286, 1836
+  xy: 1158, 1678
   size: 64, 64
   orig: 64, 64
   offset: 0, 0
   index: -1
 blocks/light
   rotate: false
-  xy: 2, 104
+  xy: 2, 204
   size: 256, 256
   orig: 256, 256
   offset: 0, 0
   index: -1
 blocks/stone_colorpack
   rotate: false
-  xy: 1094, 1607
+  xy: 586, 919
   size: 16, 1
   orig: 16, 1
   offset: 0, 0
   index: -1
 blocks/stone_spritesheet
   rotate: false
-  xy: 2, 38
+  xy: 1286, 1749
   size: 64, 64
   orig: 64, 64
   offset: 0, 0
   index: -1
 blocks/wooden_planks_colorpack
   rotate: false
-  xy: 1286, 1809
+  xy: 1028, 1511
   size: 16, 1
   orig: 16, 1
   offset: 0, 0
   index: -1
 blocks/wooden_planks_spritesheet
   rotate: false
-  xy: 260, 296
+  xy: 1405, 1936
   size: 64, 64
   orig: 64, 64
   offset: 0, 0
   index: -1
 gui/background_selected_switch
   rotate: false
-  xy: 516, 822
+  xy: 516, 857
   size: 32, 16
   orig: 32, 16
   offset: 0, 0
   index: -1
 gui/blocks_pointer
   rotate: false
-  xy: 516, 804
+  xy: 316, 330
   size: 16, 16
   orig: 16, 16
   offset: 0, 0
   index: -1
 gui/blocks_pointer_block
   rotate: false
-  xy: 550, 822
+  xy: 351, 423
   size: 16, 16
   orig: 16, 16
   offset: 0, 0
   index: -1
 gui/dialog_background
   rotate: false
-  xy: 260, 275
+  xy: 260, 273
   size: 19, 19
   orig: 19, 19
   offset: 0, 0
   index: -1
 gui/foreground_selected_switch
   rotate: false
-  xy: 752, 858
+  xy: 586, 922
   size: 32, 16
   orig: 32, 16
   offset: 0, 0
   index: -1
 gui/right_arrow
   rotate: false
-  xy: 1028, 1544
+  xy: 1028, 1514
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 inventory/items/red_bandana_item_icon
   rotate: false
-  xy: 1317, 1822
+  xy: 1094, 1566
   size: 12, 12
   orig: 12, 12
   offset: 0, 0
   index: -1
 inventory/items/test_pickaxe_item
   rotate: false
-  xy: 1286, 1812
+  xy: 1352, 1791
   size: 29, 22
   orig: 29, 22
   offset: 0, 0
   index: -1
 inventory/items/test_pickaxe_item_icon
   rotate: false
-  xy: 1094, 1610
+  xy: 1094, 1580
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 inventory/slot_background
   rotate: false
-  xy: 1028, 1526
+  xy: 516, 839
   size: 16, 16
   orig: 16, 16
   offset: 0, 0
   index: -1
 objects/torch_texture
   rotate: false
-  xy: 326, 346
+  xy: 818, 960
   size: 18, 14
   orig: 18, 14
   offset: 0, 0
   index: -1
+objects/tree/full_tree1
+  rotate: false
+  xy: 2, 38
+  size: 54, 52
+  orig: 54, 52
+  offset: 0, 0
+  index: -1
+objects/tree/other_tree1
+  rotate: false
+  xy: 2, 92
+  size: 107, 110
+  orig: 107, 110
+  offset: 0, 0
+  index: -1
+objects/tree/other_tree2
+  rotate: false
+  xy: 260, 348
+  size: 89, 112
+  orig: 89, 112
+  offset: 0, 0
+  index: -1
+objects/tree/tree_base1
+  rotate: false
+  xy: 58, 56
+  size: 26, 34
+  orig: 26, 34
+  offset: 0, 0
+  index: -1
+objects/tree/tree_base2
+  rotate: false
+  xy: 111, 114
+  size: 26, 34
+  orig: 26, 34
+  offset: 0, 0
+  index: -1
+objects/tree/tree_branch1
+  rotate: false
+  xy: 351, 441
+  size: 46, 19
+  orig: 46, 19
+  offset: 0, 0
+  index: -1
+objects/tree/tree_branch2
+  rotate: false
+  xy: 167, 185
+  size: 26, 17
+  orig: 26, 17
+  offset: 0, 0
+  index: -1
+objects/tree/tree_branch3
+  rotate: false
+  xy: 752, 947
+  size: 30, 9
+  orig: 30, 9
+  offset: 0, 0
+  index: -1
+objects/tree/tree_top1
+  rotate: false
+  xy: 516, 875
+  size: 68, 63
+  orig: 68, 63
+  offset: 0, 0
+  index: -1
+objects/tree/tree_top2
+  rotate: false
+  xy: 111, 150
+  size: 54, 52
+  orig: 54, 52
+  offset: 0, 0
+  index: -1
+objects/tree/tree_trunk
+  rotate: false
+  xy: 260, 294
+  size: 54, 52
+  orig: 54, 52
+  offset: 0, 0
+  index: -1
+objects/tree/tree_trunk2
+  rotate: false
+  xy: 1158, 1625
+  size: 32, 51
+  orig: 32, 51
+  offset: 0, 0
+  index: -1
+objects/tree/withered_tree1
+  rotate: false
+  xy: 1224, 1691
+  size: 32, 51
+  orig: 32, 51
+  offset: 0, 0
+  index: -1
+objects/tree1
+  rotate: false
+  xy: 1286, 1815
+  size: 117, 185
+  orig: 117, 185
+  offset: 0, 0
+  index: -1
 objects/tree_earth1
   rotate: false
-  xy: 2, 876
+  xy: 2, 976
   size: 1024, 1024
   orig: 1024, 1024
   offset: 0, 0
   index: -1
 player/base_body
   rotate: false
-  xy: 1352, 1866
+  xy: 1405, 1900
   size: 26, 34
   orig: 26, 34
   offset: 0, 0
   index: -1
 player/base_head
   rotate: false
-  xy: 2, 2
+  xy: 1471, 1966
   size: 26, 34
   orig: 26, 34
   offset: 0, 0
   index: -1
 player/basic_arm
   rotate: false
-  xy: 1352, 1838
+  xy: 1062, 1520
   size: 12, 26
   orig: 12, 26
   offset: 0, 0
   index: -1
 player/basic_legs
   rotate: false
-  xy: 516, 840
+  xy: 516, 940
   size: 234, 34
   orig: 234, 34
   offset: 0, 0
   index: -1
 player/red_bandana_head
   rotate: false
-  xy: 68, 68
+  xy: 2, 2
   size: 26, 34
   orig: 26, 34
   offset: 0, 0
   index: -1
 star
   rotate: false
-  xy: 1062, 1560
+  xy: 550, 857
   size: 16, 16
   orig: 16, 16
   offset: 0, 0
   index: -1
+universe/planets/planet1
+  rotate: false
+  xy: 1028, 1614
+  size: 128, 128
+  orig: 128, 128
+  offset: 0, 0
+  index: -1
 white_texture
   rotate: false
-  xy: 1128, 1626
+  xy: 620, 922
   size: 16, 16
   orig: 16, 16
   offset: 0, 0

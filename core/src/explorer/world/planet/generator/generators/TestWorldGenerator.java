@@ -8,11 +8,14 @@ import java.io.IOException;
 import java.util.zip.DeflaterOutputStream;
 
 import explorer.game.framework.Game;
+import explorer.game.framework.utils.math.FastNoise;
 import explorer.world.ChunkDataProvider;
 import explorer.world.World;
+import explorer.world.chunk.TileHolderTools;
 import explorer.world.object.WorldObject;
 import explorer.world.object.objects.TestDynamicObject;
 import explorer.world.object.objects.TreeObject;
+import explorer.world.object.objects.earthlike.WitheredTree1Object;
 import explorer.world.planet.PlanetProperties;
 import explorer.world.planet.generator.HeightsGenerator;
 import explorer.world.planet.generator.WorldGenerator;
@@ -24,6 +27,7 @@ import explorer.world.planet.generator.WorldGenerator;
 public class TestWorldGenerator extends WorldGenerator {
 
     private HeightsGenerator heights_generator;
+    private FastNoise noise, cave_noise;
 
     private final float MAX_AMPLITUDE = 100f;
     private final float MIN_AMPLITUDE = 50f;
@@ -50,6 +54,8 @@ public class TestWorldGenerator extends WorldGenerator {
         ROUGHNESS = (properties.random.nextFloat() * (MAX_ROUGHNESS - MIN_ROUGHNESS)) + MIN_ROUGHNESS;
 
         heights_generator = new HeightsGenerator(AMPLITUDE, OCTAVES, ROUGHNESS, properties.PLANET_SEED);
+        noise = new FastNoise(properties.PLANET_SEED);
+        cave_noise = new FastNoise(properties.PLANET_SEED + 1);
     }
 
     private int getHeight(int x, int chunk_pos_x) {
@@ -68,6 +74,8 @@ public class TestWorldGenerator extends WorldGenerator {
 
         int planet_width = world.getPlanetProperties().PLANET_SIZE;
         chunk_pos_x %= planet_width;
+
+        final int AIR = world.getBlocks().AIR.getBlockID();
 
         for (int i = 0; i < out.foreground_blocks.length; i++) {
             int y = getHeight(i, chunk_pos_x);
@@ -88,32 +96,43 @@ public class TestWorldGenerator extends WorldGenerator {
             }
 
             for (int j = 0; j < out.foreground_blocks[0].length; j++) {
-                int this_y = (j + (chunk_pos_y * World.CHUNK_SIZE));
+                int global_block_y = (j + (chunk_pos_y * World.CHUNK_SIZE));
+                int global_block_x = (i + (chunk_pos_x * World.CHUNK_SIZE));
 
-                if (this_y > y) {
+                //place ground blocks
+                if (global_block_y > y) {
                     out.foreground_blocks[i][j] = world.getBlocks().AIR.getBlockID();
-                } else if (this_y == y) {
+                    out.background_blocks[i][j] = AIR;
+                } else if (global_block_y == y) {
                     out.foreground_blocks[i][j] = world.getBlocks().GRASS.getBlockID();
+                    out.background_blocks[i][j] = world.getBlocks().DIRT.getBlockID();
                 } else {
                     out.foreground_blocks[i][j] = world.getBlocks().DIRT.getBlockID();
+                    out.background_blocks[i][j] = world.getBlocks().DIRT.getBlockID();
 
                     //this part of code makes that grass is everywhere on ground line
-                    if((this_y > last_y || this_y > next_y) && this_y < y) {
+                    if((global_block_y > last_y || global_block_y > next_y) && global_block_y < y) {
                         out.foreground_blocks[i][j] = world.getBlocks().GRASS.getBlockID();
                     }
                 }
 
-                out.background_blocks[i][j] = out.foreground_blocks[i][j];
+                //place some grass plants on grass block
+                if(global_block_y == y + 1 && (noise.GetNoise(global_block_x, global_block_y) + 1f) / 2f > .3f) {
+                    out.foreground_blocks[i][j] = world.getBlocks().GRASS_PLANT_BLOCK.getBlockID();
+                    out.background_blocks[i][j] = AIR;
+                }
 
-                if ((j + (chunk_pos_y * World.CHUNK_SIZE)) == y) {
-                    //use some noise func to check if can spawn never again use random!
-                    float noise = heights_generator.getNoise(i + (chunk_pos_x * World.CHUNK_SIZE), j);
+                //dig caves
+                boolean is_cave = false;
+                final float cave_scale = 1f;
+                float cave = noise.GetPerlin(global_block_x * cave_scale, global_block_y * cave_scale) + 1f;
+                if(cave > 1.1f && cave < 1.2f) {
+                    out.foreground_blocks[i][j] = AIR;
+                    is_cave = true;
+                }
 
-                    if(noise >= .9f) {
-                        out.objects.add(new TreeObject(new Vector2(chunk_position).add(i * World.BLOCK_SIZE, (j + 1) * World.BLOCK_SIZE), world, game));
-                    } else if(noise >= .6f && noise <= .65f) {
-                        out.objects.add(new TestDynamicObject(new Vector2(chunk_position).add(i * World.BLOCK_SIZE, (j + 1) * World.BLOCK_SIZE), world, game));
-                    }
+                if ((j + (chunk_pos_y * World.CHUNK_SIZE)) == y && !is_cave) {
+                    generateOnGroundLevelObject(chunk_position.x + (i * World.BLOCK_SIZE), chunk_position.y + ((j + 1) * World.BLOCK_SIZE), i, j, out, chunk_position, chunk_pos_x, chunk_pos_y);
                 }
             }
         }
@@ -124,6 +143,26 @@ public class TestWorldGenerator extends WorldGenerator {
         }
 
         return out;
+    }
+
+
+    private boolean havePlace(int i, int j, int space) {
+        for(int k = -space / 2; k < space / 2; k++) {
+            int offset = k;
+
+        }
+        return  false;
+    }
+
+    private void generateOnGroundLevelObject(float x, float y, int i, int j, ChunkDataProvider.ChunkData out, Vector2 chunk_position, int chunk_pos_x, int chunk_pos_y) {
+        //use some noise func to check if can spawn never again use random!
+        float noise = heights_generator.getNoise(i + (chunk_pos_x * World.CHUNK_SIZE), j);
+
+        if(noise >= .9f) {
+            out.objects.add(new WitheredTree1Object(new Vector2(x, y).add(-WitheredTree1Object.CENTER_OFFSET, 0), world, game));
+        } else if(noise >= .6f && noise <= .65f) {
+            out.objects.add(new TestDynamicObject(new Vector2(x, y), world, game));
+        }
     }
 
     @Override

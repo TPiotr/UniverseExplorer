@@ -492,6 +492,12 @@ public class WorldChunk extends StaticWorldObject {
         float block_x = (x * World.BLOCK_SIZE) + getPosition().x;
         float block_y = (y * World.BLOCK_SIZE) + getPosition().y;
 
+        //check if there is some block now
+        Block acc_block = (background) ? getBlocks()[x][y].getBackgroundBlock() : getBlocks()[x][y].getForegroundBlock();
+        if(!acc_block.canPlaceOtherBlockOn()) {
+            return false;
+        }
+
         for(int i = 0; i < objects.size; i++) {
             if(!objects.get(i).canPlaceBlockOver()) {
                 WorldObject object = objects.get(i);
@@ -583,11 +589,11 @@ public class WorldChunk extends StaticWorldObject {
     private void calculateGroundLight() {
         for(int i = 0; i < World.CHUNK_SIZE; i++) {
             for (int j = 0; j < World.CHUNK_SIZE; j++) {
-                int foreground_id = blocks[i][j].getForegroundBlock().getBlockID();
-                int background_id = blocks[i][j].getBackgroundBlock().getBlockID();
+                Block foreground = blocks[i][j].getForegroundBlock();
+                Block background = blocks[i][j].getBackgroundBlock();
 
-                //if block is clear air
-                if(foreground_id == world.getBlocks().AIR.getBlockID() && background_id == world.getBlocks().AIR.getBlockID()) {
+                //if block is not blocking light
+                if(!foreground.isBlockingGroundLight() && !background.isBlockingGroundLight()) {
                     //and if somewhere nearby is other foreground/background block
 
                     float half_block = World.BLOCK_SIZE / 2;

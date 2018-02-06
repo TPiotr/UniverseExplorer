@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.math.Matrix4;
 import com.esotericsoftware.minlog.Log;
 
 import java.lang.reflect.Constructor;
@@ -20,6 +21,8 @@ import explorer.network.server.GameServer;
  */
 
 public class Helper {
+
+    public static final Matrix4 IDT_MAT = new Matrix4().idt();
 
     /**
      * Helper function saves time because we don't have to write these couple lines of code every time
