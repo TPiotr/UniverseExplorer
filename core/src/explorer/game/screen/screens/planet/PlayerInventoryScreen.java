@@ -182,8 +182,18 @@ public class PlayerInventoryScreen extends Screen {
 
                                 //wearables checking part
                                 if(dropdown_renderer.getItemParent() == wearables_renderer.getItemsContainer()) {
-                                    //check if dragged item is accepted is yes do nothing if not stop replacing process
+                                    //check if dragged item is accepted if yes do nothing if not stop replacing process
                                     if(!wearables_renderer.isAcceptingItem(dragging_renderer.getItemsStack().getItem(), dropdown_renderer.getItemsContainerIndex())) {
+                                        //reset dragging item and return
+                                        dragging_renderer = null;
+                                        return false;
+                                    }
+                                }
+
+                                //opposite situation to above in terms of checking
+                                if(dragging_renderer.getItemParent() == wearables_renderer.getItemsContainer() && dropdown_renderer.getItemsStack() != null) {
+                                    //check if dragged item is accepted if yes do nothing if not stop replacing process
+                                    if(!wearables_renderer.isAcceptingItem(dropdown_renderer.getItemsStack().getItem(), dragging_renderer.getItemsContainerIndex())) {
                                         //reset dragging item and return
                                         dragging_renderer = null;
                                         return false;
