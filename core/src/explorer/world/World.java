@@ -988,7 +988,7 @@ public class World extends StaticWorldObject {
 
             //every 10 seconds resend info about current world.Time to have everything in sync
             if((((int) TIME) - last_time_send >= 10) && Game.IS_HOST) {
-                Log.info("(World, Host) Sending time update packet to players (TIME: " + TIME);
+                Log.info("(World, Host) Sending time update packet to players (TIME: " + TIME + ")");
 
                 NetworkClasses.UpdateGameTimePacket update_time_packet = new NetworkClasses.UpdateGameTimePacket();
                 update_time_packet.new_time = TIME;

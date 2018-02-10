@@ -14,6 +14,7 @@ import explorer.game.framework.Game;
 import explorer.game.framework.utils.math.MathHelper;
 import explorer.world.World;
 import explorer.world.block.Block;
+import explorer.world.chunk.TileHolderTools;
 import explorer.world.chunk.WorldChunk;
 import explorer.world.object.DynamicWorldObject;
 import explorer.world.object.StaticWorldObject;
@@ -43,10 +44,10 @@ public class PhysicsEngine {
 	//physics engine parameters
 	private float GRAVITY = -1200f;
 	
-	//by this value we mean how far away dynamic objects can be to be affected by physics
+	//by this value we mean how far away dynamic objects can be to be affected by physics from camera
 	public static final float DYNAMIC_WORK_RANGE = 500f;
 	
-	//delta managment stuff to avoid bug when because of bug game will in fact teleport us in directon of last velocity
+	//delta managment stuff to avoid bug where big delta makes something like teleport 1000 units away
 	private float[] deltas;
 	private float avg_delta = 10f; 
 	private float max_delta;
@@ -102,7 +103,7 @@ public class PhysicsEngine {
 			delta_index = 0;
 		}
 		
-		//put delta only if is nearby avg 
+		//put delta only if value is nearby avg one
 		if(delta < avg_delta + .10f) {
 			deltas[delta_index] = delta;
 		} else {
@@ -115,7 +116,7 @@ public class PhysicsEngine {
 
 		/* EMPTY THE ADD/REMOVE BUFFERS */
 
-		//add, remove object just before sim to avoid concurrent modification exception
+		//add, remove object just before sim to avoid concurrent modification exceptions
 		synchronized (add_objects_bufor) {
 			if (add_objects_bufor.size() > 0) {
 				for (Iterator<WorldObject> i = add_objects_bufor.iterator(); i.hasNext(); ) {
@@ -323,73 +324,6 @@ public class PhysicsEngine {
 					}
 				}
 
-				//try to collide with other dynamics if thi and other dynamic had proper flag
-				if(dynamic_object.isCollidingWithOtherDynamicObjects()) {
-
-					for(int k = 0; k < dynamic_objects.size; k++) {
-						DynamicWorldObject other_dynamic = dynamic_objects.get(k);
-
-						//if physics calculations are disabled to some other dynamic object just skip its collision calculations
-						if(!other_dynamic.isPhysicsEnabled()) {
-							continue;
-						}
-
-						//at first other dynamic had to have this flag set to true too
-						if(other_dynamic.isCollidingWithOtherDynamicObjects() && !(other_dynamic == dynamic_object)) {
-							//now distance cull
-
-							float this_dynamic_radius = Math.max(dynamic_object.getWH().x, dynamic_object.getWH().y) / 2f;
-							float other_dynamic_radius = Math.max(other_dynamic.getWH().x, other_dynamic.getWH().y) / 2f;
-
-							float dst_x = Math.abs((dynamic_object.getPosition().x + this_dynamic_radius) - (other_dynamic.getPosition().x + other_dynamic_radius));
-							float dst_y = Math.abs((dynamic_object.getPosition().y + this_dynamic_radius) - (other_dynamic.getPosition().y + other_dynamic_radius));
-
-							//if(dst_x < (this_dynamic_radius + other_dynamic_radius) && dst_y < (this_dynamic_radius + other_dynamic_radius)) {
-							//if we are here calculate collision
-
-							//check x axis
-							if(other_dynamic.getPhysicsShape().overlaps(dynamic_object, dynamic_object.getPhysicsShape(), 0, 0, dynamic_object.getVelocity().x, 0)) {   //dynamic_temp_rect.overlaps(temp_rect2)) {
-								object_velocity.x = 0;
-
-								if(tick_number == 0) {
-									//sensors stuff
-									if(other_dynamic instanceof SensorObject) {
-										((SensorObject) other_dynamic).collide(dynamic_object);
-									}
-									if(dynamic_object instanceof SensorObject) {
-										((SensorObject) dynamic_object).collide(other_dynamic);
-									}
-								}
-
-								//break;
-							}
-
-							//check y axis
-							if(dynamic_object.getPhysicsShape().overlaps(other_dynamic, other_dynamic.getPhysicsShape(), 0, dynamic_object.getVelocity().y, 0, 0)) {
-								if (dynamic_object.getPosition().y + object_velocity.y > other_dynamic.getPosition().y + (other_dynamic.getWH().y / 2f)) {
-									//dynamic object is under
-									dynamic_object.getPosition().y = other_dynamic.getPosition().y + other_dynamic.getWH().y;
-								} else {
-									//dynamic object is over
-									dynamic_object.getPosition().y = other_dynamic.getPosition().y - dynamic_object.getWH().y;
-								}
-								object_velocity.y = 0;
-
-								if (tick_number == 0) {
-									//sensors stuff
-									if (other_dynamic instanceof SensorObject) {
-										((SensorObject) other_dynamic).collide(dynamic_object);
-									}
-									if (dynamic_object instanceof SensorObject) {
-										((SensorObject) dynamic_object).collide(other_dynamic);
-									}
-								}
-							}
-							//}
-						}
-					}
-				}
-
 				dynamic_object.getPosition().add(object_velocity);
 
 				object_velocity.scl(1f / delta);
@@ -437,67 +371,7 @@ public class PhysicsEngine {
 	private Block getBlock(int x, int y, WorldChunk parent_chunk) {
 		//if true we have situation where we have to grab data from other chunk than given
 		if(!WorldChunk.inChunkBounds(x, y)) {
-			//first find from which chunk we have to get data
-
-			//calc this chunk in array position
-			int zero_chunk_pos_x = (int) world.getWorldChunks()[0][0].getPosition().x / World.CHUNK_WORLD_SIZE;
-			int zero_chunk_pos_y = (int) world.getWorldChunks()[0][0].getPosition().y / World.CHUNK_WORLD_SIZE;
-
-			int this_chunk_x = ((int) parent_chunk.getPosition().x / World.CHUNK_WORLD_SIZE) - zero_chunk_pos_x;
-			int this_chunk_y = ((int) parent_chunk.getPosition().y / World.CHUNK_WORLD_SIZE) - zero_chunk_pos_y;
-
-			if(x < 0) {
-				x = World.CHUNK_SIZE + x;
-
-				if(!inWorldBounds(this_chunk_x - 1, this_chunk_y, world))
-					return null;
-
-				if(!WorldChunk.inChunkBounds(x, y))
-					return null;
-
-				//left
-				WorldChunk other_chunk = world.getWorldChunks()[this_chunk_x - 1][this_chunk_y];
-				return other_chunk.getBlocks()[x][y].getForegroundBlock();
-			} else if(x >= World.CHUNK_SIZE) {
-				//right
-				x -= World.CHUNK_SIZE;
-
-				if (!inWorldBounds(this_chunk_x + 1, this_chunk_y, world)) {
-					return null;
-				}
-
-				if(!WorldChunk.inChunkBounds(x, y))
-					return null;
-
-				WorldChunk other_chunk = world.getWorldChunks()[this_chunk_x + 1][this_chunk_y];
-				return other_chunk.getBlocks()[x][y].getForegroundBlock();
-			} else if(y < 0) {
-				//down
-				y = World.CHUNK_SIZE + y;
-
-				if (!inWorldBounds(this_chunk_x, this_chunk_y - 1, world)) {
-					return null;
-				}
-
-				if(!WorldChunk.inChunkBounds(x, y))
-					return null;
-
-				WorldChunk other_chunk = world.getWorldChunks()[this_chunk_x][this_chunk_y - 1];
-				return other_chunk.getBlocks()[x][y].getForegroundBlock();
-			} else if(y >= World.CHUNK_SIZE) {
-				//up
-				y -= World.CHUNK_SIZE;
-
-				if (!inWorldBounds(this_chunk_x, this_chunk_y + 1, world)) {
-					return null;
-				}
-
-				if(!WorldChunk.inChunkBounds(x, y))
-					return null;
-
-				WorldChunk other_chunk = world.getWorldChunks()[this_chunk_x][this_chunk_y + 1];
-				return other_chunk.getBlocks()[x][y].getForegroundBlock();
-			}
+			return TileHolderTools.getBlock(x, y, false, parent_chunk, world);
 		}
 
 		return parent_chunk.getBlocks()[x][y].getForegroundBlock();

@@ -99,6 +99,8 @@ public class Player extends DynamicWorldObject {
     private WorldChunk chunk;
     public static final int ARM_RANGE = World.BLOCK_SIZE * 5;
 
+    public static final float ARM_TOOL_POWER = 1f;
+
     //blocks/tools pointing system
     private boolean pointing;
     private int last_pointed_block_x, last_pointed_block_y;
@@ -226,6 +228,11 @@ public class Player extends DynamicWorldObject {
         }
 
         /* debug adding item */
+        toolbar_items_container.clear();
+
+        toolbar_items_container.addItem(new TestPickaxeItem(game));
+        toolbar_items_container.addItem(new BlockItem(game).setBlock(world.getBlocks().GRASS_PLANT_BLOCK.getBlockID(), world), 64);
+
         /*for(int i = 0; i < INVENTORY_SLOTS_COUNT - 10; i++) {
             items_container.getItems().set(i, new ItemsContainer.ItemsStack(new BlockItem(game).setBlock(world.getBlocks().DIRT.getBlockID(), world), MathUtils.random(1, 64), items_container));
         }
@@ -235,6 +242,12 @@ public class Player extends DynamicWorldObject {
         for(int i = 0; i < TOOLBAR_INVENTORY_SLOTS_COUNT - 4; i++) {
             toolbar_items_container.getItems().set(i, new ItemsContainer.ItemsStack(new BlockItem(game).setBlock(world.getBlocks().STONE.getBlockID(), world), MathUtils.random(1, 64), toolbar_items_container));
         }*/
+
+        items_container.clear();
+        for(int i = 0; i < 10; i++) {
+            items_container.addItem(new BlockItem(game).setBlock(world.getBlocks().DIRT.getBlockID(), world), 64);
+            items_container.addItem(new BlockItem(game).setBlock(world.getBlocks().GRASS.getBlockID(), world), 64);
+        }
 
         //create blocks pointer listener
         makeBlockPointerListener();
@@ -727,6 +740,12 @@ public class Player extends DynamicWorldObject {
 
         //hitting block system & animation
         if(hitting_block) {
+            Block block;
+            if (is_foreground_placing)
+                block = chunk.getBlocks()[x][y].getForegroundBlock();
+            else
+                block = chunk.getBlocks()[x][y].getBackgroundBlock();
+
             if(last_x != x || last_y != y || is_foreground_placing != last_is_foreground_placing) {
                 if(is_foreground_placing)
                     block_hardness = chunk.getBlocks()[x][y].getForegroundBlock().getHardness();
@@ -737,27 +756,39 @@ public class Player extends DynamicWorldObject {
                 block_loot_spawned = false;
             }
 
-            float strenght = 1f; //so 1 if arm power
-            if(selected_items != null && selected_items.getItem() != null)
-                strenght = (selected_items.getItem() instanceof ToolItem) ? ((ToolItem) selected_items.getItem()).getToolPower() : 1f;
+            float strength = ARM_TOOL_POWER;
+            if(selected_items != null && selected_items.getItem() != null && selected_items.getItem() instanceof ToolItem) {
+                ToolItem tool = (ToolItem) selected_items.getItem();
+                if(block.getProfferedToolType().equals(ToolItem.ToolType.ANY)) {
+                    //if any just use holding tool power
+                    strength = tool.getToolPower();
+                } else {
+                    //if block want some specific tool compare if holding one is proper
+                    if(tool.getToolType().equals(block.getProfferedToolType())) {
+                        strength = tool.getToolPower();
+                    } else {
+                        strength = tool.getToolPower() / 3f;
 
-            block_hardness -= strenght * delta;
+                        //if acc strength is less than arm power set it to arm power
+                        if(strength < ARM_TOOL_POWER) {
+                            strength = ARM_TOOL_POWER;
+                        }
+                    }
+                }
+
+            }
+
+            block_hardness -= strength * delta;
 
             if(block_hardness <= 0f) {
-                //so here block is broken
-                int block_id;
-                if (is_foreground_placing)
-                    block_id = chunk.getBlocks()[x][y].getForegroundBlock().getBlockID();
-                else
-                    block_id = chunk.getBlocks()[x][y].getBackgroundBlock().getBlockID();
-
+                //so here block is broken and we have to remove it from world and optionally spawn item on ground that represents this item
                 chunk.setBlock(x, y, world.getBlocks().AIR.getBlockID(), !is_foreground_placing, true);
 
                 //create object that represents broken block
-                if(!block_loot_spawned && block_id != world.getBlocks().AIR.getBlockID()) {
-                    if(world.getBlocks().getBlock(block_id).isDropable()) {
+                if(!block_loot_spawned && block.getBlockID() != world.getBlocks().AIR.getBlockID()) {
+                    if(block.isDropable()) {
                         LayingItemObject loot_object = new LayingItemObject(new Vector2(x * World.BLOCK_SIZE, y * World.BLOCK_SIZE).add(chunk.getPosition()), world, game);
-                        loot_object.setItem(new BlockItem(game).setBlock(block_id, world));
+                        loot_object.setItem(new BlockItem(game).setBlock(block.getBlockID(), world));
                         world.addObject(loot_object, true);
                     }
                     block_loot_spawned = true;

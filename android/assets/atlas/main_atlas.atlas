@@ -34,7 +34,7 @@ blocks/dirt_spritesheet
   index: -1
 blocks/grass_colorpack
   rotate: false
-  xy: 399, 459
+  xy: 550, 872
   size: 16, 1
   orig: 16, 1
   offset: 0, 0
@@ -62,7 +62,7 @@ blocks/light
   index: -1
 blocks/stone_colorpack
   rotate: false
-  xy: 586, 919
+  xy: 1028, 1511
   size: 16, 1
   orig: 16, 1
   offset: 0, 0
@@ -76,7 +76,7 @@ blocks/stone_spritesheet
   index: -1
 blocks/wooden_planks_colorpack
   rotate: false
-  xy: 1028, 1511
+  xy: 1094, 1577
   size: 16, 1
   orig: 16, 1
   offset: 0, 0
@@ -97,21 +97,21 @@ gui/background_selected_switch
   index: -1
 gui/blocks_pointer
   rotate: false
-  xy: 316, 330
+  xy: 399, 444
   size: 16, 16
   orig: 16, 16
   offset: 0, 0
   index: -1
 gui/blocks_pointer_block
   rotate: false
-  xy: 351, 423
+  xy: 516, 839
   size: 16, 16
   orig: 16, 16
   offset: 0, 0
   index: -1
 gui/dialog_background
   rotate: false
-  xy: 260, 273
+  xy: 316, 327
   size: 19, 19
   orig: 19, 19
   offset: 0, 0
@@ -132,7 +132,7 @@ gui/right_arrow
   index: -1
 inventory/items/red_bandana_item_icon
   rotate: false
-  xy: 1094, 1566
+  xy: 1192, 1664
   size: 12, 12
   orig: 12, 12
   offset: 0, 0
@@ -153,7 +153,7 @@ inventory/items/test_pickaxe_item_icon
   index: -1
 inventory/slot_background
   rotate: false
-  xy: 516, 839
+  xy: 586, 904
   size: 16, 16
   orig: 16, 16
   offset: 0, 0
@@ -163,6 +163,13 @@ objects/torch_texture
   xy: 818, 960
   size: 18, 14
   orig: 18, 14
+  offset: 0, 0
+  index: -1
+objects/tree/birch_tree
+  rotate: false
+  xy: 260, 226
+  size: 25, 66
+  orig: 25, 66
   offset: 0, 0
   index: -1
 objects/tree/full_tree1
@@ -184,6 +191,13 @@ objects/tree/other_tree2
   xy: 260, 348
   size: 89, 112
   orig: 89, 112
+  offset: 0, 0
+  index: -1
+objects/tree/tree0
+  rotate: false
+  xy: 351, 379
+  size: 22, 60
+  orig: 22, 60
   offset: 0, 0
   index: -1
 objects/tree/tree_base1
@@ -286,7 +300,7 @@ player/base_head
   index: -1
 player/basic_arm
   rotate: false
-  xy: 1062, 1520
+  xy: 1128, 1586
   size: 12, 26
   orig: 12, 26
   offset: 0, 0
@@ -307,7 +321,7 @@ player/red_bandana_head
   index: -1
 star
   rotate: false
-  xy: 550, 857
+  xy: 620, 922
   size: 16, 16
   orig: 16, 16
   offset: 0, 0
@@ -321,7 +335,7 @@ universe/planets/planet1
   index: -1
 white_texture
   rotate: false
-  xy: 620, 922
+  xy: 1062, 1530
   size: 16, 16
   orig: 16, 16
   offset: 0, 0

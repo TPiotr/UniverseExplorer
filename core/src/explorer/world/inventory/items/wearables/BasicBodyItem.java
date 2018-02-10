@@ -8,7 +8,7 @@ import explorer.world.inventory.item_types.WearableItem;
 
 /**
  * This is basic body of player in fact this is not type of armor that player can access from game,
- * This body is rendered when player is wearing nothing
+ * This body is rendered when player is wearing nothing, or wearing item has render_basic flag equal to true
  * Created by RYZEN on 20.01.2018.
  */
 

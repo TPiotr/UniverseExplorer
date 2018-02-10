@@ -98,12 +98,12 @@ public class Block {
     protected boolean blocks_ground_light = true;
 
     /**
-     * Flag determining if this block need some block under
+     * Flag determining if this block need any block under (except AIR)
      */
     protected boolean need_block_under;
 
     /**
-     * Flag determining if this block need some block over
+     * Flag determining if this block need any block over (except AIR)
      */
     protected boolean need_block_over;
 
@@ -200,7 +200,7 @@ public class Block {
     }
 
     /**
-     * Getter for flag that tells if this block need some block under when placing
+     * Getter for flag that tells if this block need any block (except AIR) under when placing
      * @return need block under flag
      */
     public boolean needBlockUnder() {
@@ -208,7 +208,7 @@ public class Block {
     }
 
     /**
-     * Getter for flag that tells if this block need some block over when placing
+     * Getter for flag that tells if this block need any block (except AIR) over when placing
      * @return need block over flag
      */
     public boolean needBlockOver() {

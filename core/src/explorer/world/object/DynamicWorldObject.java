@@ -18,7 +18,7 @@ public abstract class DynamicWorldObject extends WorldObject {
     protected PhysicsShape physics_shape;
 
     /**
-     * Flag determining if physics calculations for this object are enabled so when this = false will behave like WorldObject
+     * Flag determining if physics calculations for this object are enabled so when this = false it will behave like WorldObject
      */
     protected boolean physics_enabled = true;
 
@@ -26,11 +26,6 @@ public abstract class DynamicWorldObject extends WorldObject {
      * Velocity of object
      */
     protected Vector2 velocity;
-
-    /**
-     * Flag that determines if this dynamic object colliders with other dynamic ones (other dynamic had to set this flag to true too)
-     */
-    protected boolean collide_with_other_dynamics;
 
     public DynamicWorldObject(Vector2 position, World world, Game game) {
         super(position, world, game);
@@ -52,14 +47,6 @@ public abstract class DynamicWorldObject extends WorldObject {
      */
     public PhysicsShape getPhysicsShape() {
         return physics_shape;
-    }
-
-    /**
-     * Getter for a flag that describes if this dynamic object collide with other dynamic objects that have this flag set to true too
-     * @return flag that describes if this dynamic object collide with other dynamic objects that have this flag set to true too
-     */
-    public boolean isCollidingWithOtherDynamicObjects() {
-        return collide_with_other_dynamics;
     }
 
     /**

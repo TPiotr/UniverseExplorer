@@ -37,6 +37,8 @@ public class GrassPlantBlock extends CustomRenderingBlock {
         this.hardness = 1f;
         this.blocks_ground_light = false;
         this.can_place_other_block_on = true;
+        this.need_block_under = true;
+        this.need_block_over = false;
 
         this.tile_positions = new HashMap<Short, TextureRegion>();
 
@@ -55,6 +57,7 @@ public class GrassPlantBlock extends CustomRenderingBlock {
     public void render(SpriteBatch batch, short connection_info, float x, float y, float w, float h, boolean background) {
         batch.setColor(color);
         int i = (int) x % (grasses.length - 1);
+        i = (i < 0) ? 0 : i;
         batch.draw(grasses[i], x, y - (w * 1 / 16f), w, h);
     }
 }

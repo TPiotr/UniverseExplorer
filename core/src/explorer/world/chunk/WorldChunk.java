@@ -374,16 +374,19 @@ public class WorldChunk extends StaticWorldObject {
      * @param y y in local cords
      * @param new_id new block id
      * @param background if true background block will be set to new one
-     * @param notify_network true if packet with information about block set will be send to other clients to notify them (if game is host or client)
+     * @param notify_network if true packet with information about block set will be send to other clients to notify them (if game is host or client)
      */
     public void setBlock(int x, int y, int new_id, boolean background, boolean notify_network) {
+        int last_id;
         if(!background) {
+            last_id = blocks[x][y].getForegroundBlock().getBlockID();
             blocks[x][y].setForegroundBlock(world.getBlocks().getBlock(new_id));
         } else {
+            last_id = blocks[x][y].getBackgroundBlock().getBlockID();
             blocks[x][y].setBackgroundBlock(world.getBlocks().getBlock(new_id));
         }
 
-        //update blocks old_assets.textures in area where block was set
+        //update blocks textures around
         int area_size = 4;
         boolean update_other_border = false;
         for(int i = x - (area_size / 2); i < x + (area_size / 2); i++) {
@@ -460,10 +463,53 @@ public class WorldChunk extends StaticWorldObject {
 
         //because chunk was changed we need to save it to a file again
         need_save.set(true);
+
+        //check need_block_under & over flags
+        if(last_id != new_id && new_id == world.getBlocks().AIR.getBlockID()) {
+            //block_under
+            if(inChunkBounds(x, y + 1)) {
+                Block block_over = (background) ? getBlocks()[x][y + 1].getBackgroundBlock() : getBlocks()[x][y + 1].getForegroundBlock();
+                if(block_over.needBlockUnder()) {
+                    setBlock(x, y + 1, world.getBlocks().AIR.getBlockID(), background, notify_network);
+                }
+            } else {
+                Block block_over = TileHolderTools.getBlock(x, y + 1, background, this, world);
+
+                if(block_over != null) {
+                    if(block_over.needBlockUnder()) {
+                        WorldChunk parent_chunk = TileHolderTools.getNeighbourChunk(x, y + 1, this, world);
+
+                        if(parent_chunk != null) {
+                            parent_chunk.setBlock(TileHolderTools.getNeighbourLocalX(x), TileHolderTools.getNeighbourLocalY(y + 1), world.getBlocks().AIR.getBlockID(), background, notify_network);
+                        }
+                    }
+                }
+            }
+
+            //block_over
+            if(inChunkBounds(x, y - 1)) {
+                Block block_over = (background) ? getBlocks()[x][y - 1].getBackgroundBlock() : getBlocks()[x][y - 1].getForegroundBlock();
+                if(block_over.needBlockOver()) {
+                    setBlock(x, y - 1, world.getBlocks().AIR.getBlockID(), background, notify_network);
+                }
+            } else {
+                Block block_over = TileHolderTools.getBlock(x, y - 1, background, this, world);
+
+                if(block_over != null) {
+                    if(block_over.needBlockOver()) {
+                        WorldChunk parent_chunk = TileHolderTools.getNeighbourChunk(x, y - 1, this, world);
+
+                        if(parent_chunk != null) {
+                            parent_chunk.setBlock(TileHolderTools.getNeighbourLocalX(x), TileHolderTools.getNeighbourLocalY(y - 1), world.getBlocks().AIR.getBlockID(), background, notify_network);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**
-     * Same as setBlock but this method checks if new block will collide with any objects if so you will not be able to place it
+     * Same as setBlock but this method checks if new block will collide with any objects, blocks etc.
      * @param x x in local cords
      * @param y y in local cords
      * @param new_id new block id
@@ -472,7 +518,7 @@ public class WorldChunk extends StaticWorldObject {
      * @return true if block was placed, false if not
      */
     public boolean setBlockPlayerChecks(int x, int y, int new_id, boolean background, boolean notify_network) {
-        boolean can_place = canPlaceBlock(x, y, background);
+        boolean can_place = canPlaceBlock(x, y, new_id, background);
 
         if(!can_place)
             return false;
@@ -482,22 +528,64 @@ public class WorldChunk extends StaticWorldObject {
     }
 
     /**
-     * Method that checks if block at given local coordinated can be places (check if will not collide with some blocks)
+     * Method that checks if block at given local coordinated can be placed (check if will not collide with other blocks, objects etc)
      * @param x x in local cords
      * @param y y in local cords
+     * @param new_block_id block id that we want to place
      * @param background if true background block will be set to new one
      * @return true if block can be placed at given coordinates
      */
-    public boolean canPlaceBlock(int x, int y, boolean background) {
+    public boolean canPlaceBlock(int x, int y, int new_block_id, boolean background) {
         float block_x = (x * World.BLOCK_SIZE) + getPosition().x;
         float block_y = (y * World.BLOCK_SIZE) + getPosition().y;
 
-        //check if there is some block now
+        //check if on given x,y is actually some block already if true we can't place block if its can_place_other_block_on flag set to false
         Block acc_block = (background) ? getBlocks()[x][y].getBackgroundBlock() : getBlocks()[x][y].getForegroundBlock();
         if(!acc_block.canPlaceOtherBlockOn()) {
             return false;
         }
 
+        //check if block needs some block under or over itself
+        Block new_block = world.getBlocks().getBlock(new_block_id);
+        if(new_block.needBlockUnder()) {
+            if(inChunkBounds(x, y - 1)) {
+                Block block_under = (background) ? getBlocks()[x][y - 1].getBackgroundBlock() : getBlocks()[x][y - 1].getForegroundBlock();
+
+                if(block_under.getBlockID() == world.getBlocks().AIR.getBlockID()) {
+                    return false;
+                }
+            } else {
+                Block block_under = TileHolderTools.getBlock(x, y - 1, background, this, world);
+
+                if(block_under != null) {
+                    if(block_under.getBlockID() == world.getBlocks().AIR.getBlockID()) {
+                        return false;
+                    }
+                } else
+                    return false;
+            }
+        }
+
+        if(new_block.needBlockOver()) {
+            if(inChunkBounds(x, y + 1)) {
+                Block block_over = (background) ? getBlocks()[x][y + 1].getBackgroundBlock() : getBlocks()[x][y + 1].getForegroundBlock();
+
+                if(block_over.getBlockID() == world.getBlocks().AIR.getBlockID()) {
+                    return false;
+                }
+            } else {
+                Block block_over = TileHolderTools.getBlock(x, y + 1, background, this, world);
+
+                if(block_over != null) {
+                    if(block_over.getBlockID() == world.getBlocks().AIR.getBlockID()) {
+                        return false;
+                    }
+                } else
+                    return false;
+            }
+        }
+
+        //check if new block will not collide with some object that can't be overlapped by some blocks
         for(int i = 0; i < objects.size; i++) {
             if(!objects.get(i).canPlaceBlockOver()) {
                 WorldObject object = objects.get(i);
@@ -594,8 +682,6 @@ public class WorldChunk extends StaticWorldObject {
 
                 //if block is not blocking light
                 if(!foreground.isBlockingGroundLight() && !background.isBlockingGroundLight()) {
-                    //and if somewhere nearby is other foreground/background block
-
                     float half_block = World.BLOCK_SIZE / 2;
 
                     //
@@ -620,7 +706,7 @@ public class WorldChunk extends StaticWorldObject {
      * Very useful function to protect from exceptions
      * @param x local x (0 - CHUNK_SIZE)
      * @param y local y (0 - CHUNK_SIZE)
-     * @return if is in chunk bounds
+     * @return true if is in chunk bounds
      */
     public static boolean inChunkBounds(int x, int y) {
         if(World.CHUNK_SIZE - 1 < x || 0 > x) {

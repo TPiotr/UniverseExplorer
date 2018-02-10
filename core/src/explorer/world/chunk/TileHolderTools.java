@@ -317,6 +317,170 @@ public class TileHolderTools {
         return true;
     }
 
+    /**
+     * Method that 'tiles' given coord so it will fit chunk size on x axis
+     * @param x
+     * @return
+     */
+    public static synchronized int getNeighbourLocalX(int x) {
+        if(x < 0) {
+            x = World.CHUNK_SIZE + x;
+            return x;
+        } else if(x >= World.CHUNK_SIZE) {
+            //right
+            x -= World.CHUNK_SIZE;
+            return x;
+        }
+
+        return x;
+    }
+
+    /**
+     * Method that 'tiles' given coord so it will fit chunk size on y axis
+     * @param y
+     * @return
+     */
+    public static synchronized int getNeighbourLocalY(int y) {
+        if(y < 0) {
+            //down
+            y = World.CHUNK_SIZE + y;
+            return y;
+        } else if(y >= World.CHUNK_SIZE) {
+            //up
+            y -= World.CHUNK_SIZE;
+            return y;
+        }
+
+        return y;
+    }
+
+    /**
+     * Called only when given x,y are not in current chunk bounds so it returns chunk that is neighbour of given chunk or null if not in world bound
+     * @param x
+     * @param y
+     * @param chunk
+     * @param world
+     * @return
+     */
+    public static synchronized WorldChunk getNeighbourChunk(int x, int y, WorldChunk chunk, World world) {
+        int zero_chunk_pos_x = (int) world.getWorldChunks()[0][0].getPosition().x / World.CHUNK_WORLD_SIZE;
+        int zero_chunk_pos_y = (int) world.getWorldChunks()[0][0].getPosition().y / World.CHUNK_WORLD_SIZE;
+
+        int this_chunk_x = ((int) chunk.getPosition().x / World.CHUNK_WORLD_SIZE) - zero_chunk_pos_x;
+        int this_chunk_y = ((int) chunk.getPosition().y / World.CHUNK_WORLD_SIZE) - zero_chunk_pos_y;
+
+        if(x < 0) {
+            if(!inWorldBounds(this_chunk_x - 1, this_chunk_y, world))
+                return null;
+
+            //left
+            WorldChunk other_chunk = world.getWorldChunks()[this_chunk_x - 1][this_chunk_y];
+            return other_chunk;
+        } else if(x >= World.CHUNK_SIZE) {
+            //right
+            if (!inWorldBounds(this_chunk_x + 1, this_chunk_y, world)) {
+                return null;
+            }
+
+            WorldChunk other_chunk = world.getWorldChunks()[this_chunk_x + 1][this_chunk_y];
+            return other_chunk;
+        } else if(y < 0) {
+            //down
+            if (!inWorldBounds(this_chunk_x, this_chunk_y - 1, world)) {
+                return null;
+            }
+
+            WorldChunk other_chunk = world.getWorldChunks()[this_chunk_x][this_chunk_y - 1];
+            return other_chunk;
+        } else if(y >= World.CHUNK_SIZE) {
+            //up
+            if (!inWorldBounds(this_chunk_x, this_chunk_y + 1, world)) {
+                return null;
+            }
+
+            WorldChunk other_chunk = world.getWorldChunks()[this_chunk_x][this_chunk_y + 1];
+            return other_chunk;
+        }
+
+        return null;
+    }
+
+    /**
+     * Useful method that gives block from some neighbour chunk, call it when you know that current x,y are not in bounds of chunk
+     * @param x
+     * @param y
+     * @param background
+     * @param chunk
+     * @param world
+     * @return
+     */
+    public static synchronized Block getBlock(int x, int y, boolean background, WorldChunk chunk, World world) {
+        int zero_chunk_pos_x = (int) world.getWorldChunks()[0][0].getPosition().x / World.CHUNK_WORLD_SIZE;
+        int zero_chunk_pos_y = (int) world.getWorldChunks()[0][0].getPosition().y / World.CHUNK_WORLD_SIZE;
+
+        int this_chunk_x = ((int) chunk.getPosition().x / World.CHUNK_WORLD_SIZE) - zero_chunk_pos_x;
+        int this_chunk_y = ((int) chunk.getPosition().y / World.CHUNK_WORLD_SIZE) - zero_chunk_pos_y;
+
+        if(x < 0) {
+            x = World.CHUNK_SIZE + x;
+
+            if(!inWorldBounds(this_chunk_x - 1, this_chunk_y, world))
+                return null;
+
+            //left
+            WorldChunk other_chunk = world.getWorldChunks()[this_chunk_x - 1][this_chunk_y];
+            if(background) {
+                return other_chunk.getBlocks()[x][y].getBackgroundBlock();
+            } else {
+                return other_chunk.getBlocks()[x][y].getForegroundBlock();
+            }
+        } else if(x >= World.CHUNK_SIZE) {
+            //right
+            x -= World.CHUNK_SIZE;
+
+            if (!inWorldBounds(this_chunk_x + 1, this_chunk_y, world)) {
+                return null;
+            }
+
+            WorldChunk other_chunk = world.getWorldChunks()[this_chunk_x + 1][this_chunk_y];
+            if(background) {
+                return other_chunk.getBlocks()[x][y].getBackgroundBlock();
+            } else {
+                return other_chunk.getBlocks()[x][y].getForegroundBlock();
+            }
+        } else if(y < 0) {
+            //down
+            y = World.CHUNK_SIZE + y;
+
+            if (!inWorldBounds(this_chunk_x, this_chunk_y - 1, world)) {
+                return null;
+            }
+
+            WorldChunk other_chunk = world.getWorldChunks()[this_chunk_x][this_chunk_y - 1];
+            if(background) {
+                return other_chunk.getBlocks()[x][y].getBackgroundBlock();
+            } else {
+                return other_chunk.getBlocks()[x][y].getForegroundBlock();
+            }
+        } else if(y >= World.CHUNK_SIZE) {
+            //up
+            y -= World.CHUNK_SIZE;
+
+            if (!inWorldBounds(this_chunk_x, this_chunk_y + 1, world)) {
+                return null;
+            }
+
+            WorldChunk other_chunk = world.getWorldChunks()[this_chunk_x][this_chunk_y + 1];
+            if(background) {
+                return other_chunk.getBlocks()[x][y].getBackgroundBlock();
+            } else {
+                return other_chunk.getBlocks()[x][y].getForegroundBlock();
+            }
+        }
+
+        return null;
+    }
+
     // func return if given tile collide with tile on xy uses short two dim
     // array
     private static synchronized boolean tileCollide(TileHolder[][] tiles_data, Block this_block,
