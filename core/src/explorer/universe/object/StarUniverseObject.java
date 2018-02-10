@@ -1,11 +1,14 @@
 package explorer.universe.object;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.esotericsoftware.minlog.Log;
 
 import explorer.game.framework.Game;
 import explorer.game.framework.utils.math.FastNoise;
@@ -21,6 +24,8 @@ public class StarUniverseObject extends UniverseObject {
     private static TextureRegion star_region;
     private static TextureRegion light_region;
     private static HeightsGenerator heights_generator;
+
+    private static ShapeRenderer shape_renderer;
 
     private int planet_index;
 
@@ -55,6 +60,14 @@ public class StarUniverseObject extends UniverseObject {
             light_region = game.getAssetsManager().getTextureRegion("blocks/light");
 
             heights_generator = new HeightsGenerator(75, 1, .5f, 1);
+
+            Runnable r = new Runnable() {
+                @Override
+                public void run() {
+                    shape_renderer = new ShapeRenderer();
+                }
+            };
+            Gdx.app.postRunnable(r);
         }
 
         rotation = MathUtils.random(0, 360);
@@ -72,26 +85,34 @@ public class StarUniverseObject extends UniverseObject {
         //time to generate planets
         planets = new Array<PlanetUniverseObject>();
 
-        int planets_num = (int) (((noise.GetNoise(position.x, position.y) + 1f) / 2f) * 10f);
+        int planets_num = (int) (((noise.GetNoise(position.x, position.y) + 1f) / 2f) * 5f);
+
+        final float min_dst_between_planets = 50;
+        final float min_radius_from_start = wh.x * (scale + max_scale_add);
+
+        float last_radius = min_radius_from_start;
         for(int i = 0; i < planets_num; i++) {
-            float radius = ((noise.GetNoise(position.x * i, position.y) + 1f) / 2f) * 500f;
+            float radius_add = ((noise.GetNoise(position.x * i, position.y) + 1f) / 2f) * 100f;
+            float radius = last_radius + min_dst_between_planets + radius_add;
+
             float full_time_orbit = ((noise.GetNoise(position.x - (i * 100), position.y) + 1f) / 2f) * 400f + 200;
 
             Vector2 planet_position = new Vector2(position.x + radius, position.y);
 
             PlanetUniverseObject planet = new PlanetUniverseObject(planet_position, universe, this, radius, full_time_orbit, game);
             planets.add(planet);
+
+            last_radius = radius;
         }
 
     }
 
-    private float time;
     @Override
     public void tick(float delta) {
-        float scale_add = min_scale_add + (MathUtils.cos(time += delta * speed) * max_scale_add);
+        float scale_add = min_scale_add + (MathUtils.cos(universe.getUniverseTime() * speed) * max_scale_add);
         scale = 2f + scale_add;
 
-        //if camera zoom if under some value start to tick planets
+        //if planets visible update them
         if(game.getMainCamera().zoom < MIN_ZOOM) {
             for(int i = 0; i < planets.size; i++) {
                 planets.get(i).tick(delta);
@@ -101,7 +122,7 @@ public class StarUniverseObject extends UniverseObject {
 
     @Override
     public void render(SpriteBatch batch) {
-
+        //at first render start
         float last_scale = scale;
         scale *= 1.5f;
         batch.setColor(color);
@@ -113,11 +134,39 @@ public class StarUniverseObject extends UniverseObject {
         batch.setColor(Color.WHITE);
         batch.draw(star_region, getPosition().x, getPosition().y, getWH().x * .5f, getWH().y * .5f, getWH().x, getWH().y, scale, scale, rotation);
 
-        //render planets
-        if(game.getMainCamera().zoom < MIN_ZOOM) {
-            for(int i = 0; i < planets.size; i++) {
-                planets.get(i).render(batch);
+        //if planets not visible just return this function
+        if(game.getMainCamera().zoom > MIN_ZOOM)
+            return;
+
+        //render planets orbits
+        if(shape_renderer != null) {
+            batch.end();
+            shape_renderer.setProjectionMatrix(batch.getProjectionMatrix());
+            shape_renderer.begin(ShapeRenderer.ShapeType.Line);
+
+            final float max_intensity_at = .01f;
+            final float min_intensity_at = 5f;
+            float intensity = (game.getMainCamera().zoom - max_intensity_at) / min_intensity_at;
+            intensity = MathUtils.clamp(intensity, 0f, 1f);
+            intensity = 1f - intensity;
+
+            for (int i = 0; i < planets.size; i++) {
+                planets.get(i).renderOrbit(shape_renderer, intensity);
             }
+
+            shape_renderer.end();
+            batch.begin();
+        }
+
+        //render planets
+        final float max_intensity_at = 5f;
+        final float min_intensity_at = 18f;
+        float intensity = (game.getMainCamera().zoom - max_intensity_at) / min_intensity_at;
+        intensity = MathUtils.clamp(intensity, 0f, 1f);
+        intensity = 1f - intensity;
+
+        for(int i = 0; i < planets.size; i++) {
+            planets.get(i).render(batch, intensity);
         }
     }
 

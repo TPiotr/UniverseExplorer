@@ -234,16 +234,7 @@ public class Player extends DynamicWorldObject {
         toolbar_items_container.addItem(new TestPickaxeItem(game));
         toolbar_items_container.addItem(new BlockItem(game).setBlock(world.getBlocks().GRASS_PLANT_BLOCK.getBlockID(), world), 64);
 
-        /*for(int i = 0; i < INVENTORY_SLOTS_COUNT - 10; i++) {
-            items_container.getItems().set(i, new ItemsContainer.ItemsStack(new BlockItem(game).setBlock(world.getBlocks().DIRT.getBlockID(), world), MathUtils.random(1, 64), items_container));
-        }
-        items_container.addItem(new RedBandanaHeadItem(game), 1);
-        items_container.addItem(new TestPickaxeItem(game), 1);
-
-        for(int i = 0; i < TOOLBAR_INVENTORY_SLOTS_COUNT - 4; i++) {
-            toolbar_items_container.getItems().set(i, new ItemsContainer.ItemsStack(new BlockItem(game).setBlock(world.getBlocks().STONE.getBlockID(), world), MathUtils.random(1, 64), toolbar_items_container));
-        }*/
-
+        //debug, add stack of every possible block to inventory
         items_container.clear();
         for(Object id : ((Map) world.getBlocks().getAllBlocksMap()).keySet()) {
             if((Integer) id == world.getBlocks().AIR.getBlockID())

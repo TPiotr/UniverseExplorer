@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 
@@ -77,8 +78,9 @@ public class PlanetUniverseObject extends UniverseObject {
         angle = (((universe.getUniverseTime() + time_offset) % full_orbit_time) / full_orbit_time) * 360f;
     }
 
-    @Override
-    public void render(SpriteBatch batch) {
+    public void render(SpriteBatch batch) {}
+
+    public void render(SpriteBatch batch, float alpha) {
         if(planet_color == null)
             return;
 
@@ -89,10 +91,18 @@ public class PlanetUniverseObject extends UniverseObject {
         batch.setColor(Color.WHITE);
         planet_color.bind(1);
         Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
-
-        batch.draw(planet_noise, getPosition().x, getPosition().y, getWH().x * .5f, getWH().y * .5f, getWH().x, getWH().y, scale, scale, rotation);
+        batch.setColor(1f, 1f, 1f, alpha);
+        batch.draw(planet_noise, getPosition().x - getWH().x / 2f, getPosition().y - getWH().y / 2f, getWH().x * .5f, getWH().y * .5f, getWH().x, getWH().y, scale, scale, rotation);
 
         batch.setShader(null);
+    }
+
+    public void renderOrbit(ShapeRenderer renderer, float intensity) {
+        if(intensity == 0f)
+            return;
+
+        renderer.setColor(intensity, intensity, intensity, intensity);
+        renderer.circle(parent_star.getPosition().x + parent_star.getWH().x / 2f, parent_star.getPosition().y + parent_star.getWH().y / 2f, radius);
     }
 
     @Override
