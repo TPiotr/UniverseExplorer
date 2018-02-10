@@ -11,6 +11,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.esotericsoftware.minlog.Log;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Map;
 
 import explorer.game.Helper;
 import explorer.game.framework.Game;
@@ -244,9 +245,11 @@ public class Player extends DynamicWorldObject {
         }*/
 
         items_container.clear();
-        for(int i = 0; i < 10; i++) {
-            items_container.addItem(new BlockItem(game).setBlock(world.getBlocks().DIRT.getBlockID(), world), 64);
-            items_container.addItem(new BlockItem(game).setBlock(world.getBlocks().GRASS.getBlockID(), world), 64);
+        for(Object id : ((Map) world.getBlocks().getAllBlocksMap()).keySet()) {
+            if((Integer) id == world.getBlocks().AIR.getBlockID())
+                continue;
+
+            items_container.addItem(new BlockItem(game).setBlock((Integer) id, world), 64);
         }
 
         //create blocks pointer listener
