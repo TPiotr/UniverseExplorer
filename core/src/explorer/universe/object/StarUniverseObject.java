@@ -25,6 +25,10 @@ public class StarUniverseObject extends UniverseObject {
     private static TextureRegion light_region;
     private static HeightsGenerator heights_generator;
 
+    static {
+        heights_generator = new HeightsGenerator(75, 1, .5f, 1);
+    }
+
     private static ShapeRenderer shape_renderer;
 
     private int planet_index;
@@ -39,7 +43,7 @@ public class StarUniverseObject extends UniverseObject {
 
     private Color color;
 
-    //minimal value of main camera zoom when planets can be rendered
+    //minimal value of main camera zoom when planets start to be rendered
     private static final float MIN_ZOOM = 18f;
 
     //fast noise static instance for generating planets
@@ -58,8 +62,6 @@ public class StarUniverseObject extends UniverseObject {
         if(star_region == null) {
             star_region = game.getAssetsManager().getTextureRegion("star");
             light_region = game.getAssetsManager().getTextureRegion("blocks/light");
-
-            heights_generator = new HeightsGenerator(75, 1, .5f, 1);
 
             Runnable r = new Runnable() {
                 @Override
