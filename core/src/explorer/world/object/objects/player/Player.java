@@ -17,11 +17,9 @@ import explorer.game.Helper;
 import explorer.game.framework.Game;
 import explorer.game.framework.utils.math.PositionInterpolator;
 import explorer.game.framework.utils.math.RotationInterpolator;
-import explorer.game.screen.gui.dialog.InfoDialog;
 import explorer.game.screen.screens.Screens;
 import explorer.game.screen.screens.menu.SelectPlayerScreen;
 import explorer.game.screen.screens.planet.PlanetGUIScreen;
-import explorer.game.screen.screens.planet.PlanetScreen;
 import explorer.game.screen.screens.planet.PlayerInventoryScreen;
 import explorer.network.NetworkClasses;
 import explorer.network.NetworkHelper;
@@ -29,17 +27,18 @@ import explorer.network.client.ServerPlayer;
 import explorer.network.server.GameServer;
 import explorer.world.World;
 import explorer.world.block.Block;
-import explorer.world.chunk.TileHolder;
 import explorer.world.chunk.WorldChunk;
 import explorer.world.inventory.Item;
 import explorer.world.inventory.ItemsContainer;
-import explorer.world.inventory.item_types.BlockItem;
+import explorer.world.inventory.item_types.PlaceableItem;
+import explorer.world.inventory.items.placeables.BlockItem;
 import explorer.world.inventory.item_types.BodyWearableItem;
 import explorer.world.inventory.item_types.ToolItem;
 import explorer.world.inventory.item_types.WearableItem;
+import explorer.world.inventory.items.placeables.TorchItem;
 import explorer.world.inventory.items.tools.TestPickaxeItem;
-import explorer.world.inventory.items.wearables.BasicHeadItem;
 import explorer.world.inventory.items.wearables.RedBandanaHeadItem;
+import explorer.world.inventory.items.wearables.UniformBodyItem;
 import explorer.world.object.DynamicWorldObject;
 import explorer.world.object.objects.LayingItemObject;
 import explorer.world.object.objects.TorchObject;
@@ -91,9 +90,9 @@ public class Player extends DynamicWorldObject {
     private BodyWearableItem wear_body_item, last_wear_body_item;
     private WearableItem wear_legs_item, last_wear_legs_item;
 
-    //breaking, placing blocks & arm animation
+    //breaking, placing & arm animation
     private boolean hitting_block, block_loot_spawned;
-    private boolean placing_block;
+    private boolean placing;
     private int last_x, last_y, x, y;
     private float block_hardness, last_arm_angle;
     private boolean is_foreground_placing = true, last_is_foreground_placing = true;
@@ -105,9 +104,10 @@ public class Player extends DynamicWorldObject {
     //blocks/tools pointing system
     private boolean pointing;
     private int last_pointed_block_x, last_pointed_block_y;
+    private Vector2 last_pointer_world_position;
     private WorldChunk last_pointed_chunk;
 
-    private boolean pickaxe_button_pressed, placeblock_button_pressed;
+    private boolean pickaxe_button_pressed, place_button_pressed;
 
     private InputAdapter input_adapter;
 
@@ -150,6 +150,7 @@ public class Player extends DynamicWorldObject {
 
         chunk_rect = new Rectangle();
         last_position_clone = new Vector2();
+        last_pointer_world_position = new Vector2();
 
         //create interpolators
         interpolator = new PositionInterpolator(this, new PositionInterpolator.InterpolatorPacketSender() {
@@ -234,8 +235,14 @@ public class Player extends DynamicWorldObject {
         toolbar_items_container.addItem(new TestPickaxeItem(game));
         toolbar_items_container.addItem(new BlockItem(game).setBlock(world.getBlocks().GRASS_PLANT_BLOCK.getBlockID(), world), 64);
 
+        toolbar_items_container.addItem(new TorchItem(game), 16);
+
         //debug, add stack of every possible block to inventory
         items_container.clear();
+
+        items_container.addItem(new RedBandanaHeadItem(game), 1);
+        items_container.addItem(new UniformBodyItem(game), 1);
+
         for(Object id : ((Map) world.getBlocks().getAllBlocksMap()).keySet()) {
             if((Integer) id == world.getBlocks().AIR.getBlockID())
                 continue;
@@ -272,6 +279,7 @@ public class Player extends DynamicWorldObject {
             @Override
             public void changed(int new_block_x, int new_block_y, WorldChunk chunk, Vector2 pointer_world_pos) {
                 calculateArmAngle(pointer_world_pos, true);
+                last_pointer_world_position.set(pointer_world_pos);
 
                 last_pointed_block_x = new_block_x;
                 last_pointed_block_y = new_block_y;
@@ -320,35 +328,14 @@ public class Player extends DynamicWorldObject {
                     if(selected_items == null)
                         return false;
 
-                    if(selected_items.getItem() instanceof BlockItem) {
-                        for (int i = 0; i < world.getWorldChunks().length; i++) {
-                            for (int j = 0; j < world.getWorldChunks()[0].length; j++) {
-                                WorldChunk chunk = world.getWorldChunks()[i][j];
-                                Rectangle chunk_rect = new Rectangle(chunk.getPosition().x, chunk.getPosition().y, chunk.getWH().x, chunk.getWH().y);
+                    if(selected_items.getItem() instanceof PlaceableItem) {
+                        boolean r = ((PlaceableItem) selected_items.getItem()).place(touch, last_is_foreground_placing, world, game);
 
-                                //so we have proper chunk now just transform global cords to local blocks coords
-                                if (chunk_rect.contains(touch)) {
-                                    int local_x = (int) (touch.x - chunk_rect.getX()) / World.BLOCK_SIZE;
-                                    int local_y = (int) (touch.y - chunk_rect.getY()) / World.BLOCK_SIZE;
-
-                                    //we have to notify network if game is using network(game checks it itself)
-                                    boolean result = chunk.setBlockPlayerChecks(local_x, local_y, ((BlockItem) selected_items.getItem()).getRepresentingBlockID(), false, true);
-
-                                    //if block was placed removed one from stack and check if stack don't ended
-                                    if(result) {
-                                        selected_items.removeOneFromStack();
-
-                                        if (selected_items.getInStack() <= 0)
-                                            selected_items = null;
-                                    }
-                                }
-                            }
+                        if(r) {
+                            getSelectedItems().removeOneFromStack();
                         }
                     }
 
-                } else if(button == 2) {
-                    TorchObject torch_object = new TorchObject(touch, world, game);
-                    world.addObject(torch_object, true);
                 }
 
                 return false;
@@ -452,7 +439,7 @@ public class Player extends DynamicWorldObject {
     }
 
     /**
-     * This function is only called if some packet from network comes to player as normal player not a clone (so this method can be called only if player is not an clone)
+     * This function is only called if some packet from network comes to player as normal player not a clone (so this method will be called only if player is not an clone)
      * @param packet packet
      */
     public void processToPlayerPacket(Object packet) {
@@ -669,7 +656,7 @@ public class Player extends DynamicWorldObject {
     public void tick(float delta) {
         animation_time += delta * 20f;
 
-        if(!getParentChunk().isDirty())
+        if(getParentChunk() != null && !getParentChunk().isDirty())
             on_current_chunk_time += delta * 1000f;
 
         //find parent chunk (because chunk[1][1] is not always players parent chunk because of delayed loading chunks system)
@@ -728,8 +715,8 @@ public class Player extends DynamicWorldObject {
         //read ui from planetGuiScreen
         if(pickaxe_button_pressed) {
             setHittingBlock(true, last_pointed_block_x, last_pointed_block_y, last_pointed_chunk);
-        } else if(placeblock_button_pressed) {
-            placing_block = true;
+        } else if(place_button_pressed) {
+            placing = true;
         }
 
         //hitting block system & animation
@@ -794,27 +781,19 @@ public class Player extends DynamicWorldObject {
 
             last_x = x;
             last_y = y;
-        } else if(placing_block) {
-            int in_hand_block = -1;
-
-            //first check if player is even holding some block
+        } else if(placing) {
+            //first check if player is holding some placeable item
             if(getSelectedItems() != null && getSelectedItems().getItem() != null) {
-                if(getSelectedItems().getItem() instanceof BlockItem) {
-                    in_hand_block = ((BlockItem) getSelectedItems().getItem()).getRepresentingBlockID();
-                }
-            }
+                if(getSelectedItems().getItem() instanceof PlaceableItem) {
+                    boolean placed = ((PlaceableItem) getSelectedItems().getItem()).place(last_pointer_world_position, is_foreground_placing, world, game);
 
-            if(in_hand_block != -1) {
-                //try to place a block
-                if(last_pointed_chunk != null) {
-                    boolean placed = last_pointed_chunk.setBlockPlayerChecks(last_pointed_block_x, last_pointed_block_y, in_hand_block, !is_foreground_placing, true);
-
-                    if(placed)
+                    if(placed) {
                         getSelectedItems().removeOneFromStack();
+                    }
                 }
             }
 
-            placing_block = false;
+            placing = false;
         }
 
         //run this code only if this is not a clone
@@ -837,6 +816,11 @@ public class Player extends DynamicWorldObject {
     @Override
     public void render(SpriteBatch batch) {
         player_renderer.render(batch);
+
+        //if player is holding placeable item render its silhouette
+        if(isPointing() && getSelectedItems() != null && getSelectedItems().getItem() instanceof PlaceableItem) {
+            ((PlaceableItem) getSelectedItems().getItem()).renderSilhouette(batch, last_pointer_world_position);
+        }
     }
 
     @Override
@@ -926,8 +910,8 @@ public class Player extends DynamicWorldObject {
         pickaxe_button_pressed = pressed;
     }
 
-    public void setPlaceBlockButtonPressed(boolean pressed) {
-        placeblock_button_pressed = pressed;
+    public void setPlaceButtonPressed(boolean pressed) {
+        place_button_pressed = pressed;
     }
 
     public boolean isPointing() {

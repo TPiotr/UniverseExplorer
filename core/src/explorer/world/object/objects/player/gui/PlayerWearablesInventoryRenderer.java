@@ -74,14 +74,14 @@ public class PlayerWearablesInventoryRenderer extends GUIComponent {
                 planet_screen.getWorld().getPlayer().setWearHeadItem(null);
             }
 
-            Item body = (getItemsContainer().getItems().get(1) != null) ? getItemsContainer().getItems().get(0).getItem() : null;
+            Item body = (getItemsContainer().getItems().get(1) != null) ? getItemsContainer().getItems().get(1).getItem() : null;
             if(body != null) {
                 planet_screen.getWorld().getPlayer().setWearBodyItem((BodyWearableItem) body);
             } else {
                 planet_screen.getWorld().getPlayer().setWearBodyItem(null);
             }
 
-            Item legs = (getItemsContainer().getItems().get(2) != null) ? getItemsContainer().getItems().get(0).getItem() : null;
+            Item legs = (getItemsContainer().getItems().get(2) != null) ? getItemsContainer().getItems().get(2).getItem() : null;
             if(legs != null) {
                 planet_screen.getWorld().getPlayer().setWearLegsItem((WearableItem) legs);
                 planet_screen.getWorld().getPlayer().getPlayerRenderer().updateLegs();

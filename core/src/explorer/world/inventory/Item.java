@@ -26,7 +26,7 @@ public abstract class Item {
 		 * @param y y cord
 		 * @param w width
 		 * @param h height
-		 * @param batch batch instance, take care about color after custom rendering! (just set to Color.WHITE)
+		 * @param batch batch instance, take care about color after custom rendering! (just set to Color.WHITE after rendering)
 		 */
 		void renderInInventory(float x, float y, float w, float h, SpriteBatch batch);
 	}
@@ -38,8 +38,8 @@ public abstract class Item {
 	public interface InHandItemRenderer {
 
 		/**
-		 * Render method to render in hand item like block, weapon etc.
-		 * Affine2 transform variable contains in all info and is ready to be used in rendering process (contains x, y, angle and direction)
+		 * Method to render in hand item like block, weapon etc.
+		 * Affine2 transform variable contains all info and is ready to be used in rendering process (contains x, y, angle and direction)
 		 * So in rendering process user can use transform or just other given variables or mix of them whatever
 		 * @param x global x position at which item should be rendered
 		 * @param y global y position at which item should be rendered
@@ -70,7 +70,7 @@ public abstract class Item {
 	protected boolean stackable;
 
 	/**
-	 * Variables used only if stackable == true determines how much items can in one stack of items
+	 * Variables used only if stackable == true determines how much items can be in one stack of items
 	 */
 	protected int max_in_stack;
 

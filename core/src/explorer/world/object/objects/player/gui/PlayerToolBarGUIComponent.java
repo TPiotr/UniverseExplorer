@@ -16,7 +16,6 @@ import explorer.game.screen.screens.Screens;
 import explorer.game.screen.screens.planet.PlanetScreen;
 import explorer.world.inventory.Item;
 import explorer.world.inventory.ItemsContainer;
-import explorer.world.inventory.item_types.BlockItem;
 import explorer.world.object.objects.player.Player;
 
 /**

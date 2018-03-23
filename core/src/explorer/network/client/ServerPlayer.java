@@ -20,7 +20,7 @@ public class ServerPlayer {
     public final String username;
 
     /**
-     * Flag determining if this player is and host (also host connection_id is always -1)
+     * Flag determining if this player is an host (also host connection_id is always -1)
      */
     public final boolean is_host;
 

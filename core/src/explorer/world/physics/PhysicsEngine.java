@@ -78,10 +78,10 @@ public class PhysicsEngine {
 	public void tick(float in_delta) {
 		/* DELTA MANAGEMENT STUFF */
 
-		//why this? this code helps to avoid bug when some bug occur and our delta will be very big for example 10 (because game was lagged for f.e. 10 secs)
+		//this code helps to avoid situation when some bug occur and our delta will be very big for example 10 (because game was lagged f.e. 10 secs)
 		//using directly that big delta will cause bug when every dynamic object with velocity > 0 will teleport probably far away compared to previous location
 		//so calculate avg delta from last 10 deltas if in_delta is bigger than avg and some threshold it means that some lag occured
-		//this problem resolve will not make any problems when entering f.e. laggy area because avg delta is calculating in real time
+		//this problem solution will not make any problems when entering f.e. laggy area because avg delta is calculating in real time
 
 		tick_number++;
 		float delta = in_delta;
@@ -104,7 +104,8 @@ public class PhysicsEngine {
 		}
 		
 		//put delta only if value is nearby avg one
-		if(delta < avg_delta + .10f) {
+		float delta_thr = .10f;
+		if(delta < avg_delta + delta_thr) {
 			deltas[delta_index] = delta;
 		} else {
 			delta = avg_delta;
@@ -210,7 +211,7 @@ public class PhysicsEngine {
 				object_velocity.scl(delta);
 
 				//how it works:
-				//get blocks around dynamic object and iterate through them to check collision like with normal rectangulary static world objects
+				//get blocks around dynamic object and iterate through them to check collision like with normal rectangle static world objects
 
 				//vars used in collision with chunk blocks
 				int offset_add_x = (int) Math.max((dynamic_object.getWH().x / World.BLOCK_SIZE) * 1.5f, 4);

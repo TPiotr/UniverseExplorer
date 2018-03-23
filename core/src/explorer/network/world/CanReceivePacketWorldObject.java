@@ -1,7 +1,7 @@
 package explorer.network.world;
 
 /**
- * Type of object that can receive packet from network packets are addressed for one instance of object not whole type
+ * Type of object that can receive packet from network (packets are addressed for one specified instance of object f.e. to tree with id of 10)
  * Created by RYZEN on 29.12.2017.
  */
 

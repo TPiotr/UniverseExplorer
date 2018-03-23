@@ -1,24 +1,24 @@
-package explorer.world.inventory.item_types;
+package explorer.world.inventory.items.placeables;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Affine2;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
-
-import java.util.HashMap;
-import java.util.concurrent.atomic.AtomicInteger;
+import com.esotericsoftware.minlog.Log;
 
 import explorer.game.framework.Game;
+import explorer.game.framework.utils.math.MathHelper;
 import explorer.game.screen.screens.Screens;
 import explorer.game.screen.screens.planet.PlanetScreen;
 import explorer.world.World;
 import explorer.world.block.Block;
 import explorer.world.block.CustomColorBlock;
 import explorer.world.block.CustomRenderingBlock;
+import explorer.world.chunk.WorldChunk;
 import explorer.world.inventory.Item;
+import explorer.world.inventory.item_types.PlaceableItem;
 import explorer.world.object.objects.player.Player;
 
 /**
@@ -26,7 +26,7 @@ import explorer.world.object.objects.player.Player;
  * Created by RYZEN on 21.01.2018.
  */
 
-public class BlockItem extends Item implements Item.InHandItemRenderer, Item.InInventoryRenderer {
+public class BlockItem extends PlaceableItem implements Item.InHandItemRenderer, Item.InInventoryRenderer {
 
     /**
      * ID of block that this item represents
@@ -100,6 +100,60 @@ public class BlockItem extends Item implements Item.InHandItemRenderer, Item.InI
      */
     public int getRepresentingBlockID() {
         return representing_block_id;
+    }
+
+    @Override
+    public boolean place(Vector2 world_position, boolean foreground_placing_mode, World world, Game game) {
+        //find proper chunk
+        WorldChunk ch = null;
+
+        loop:
+        for(int i = 0; i < world.getWorldChunks().length; i++) {
+            for(int j = 0; j < world.getWorldChunks()[0].length; j++) {
+                WorldChunk chunk = world.getWorldChunks()[i][j];
+
+                if(MathHelper.overlaps2Rectangles(chunk.getPosition().x, chunk.getPosition().y, World.CHUNK_WORLD_SIZE, World.CHUNK_WORLD_SIZE
+                        , world_position.x, world_position.y, World.BLOCK_SIZE, World.BLOCK_SIZE)) {
+                    ch = chunk;
+                    break loop;
+                }
+            }
+        }
+
+        if(ch != null) {
+            int block_x = (int) (world_position.x - ch.getPosition().x) / World.BLOCK_SIZE;
+            int block_y = (int) (world_position.y - ch.getPosition().y) / World.BLOCK_SIZE;
+
+            return ch.setBlockPlayerChecks(block_x, block_y, getRepresentingBlockID(), !foreground_placing_mode, true);
+        }
+
+        return false;
+    }
+
+    @Override
+    public void renderSilhouette(SpriteBatch batch, Vector2 world_cords) {
+        float x = world_cords.x;
+        float y = world_cords.y;
+
+        x -= x % World.BLOCK_SIZE;
+        y -= y % World.BLOCK_SIZE;
+
+        if(block != null) {
+            if(!(block instanceof CustomRenderingBlock)) {
+                if (block instanceof CustomColorBlock) {
+                    CustomColorBlock cblock = (CustomColorBlock) block;
+                    batch.setColor(cblock.getBlockColor().r, cblock.getBlockColor().g, cblock.getBlockColor().b, .4f);
+                } else {
+                    batch.setColor(1f, 1f, 1f, .4f);
+                }
+
+                batch.draw(item_icon, x, y, World.BLOCK_SIZE, World.BLOCK_SIZE);
+                batch.setColor(Color.WHITE);
+            } else {
+                ((CustomRenderingBlock) block).render(batch, Block.COLLIDE_NONE, x, y, World.BLOCK_SIZE, World.BLOCK_SIZE, false);
+                batch.setColor(Color.WHITE);
+            }
+        }
     }
 
     @Override

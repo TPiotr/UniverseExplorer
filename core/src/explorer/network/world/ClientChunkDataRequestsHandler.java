@@ -37,7 +37,7 @@ public class ClientChunkDataRequestsHandler {
     private Game game;
 
     /**
-     * Array that contains all data requests packets which weren't realized yet
+     * Array that contains all data requests packets which weren't done yet
      */
     private Array<NetworkClasses.ChunkDataRequestPacket> pending_packets;
 
@@ -95,6 +95,7 @@ public class ClientChunkDataRequestsHandler {
                                 if(!world.getWorldChunks()[i][j].getPosition().equals(request.position)) {
                                     //send back to server this request
                                     game.getGameClient().getClient().sendTCP(request);
+                                    pending_packets.removeValue(request, true);
                                     return;
                                 }
 

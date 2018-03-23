@@ -424,7 +424,7 @@ public class TileHolderTools {
         if(x < 0) {
             x = World.CHUNK_SIZE + x;
 
-            if(!inWorldBounds(this_chunk_x - 1, this_chunk_y, world))
+            if(!inWorldBounds(this_chunk_x - 1, this_chunk_y, world) || !inChunkBounds(x, y))
                 return null;
 
             //left
@@ -438,7 +438,7 @@ public class TileHolderTools {
             //right
             x -= World.CHUNK_SIZE;
 
-            if (!inWorldBounds(this_chunk_x + 1, this_chunk_y, world)) {
+            if (!inWorldBounds(this_chunk_x + 1, this_chunk_y, world) || !inChunkBounds(x, y)) {
                 return null;
             }
 
@@ -452,7 +452,7 @@ public class TileHolderTools {
             //down
             y = World.CHUNK_SIZE + y;
 
-            if (!inWorldBounds(this_chunk_x, this_chunk_y - 1, world)) {
+            if (!inWorldBounds(this_chunk_x, this_chunk_y - 1, world) || !inChunkBounds(x, y)) {
                 return null;
             }
 
@@ -466,7 +466,7 @@ public class TileHolderTools {
             //up
             y -= World.CHUNK_SIZE;
 
-            if (!inWorldBounds(this_chunk_x, this_chunk_y + 1, world)) {
+            if (!inWorldBounds(this_chunk_x, this_chunk_y + 1, world) || !inChunkBounds(x, y)) {
                 return null;
             }
 

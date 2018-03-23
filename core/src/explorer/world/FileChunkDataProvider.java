@@ -57,7 +57,6 @@ public class FileChunkDataProvider extends ChunkDataProvider {
 
     @Override
     public Future<?> getChunkData(final DataLoaded callback, final Vector2 chunk_position, final World world, final Game game) {
-        //CALCULATION THESE COORDS JUST STOLEN FROM WorldChunk getGlobalChunkXIndex, getGlobalChunkYIndex
         int x = (int) chunk_position.x / World.CHUNK_WORLD_SIZE;
         int y = (int) chunk_position.y / World.CHUNK_WORLD_SIZE;
 

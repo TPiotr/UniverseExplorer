@@ -97,7 +97,7 @@ public class ChunkDataSaveRequestsHandler {
                 public void run() {
                     saveToDisk(packet);
                     save_requests.removeValue(packet, true);
-                    Log.debug("(ChunkDataSaveRequestsHandler) Save request realized! From con_id: " + packet.connection_id);
+                    Log.debug("(ChunkDataSaveRequestsHandler) Save request done! From con_id: " + packet.connection_id);
                 }
             };
             worker_pool.submit(r);
@@ -105,7 +105,7 @@ public class ChunkDataSaveRequestsHandler {
     }
 
     /**
-     * Method used in HostNetworkChunkDataProvider & ChunkDataRequestsHandler useful when some client want data that wasn't save to disk yet so we can grab data from there
+     * Method used in HostNetworkChunkDataProvider & ChunkDataRequestsHandler useful when some client want data that wasn't saved to disk yet so we can grab data from there
      * @param chunk_x local chunk x
      * @param chunk_y local chunk y
      * @return chunk data in byte array, could be null!

@@ -207,6 +207,22 @@ public class PlayerInventoryRenderer extends GUIComponent {
 
         this.planet_screen = planet_screen;
         this.items_renderers = new Array<ItemRenderer>(Player.INVENTORY_SLOTS_COUNT);
+
+        //background of item slot
+        TextureRegion background_texture = game.getAssetsManager().getTextureRegion("inventory/slot_background");
+
+        //create items renderers
+        for(int i = 0; i < Player.INVENTORY_SLOTS_COUNT; i++) {
+            int column = i / COLUMNS_COUNT;
+            int row = i % COLUMNS_COUNT;
+
+            float x = row * (RENDERER_WIDTH + RENDERERS_SPACING);
+            float y = column * (RENDERER_HEIGHT + RENDERERS_SPACING);
+
+            ItemRenderer renderer = new ItemRenderer(new Vector2(x, y), new Vector2(RENDERER_WIDTH, RENDERER_HEIGHT), i, null, background_texture, game);
+            renderer.setItemsStack(null, null);
+            items_renderers.add(renderer);
+        }
     }
 
     @Override
@@ -222,27 +238,7 @@ public class PlayerInventoryRenderer extends GUIComponent {
         if(player == null)
             return;
 
-        //initialization of screen here because it can't be in constructor because player or world could be null
-        //and we have to be sure that player & world != null
-        if(!initialized) {
-            TextureRegion background_texture = game.getAssetsManager().getTextureRegion("inventory/slot_background");
-
-            //create items renderers
-            for(int i = 0; i < Player.INVENTORY_SLOTS_COUNT; i++) {
-                int column = i / COLUMNS_COUNT;
-                int row = i % COLUMNS_COUNT;
-
-                float x = row * (RENDERER_WIDTH + RENDERERS_SPACING);
-                float y = column * (RENDERER_HEIGHT + RENDERERS_SPACING);
-
-                ItemRenderer renderer = new ItemRenderer(new Vector2(x, y), new Vector2(RENDERER_WIDTH, RENDERER_HEIGHT), i, player.getItemsContainer(), background_texture, game);
-                renderer.setItemsStack(player.getItemsContainer().getItems().get(i), player.getItemsContainer());
-                items_renderers.add(renderer);
-            }
-
-            initialized = true;
-        }
-
+        //update items renderers content
         for(int i = 0; i < items_renderers.size; i++) {
             items_renderers.get(i).setItemsStack(player.getItemsContainer().getItems().get(i), player.getItemsContainer());
             items_renderers.get(i).tick(delta);

@@ -11,7 +11,7 @@ import explorer.game.screen.Screen;
 import explorer.game.screen.screens.Screens;
 
 /**
- * Screen that is showing progress bar when player teleports and engine have to load whole >=75% of chunks,
+ * Screen that is showing progress bar when player teleports and engine have to load chunks,
  * we have to stop game because of possibility of bugs (like falling down from the world because world wasn't loaded yet)
  * Created by RYZEN on 26.10.2017.
  */

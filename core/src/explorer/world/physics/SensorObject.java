@@ -3,7 +3,7 @@ package explorer.world.physics;
 import explorer.world.object.WorldObject;
 
 /**
- * Object that will receive info when will collide with other objects
+ * Object that will receive info when it will collide with other objects
  * Created by RYZEN on 23.10.2017.
  */
 

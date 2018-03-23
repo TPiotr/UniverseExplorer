@@ -92,7 +92,7 @@ public class Universe implements ScreenComponent {
         int center_chunk_pos_x = (int) center_chunk.getPosition().x / UNIVERSE_CHUNK_SIZE;
         int center_chunk_pos_y = (int) center_chunk.getPosition().y / UNIVERSE_CHUNK_SIZE;
 
-        /** Math.floor makes possiblity that this works for moving in negative coords **/
+        /** Math.floor makes give it possiblity for moving in negative coords properly **/
         int camera_chunk_pos_x = (int) Math.floor(game.getMainCamera().position.x / UNIVERSE_CHUNK_SIZE);
         int camera_chunk_pos_y = (int) Math.floor(game.getMainCamera().position.y / UNIVERSE_CHUNK_SIZE);
 

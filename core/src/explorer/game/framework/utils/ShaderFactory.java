@@ -17,16 +17,18 @@ public class ShaderFactory {
     private static HashMap<String, ShaderProgram> shaders = new HashMap<String, ShaderProgram>();
 
     /**
-     *
+     * Create shader program from 2 text files which path are provided as parameters
      * @param vert_path string contains all vertex shader code
      * @param frag_path string containning all fragment shader code
      * @param shader_name name used in logging to determine in what shader something went wrong
      * @return fresh and new shader, remember to dispose it after using!
      */
     public static synchronized ShaderProgram createShaderProgram(String vert_path, String frag_path, String shader_name) {
+        //if program allready with that name exists just return it
         if(shaders.containsKey(shader_name))
             return shaders.get(shader_name);
 
+        //if not load shader code from text files and compile it
         String vert = Gdx.files.internal(vert_path).readString();
         String frag = Gdx.files.internal(frag_path).readString();
 

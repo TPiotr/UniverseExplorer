@@ -10,7 +10,7 @@ import explorer.game.ExplorerGame;
 
 public class DesktopLauncher {
 	public static void main (String[] arg) {
-		//pack old_assets.textures into assets.atlas
+		//pack all textures into atals
 		TexturePacker.Settings settings = new TexturePacker.Settings();
 		settings.maxWidth = 4096;
 		settings.maxHeight = 4096;
@@ -26,9 +26,9 @@ public class DesktopLauncher {
 
 		settings.combineSubdirectories = true;
 
-		TexturePacker.process(settings,"assets_to_pack", "atlas", "main_atlas");
+		TexturePacker.processIfModified(settings,"assets_to_pack", "atlas", "main_atlas");
 
-		//run game like normally
+		//run game
 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
 
 		config.width = 1280;

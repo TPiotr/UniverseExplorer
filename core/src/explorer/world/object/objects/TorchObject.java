@@ -26,17 +26,21 @@ public class TorchObject extends WorldObject {
 
     private float time;
 
+    private static final float scale = 3f;
+
     public TorchObject(Vector2 position, World world, Game game) {
         super(position, world, game);
 
-        final float scale = 3f;
         wh.set(6, 14).scl(scale);
 
         if (torch_animation == null) {
             torch_animation = Helper.makeAnimation(6, 14, .4f, game.getAssetsManager().getTextureRegion("objects/torch_texture"));
         }
+    }
 
-        light = new PointLight(new Vector2(getPosition().x + getWH().x / 2f, getPosition().y + getWH().y / 2f), new Vector3(1, 1, 1), 50 * scale, game);
+    @Override
+    public void addedToWorld() {
+        light = new PointLight(new Vector2(getPosition().x + getWH().x / 2f, getPosition().y + getWH().y / 2f), new Vector3(1, 1, 1), 150 * scale, game);
         world.getLightEngine().addLight(light);
     }
 

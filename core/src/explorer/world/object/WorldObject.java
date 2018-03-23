@@ -15,6 +15,7 @@ import explorer.world.World;
 import explorer.world.chunk.WorldChunk;
 
 /**
+ * The most basic class of all world objects
  * Created by RYZEN on 07.10.2017.
  */
 
@@ -115,7 +116,7 @@ public abstract class WorldObject {
     protected HashMap<String, String> object_properties;
 
     /**
-     * The most basic constructor that every saveable object have to have!
+     * The most basic constructor that every object have to have!
      * @param position position of new object
      * @param world world instance
      * @param game game instance
@@ -154,7 +155,12 @@ public abstract class WorldObject {
     public abstract void dispose();
 
     /**
-     * Flag informating world ligthing engine if for this world object should be rendered point light with bound of this objects to simulate ambient lighting
+     * Function called only when this object was just added to world (removedFromWorld is dispose method)
+     */
+    public void addedToWorld() {}
+
+    /**
+     * Flag informating world ligthing engine if for this world object should be rendered point light with bounds of this object to simulate ambient lighting
      * @return
      */
     public boolean isCastingSelfLight() {

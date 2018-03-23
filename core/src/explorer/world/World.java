@@ -50,12 +50,13 @@ import explorer.world.object.WorldObject;
 import explorer.world.object.objects.player.Player;
 import explorer.world.physics.PhysicsEngine;
 import explorer.world.planet.PlanetProperties;
+import explorer.world.object.WorldObject.IDAssigner;
 
 /**
  * Created by RYZEN on 07.10.2017.
  */
 
-public class World extends StaticWorldObject {
+public class World {
 
     /**
      * World properties
@@ -76,7 +77,7 @@ public class World extends StaticWorldObject {
     private explorer.world.chunk.WorldChunk[][] chunks;
 
     /**
-     * Determines in milis how long wait with chunks loading when player is on new one
+     * Determines in milis how long wait with chunks loading when player is on new chunk
      */
     private long load_chunk_after = 1000;
     /**
@@ -114,8 +115,8 @@ public class World extends StaticWorldObject {
     private AtomicBoolean initializated;
 
     /**
-     * Float that is same on every client so very usefull variable to synchronize objects
-     * in fact time in seconds passed since started this world
+     * Float that is same on every client so very useful variable to synchronize objects
+     * (in fact this is time in seconds passed since this world was started)
      */
     public static float TIME;
 
@@ -135,6 +136,11 @@ public class World extends StaticWorldObject {
     private Player player;
 
     /**
+     * Game instance
+     */
+    private Game game;
+
+    /**
      * Chunk data provider
      */
     protected ChunkDataProvider data_provider;
@@ -150,11 +156,6 @@ public class World extends StaticWorldObject {
     private ShaderProgram combine_shader;
 
     /**
-     * Temp rect used in addObject() to check if given objects is inside some chunk
-     */
-    private Rectangle chunk_rect;
-
-    /**
      * World bound packets listener for client or server depends on what game is at the moment
      */
     private Listener listener;
@@ -165,7 +166,7 @@ public class World extends StaticWorldObject {
     private ChunkDataRequestsHandler server_request_handler;
 
     /**
-     * Server bound instance, responsible for receiving ChunkDataSaveRequestPacket and save received data to file
+     * Server bound instance, responsible for receiving ChunkDataSaveRequestPacket and save received chunk data to file
      */
     private ChunkDataSaveRequestsHandler server_save_request_handler;
 
@@ -183,9 +184,7 @@ public class World extends StaticWorldObject {
     private ShapeRenderer shape_renderer;
 
     public World(Game game, int planet_seed) {
-        super(new Vector2(0, 0), null, game);
-        world = this;
-
+        this.game = game;
         this.planet_seed = planet_seed;
 
         initializated = new AtomicBoolean(false);
@@ -231,6 +230,7 @@ public class World extends StaticWorldObject {
 
         client_request_handler = new ClientChunkDataRequestsHandler(this, game);
 
+        final World world = this;
         //create server listener if is host for things combined with world, like sending chunk data, block updates etc.
         if(Game.IS_HOST) {
             server_request_handler = new ChunkDataRequestsHandler(this, game);
@@ -502,7 +502,7 @@ public class World extends StaticWorldObject {
             game.getGameServer().getServer().addListener(listener);
             Log.info("(World) Listener made");
         } else if(Game.IS_CLIENT) {
-            //create players clones
+            //create connected & registered players clones
             for(int i = 0; i < game.getGameClient().getPlayers().size; i++) {
                 ServerPlayer server_player = game.getGameClient().getPlayers().get(i);
 
@@ -722,8 +722,6 @@ public class World extends StaticWorldObject {
         player = new Player(new Vector2(getPlanetProperties().PLANET_TYPE.PLANET_GENERATOR.getPlayerSpawn()), this, false, game);
         physics_engine.addWorldObject(player);
 
-        chunk_rect = new Rectangle();
-
         initializated.set(true);
 
         /* DEBUG*/
@@ -891,7 +889,7 @@ public class World extends StaticWorldObject {
         long start_time = System.currentTimeMillis();
         DataInputStream reader = new DataInputStream(Gdx.files.local(getWorldDirectory(getPlanetProperties().PLANET_SEED) + "world.properties").read(128));
         try {
-            //write value from IDAssigner to next time properly assign id's to objects
+            //read value for current IDAssigner value
             int acc_id = reader.readInt();
             IDAssigner.set(acc_id);
 
@@ -901,6 +899,7 @@ public class World extends StaticWorldObject {
             Log.error("(World) Failed to read world info file", e);
 
             //TODO handle corrupted world file(push back to menu and show dialog or whatever)
+            game.getDialogHandler().showDialog(new InfoDialog("Failed to load world! (file is probably corrupted)", game.getGUIViewport(), game));
         }
     }
 
@@ -949,7 +948,10 @@ public class World extends StaticWorldObject {
             object.getParentChunk().removeObject(object, notify_network);
     }
 
-    @Override
+    /**
+     * Tick world
+     * @param delta delta time
+     */
     public void tick(float delta) {
         //first check status about chunks if more than 70% procents of them are loading hide planet screen and show loading screen and wait until everything will be ready for playing a game
         if(isInitializated()) {
@@ -1009,7 +1011,7 @@ public class World extends StaticWorldObject {
         //well this system is simple and doesn't forces host to calculate whole logic for all players
         //just to synchronized everything we will have some kind of local hosts of local regions where they are
         //so we have to calculate value SIMULATE_LOGIC based on distance from other players on server if true this client will calculate whole logic and send
-        //result to other clients if some clients are near enough he will use this info and everything will be nice and synchronized
+        //result to other clients if some clients are near enough which were use this info
 
         //calculate this value only if game is in networking mode otherwise setting SIMULATE_LOGIC to true once is enough because noting will change it to other value
 
@@ -1396,7 +1398,10 @@ public class World extends StaticWorldObject {
         game.getScreen(Screens.PLANET_GUI_SCREEN_NAME, PlanetGUIScreen.class).tick(delta);
     }
 
-    @Override
+    /**
+     * Render world
+     * @param batch sprite batch instance
+     */
     public void render(SpriteBatch batch) {
         if(!isInitializated() || isGenerating())
             return;
@@ -1407,13 +1412,9 @@ public class World extends StaticWorldObject {
         //now rendering sprites combined with light map
         batch.setShader(combine_shader);
 
-        //here 1~3 ms
-
         //bind light map texture as second texture
         light_engine.getLightMap().getColorBufferTexture().bind(1);
         Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
-
-        //here ~0ms lol
 
         //firstly render background
         combine_shader.setUniformf("ambient_color", getPlanetProperties().PLANET_TYPE.PLANET_BACKGROUND.getColor());
@@ -1425,20 +1426,13 @@ public class World extends StaticWorldObject {
         //pass other uniforms
         combine_shader.setUniformf("ambient_color", getLightEngine().getAmbientColor());
 
-        //umm ~0ms
-
         //next render world
         batch.setProjectionMatrix(game.getMainCamera().combined);
 
-        long start_time = System.currentTimeMillis();
-
-        int blocks_rendered = 0;
         for(int i = 0; i < chunks.length; i++) {
             for(int j = 0; j < chunks[0].length; j++) {
                 WorldChunk chunk = chunks[i][j];
                 chunk.render(batch);
-
-                blocks_rendered += chunk.blocks_rendered;
             }
         }
 
@@ -1497,7 +1491,9 @@ public class World extends StaticWorldObject {
         batch.begin();
     }
 
-    @Override
+    /**
+     * Dispose this world instance (save world info, chunks, dispose shaders, remove server/client listeners etc)
+     */
     public void dispose() {
         if(isInitializated() && player != null)
             player.dispose();

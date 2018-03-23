@@ -82,7 +82,7 @@ public class ChunkDataRequestsHandler {
                         chunk_data = packet_data;
                     }
 
-                    //check if we can grab this chunk data from some player which is on requested chunk already is byte chunk data is still null
+                    //check if we can grab this chunk data from some player which is on requested chunk already if byte chunk data is still null
                     if(chunk_data == null) {
                         for (int i = 0; i < world.getClonedPlayers().size; i++) {
                             Player clone = world.getClonedPlayers().get(i);
@@ -92,6 +92,7 @@ public class ChunkDataRequestsHandler {
 
                             if (canSendData(x, y, player_x, player_y) && clone.getRepresentingPlayer().connection_id != request.connection_id
                                     && clone.getRepresentingPlayer().connection_id != request.rejected_id && clone.getOnCurrentChunkTime() > MUST_BE_ON_CHUNK_TO_REQUEST_DATA) {
+
                                 game.getGameServer().getServer().sendToTCP(clone.getRepresentingPlayer().connection_id, request);
                                 Log.debug("(ChunkDataRequestsHandler) Sending data request from:" + request.connection_id + " to another client: " + clone.getRepresentingPlayer().connection_id);
                                 return;
@@ -141,8 +142,7 @@ public class ChunkDataRequestsHandler {
                         ((HostNetworkChunkDataProvider) world.getChunksDataProvider()).parseChunkDataPacket(data_packet);
                     }
                 } catch(Exception e) {
-                    System.err.println("(Chunk Data Requests Handler) loading chunk file for client failed! ("+e.getClass().getSimpleName()+ "):");
-                    e.printStackTrace();
+                    Log.error("(Chunk Data Requests Handler) loading chunk file for client failed! ("+e.getClass().getSimpleName()+ "):", e);
                 }
             }
         };

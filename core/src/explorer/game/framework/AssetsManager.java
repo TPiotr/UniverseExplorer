@@ -28,7 +28,7 @@ public class AssetsManager {
 	private HashMap<String, TextureAtlas> atlases;
 
 	/**
-	 * Helpful for debug bitmap font with default font;
+	 * Font used while debugging or creating something, do not use in final things
 	 */
 	public static BitmapFont font;
 
@@ -50,7 +50,7 @@ public class AssetsManager {
 	private HashMap<Texture, TextureRegion[][]> sprite_sheets;
 	
 	//callback class to handle assets loading on other threads
-	public static interface AssetCallback {
+	public interface AssetCallback {
 		//objects because we will use it for assets.fonts, old_assets.textures, textureregions, textureregions arrays etc. (user will know what he is loading)
 		public void loaded(Object asset);
 	}
@@ -293,24 +293,7 @@ public class AssetsManager {
 		
 		return atlas;
 	}
-	public TextureAtlas getTextureAtlasWithSplitedTextureRegion(int tile_x, int tile_y, String path, TextureFilter min_filter, TextureFilter mag_filter) {
-		TextureRegion[][] right_anim_keys = getTilesFromSpriteSheet(path, tile_x, tile_y, min_filter, mag_filter);
-		
-		TextureAtlas atlas = new TextureAtlas();
-		for(int i = 0; i < right_anim_keys[0].length; i++) 
-			atlas.addRegion(""+i, right_anim_keys[0][i]);
-		
-		return atlas;
-	}
-	
-	public synchronized void getTextureAtlasWithSplitedTextureRegionOnOtherThread(int tile_x, int tile_y, String path, AssetCallback callback) {
-		//if(!old_assets.textures.containsKey(path)) {
-			texture_atlases_to_load.put(new TextureAtlasKey(tile_x, tile_y, path), callback);
-		//} else {
-		//	callback.loaded(getTextureAtlasWithSplitedTextureRegion(tile_x, tile_y, path));
-		//}
-	}
-	
+
 	//and dispose function
 	public void dispose() {
 		for(Texture texture : textures.values()) {

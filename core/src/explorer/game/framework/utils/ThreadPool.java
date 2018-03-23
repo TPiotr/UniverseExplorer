@@ -68,7 +68,7 @@ public class ThreadPool {
         //thread_pool_size means max pool space
         //thread_num means how many threads will work at the moment
         //keep_alive means how to keep alive
-        //thread_num-1 because we allready use one thread as out main rendering and logic gdx thread
+        //thread_num-1 because we already use one thread as out main rendering and logic gdx thread
         executor_pool = new ThreadPoolExecutor(threads_count, thread_pool_size, keep_alive,
        		TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(threads_count), thread_factory, rejection_handler);
 	}

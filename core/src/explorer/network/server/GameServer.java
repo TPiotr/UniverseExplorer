@@ -21,7 +21,7 @@ import explorer.network.client.ServerPlayer;
 public class GameServer {
 
     /**
-     * Interfacing informing us about progress on creating an server
+     * Interface informing us about progress on creating an server
      */
     public interface GameServerCreatedCallback {
         void created();
@@ -44,7 +44,7 @@ public class GameServer {
     public static final int UDP_PORT = 54777;
 
     /**
-     * Array that contains all currently connected players (and registered)
+     * Array that contains all currently connected players (and registered!)
      */
     private Array<ServerPlayer> players;
 
@@ -109,7 +109,7 @@ public class GameServer {
                         server.sendToTCP(connection.getID(), new_player_info);
                     }
 
-                    //finally send info about server player so about host
+                    //finally send info host
                     NetworkClasses.NewPlayerPacket host_player_info = new NetworkClasses.NewPlayerPacket();
                     host_player_info.connection_id = SERVER_CONNECTION_ID;
                     host_player_info.username = game.getUsername();
@@ -142,7 +142,6 @@ public class GameServer {
             @Override
             public void connected(Connection connection) {
                 Log.info("(Network Server) New client connected");
-
             }
 
             @Override
@@ -208,7 +207,7 @@ public class GameServer {
     }
 
     /**
-     * Freeup resources used by this instance
+     * Free resources used by server
      */
     public void dispose() {
         if(server != null) {

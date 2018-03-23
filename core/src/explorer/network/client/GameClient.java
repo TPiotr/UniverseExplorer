@@ -70,6 +70,11 @@ public class GameClient {
         setupClientStuff();
     }
 
+    /**
+     * Connect to server (useful InetAddress.getByName(String ip))
+     * @param address address of server
+     * @param connected_callback callback that informs about connecting status (successful or not)
+     */
     public void connect(InetAddress address, final ConnectedToServerCallback connected_callback) {
         try {
             if(!started) {
@@ -98,7 +103,7 @@ public class GameClient {
 
     /**
      * Method that send to the server packet that contains info about this player so server can register him and game can begin
-     * @param username
+     * @param username username of this player
      */
     private void sendRegistrationPacket(String username) {
         NetworkClasses.OnServerRegistrationPacket registration_packet = new NetworkClasses.OnServerRegistrationPacket();
@@ -109,7 +114,7 @@ public class GameClient {
     }
 
     /**
-     * Method that setsup all stuff like packets listener and proper way of handling them, creates players array etc.
+     * Method that setup all stuff like packets listener and proper way of handling them, creates players array etc.
      */
     private void setupClientStuff() {
         players = new Array<ServerPlayer>();
@@ -268,7 +273,7 @@ public class GameClient {
             try {
                 client.dispose();
             } catch (IOException e) {
-                System.err.println("Exception while disposing client: " + e.getMessage());
+                Log.error("Exception while disposing client", e);
             }
         }
     }

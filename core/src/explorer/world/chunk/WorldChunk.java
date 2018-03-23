@@ -157,6 +157,9 @@ public class WorldChunk extends StaticWorldObject {
                 NetworkHelper.send(new_object_packet);
             }
 
+            //finally call its addedToWorld() method
+            object.addedToWorld();
+
             return true;
         }
     }
@@ -270,6 +273,7 @@ public class WorldChunk extends StaticWorldObject {
 
                         o.setParentChunk(WorldChunk.this);
                         objects.add(o);
+                        o.addedToWorld();
                     }
 
                     if(Thread.interrupted()) {

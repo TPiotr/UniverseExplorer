@@ -34,7 +34,7 @@ blocks/dirt_spritesheet
   index: -1
 blocks/grass_colorpack
   rotate: false
-  xy: 550, 872
+  xy: 586, 919
   size: 16, 1
   orig: 16, 1
   offset: 0, 0
@@ -62,7 +62,7 @@ blocks/light
   index: -1
 blocks/stone_colorpack
   rotate: false
-  xy: 1028, 1511
+  xy: 1062, 1545
   size: 16, 1
   orig: 16, 1
   offset: 0, 0
@@ -76,7 +76,7 @@ blocks/stone_spritesheet
   index: -1
 blocks/wooden_planks_colorpack
   rotate: false
-  xy: 1094, 1577
+  xy: 1158, 1622
   size: 16, 1
   orig: 16, 1
   offset: 0, 0
@@ -104,7 +104,7 @@ gui/blocks_pointer
   index: -1
 gui/blocks_pointer_block
   rotate: false
-  xy: 516, 839
+  xy: 550, 857
   size: 16, 16
   orig: 16, 16
   offset: 0, 0
@@ -132,7 +132,7 @@ gui/right_arrow
   index: -1
 inventory/items/red_bandana_item_icon
   rotate: false
-  xy: 1192, 1664
+  xy: 1258, 1730
   size: 12, 12
   orig: 12, 12
   offset: 0, 0
@@ -151,9 +151,16 @@ inventory/items/test_pickaxe_item_icon
   orig: 32, 32
   offset: 0, 0
   index: -1
+inventory/items/uniform_body_item_icon
+  rotate: false
+  xy: 1094, 1562
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: -1
 inventory/slot_background
   rotate: false
-  xy: 586, 904
+  xy: 620, 922
   size: 16, 16
   orig: 16, 16
   offset: 0, 0
@@ -167,7 +174,7 @@ objects/torch_texture
   index: -1
 objects/tree/birch_tree
   rotate: false
-  xy: 260, 226
+  xy: 351, 373
   size: 25, 66
   orig: 25, 66
   offset: 0, 0
@@ -195,7 +202,7 @@ objects/tree/other_tree2
   index: -1
 objects/tree/tree0
   rotate: false
-  xy: 351, 379
+  xy: 516, 795
   size: 22, 60
   orig: 22, 60
   offset: 0, 0
@@ -300,7 +307,7 @@ player/base_head
   index: -1
 player/basic_arm
   rotate: false
-  xy: 1128, 1586
+  xy: 1192, 1650
   size: 12, 26
   orig: 12, 26
   offset: 0, 0
@@ -319,9 +326,23 @@ player/red_bandana_head
   orig: 26, 34
   offset: 0, 0
   index: -1
+player/uniform_arm
+  rotate: false
+  xy: 1352, 1763
+  size: 12, 26
+  orig: 12, 26
+  offset: 0, 0
+  index: -1
+player/uniform_body
+  rotate: false
+  xy: 260, 258
+  size: 26, 34
+  orig: 26, 34
+  offset: 0, 0
+  index: -1
 star
   rotate: false
-  xy: 620, 922
+  xy: 1028, 1496
   size: 16, 16
   orig: 16, 16
   offset: 0, 0
@@ -335,7 +356,7 @@ universe/planets/planet1
   index: -1
 white_texture
   rotate: false
-  xy: 1062, 1530
+  xy: 1128, 1596
   size: 16, 16
   orig: 16, 16
   offset: 0, 0

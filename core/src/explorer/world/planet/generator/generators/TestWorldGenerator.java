@@ -59,10 +59,9 @@ public class TestWorldGenerator extends WorldGenerator {
     }
 
     private int getHeight(int x, int chunk_pos_x) {
-        //final int height_offset = 100;
-        //int y = (int) heights_generator.generateHeight(x + (chunk_pos_x * World.CHUNK_SIZE), 0) + height_offset;
+        final int height_offset = 200;
+        int y = (int) heights_generator.generateHeight(x + (chunk_pos_x * World.CHUNK_SIZE), 0) + height_offset;
 
-        int y = 150;
         return y;
     }
 

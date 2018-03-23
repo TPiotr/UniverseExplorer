@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Vector2;
 import com.esotericsoftware.minlog.Log;
 
 import java.lang.reflect.Constructor;
@@ -15,6 +16,8 @@ import java.lang.reflect.InvocationTargetException;
 
 import explorer.game.framework.Game;
 import explorer.network.server.GameServer;
+import explorer.world.World;
+import explorer.world.object.WorldObject;
 
 /**
  * Created by RYZEN on 07.10.2017.
@@ -22,6 +25,9 @@ import explorer.network.server.GameServer;
 
 public class Helper {
 
+    /**
+     * Just 4x4 identity matrix to not create a lot of same objects in different classes
+     */
     public static final Matrix4 IDT_MAT = new Matrix4().idt();
 
     /**
@@ -98,5 +104,30 @@ public class Helper {
         Object object = ctor.newInstance(constructor_arguments);
 
         return object;
+    }
+
+    /**
+     * Create world object from class name
+     * @param class_name
+     * @param position
+     * @param world
+     * @param game
+     * @return could be null
+     */
+    public static WorldObject instantieWorldObject(String class_name, Vector2 position, World world, Game game) {
+        try {
+            return (WorldObject) objectFromClassName(class_name, new Object[] { position, world, game }, Vector2.class, World.class, Game.class);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

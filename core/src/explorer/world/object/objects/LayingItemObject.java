@@ -10,7 +10,7 @@ import explorer.game.Helper;
 import explorer.game.framework.Game;
 import explorer.world.World;
 import explorer.world.inventory.Item;
-import explorer.world.inventory.item_types.BlockItem;
+import explorer.world.inventory.items.placeables.BlockItem;
 import explorer.world.object.DynamicWorldObject;
 import explorer.world.object.WorldObject;
 import explorer.world.object.objects.player.Player;

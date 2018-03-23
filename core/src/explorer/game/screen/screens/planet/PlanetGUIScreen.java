@@ -1,36 +1,23 @@
 package explorer.game.screen.screens.planet;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.InputAdapter;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.profiling.GLProfiler;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 
-import explorer.game.framework.AssetsManager;
 import explorer.game.framework.Game;
-import explorer.game.framework.utils.math.MathHelper;
 import explorer.game.screen.Screen;
-import explorer.game.screen.ScreenComponent;
 import explorer.game.screen.gui.GUIComponent;
-import explorer.game.screen.gui.TextButton;
 import explorer.game.screen.gui.TextureButton;
 import explorer.game.screen.screens.Screens;
 import explorer.network.client.ServerPlayer;
-import explorer.world.World;
-import explorer.world.block.Block;
-import explorer.world.block.CustomColorBlock;
-import explorer.world.block.CustomRenderingBlock;
 import explorer.world.inventory.Item;
-import explorer.world.inventory.item_types.BlockItem;
+import explorer.world.inventory.item_types.PlaceableItem;
+import explorer.world.inventory.items.placeables.BlockItem;
 import explorer.world.inventory.item_types.ToolItem;
-import explorer.world.object.WorldObject;
 import explorer.world.object.objects.player.gui.BackgroundForegroundSwitch;
 import explorer.world.object.objects.player.gui.PlayerBlockSelectorGUIComponent;
-import explorer.world.object.objects.player.gui.PlayerInventoryRenderer;
 import explorer.world.object.objects.player.gui.PlayerToolBarGUIComponent;
 
 /**
@@ -167,14 +154,14 @@ public class PlanetGUIScreen extends Screen {
             @Override
             public void touched(GUIComponent instance) {
                 if(planet_screen.getWorld() != null && planet_screen.getWorld().getPlayer() != null) {
-                    planet_screen.getWorld().getPlayer().setPlaceBlockButtonPressed(true);
+                    planet_screen.getWorld().getPlayer().setPlaceButtonPressed(true);
                 }
             }
 
             @Override
             public void released(GUIComponent instance) {
                 if(planet_screen.getWorld() != null && planet_screen.getWorld().getPlayer() != null) {
-                    planet_screen.getWorld().getPlayer().setPlaceBlockButtonPressed(false);
+                    planet_screen.getWorld().getPlayer().setPlaceButtonPressed(false);
                 }
             }
         });
@@ -224,7 +211,7 @@ public class PlanetGUIScreen extends Screen {
                 Item item = planet_screen.getWorld().getPlayer().getSelectedItems().getItem();
                 if (item instanceof ToolItem) {
                     pickaxe_button.setVisible(true);
-                } else if (item instanceof BlockItem) {
+                } else if (item instanceof PlaceableItem) {
                     placeblock_button.setVisible(true);
                 }
 

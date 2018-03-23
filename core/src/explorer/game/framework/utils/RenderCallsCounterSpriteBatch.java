@@ -10,7 +10,7 @@ import com.badlogic.gdx.math.Affine2;
 import com.badlogic.gdx.math.Matrix4;
 
 /**
- * Simply modificated sprite batch that counts all render calls until reset() method is called in main rendering loop in Game class
+ * Little modificated sprite batch that counts all render calls until reset() method is called in main rendering loop in Game class
  * With that we can calculate total count of render calls per 1 frame
  * Created by RYZEN on 13.10.2017.
  */
@@ -105,7 +105,7 @@ public class RenderCallsCounterSpriteBatch extends SpriteBatch implements Batch 
     }
 
     /**
-     * Set counter to 0 call after whole frame is rendered
+     * Set counter to 0, call after whole frame is rendered
      */
     public void resetCounter() {
         render_method_calls = 0;
