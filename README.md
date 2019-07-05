@@ -23,4 +23,7 @@ This engine uses LibGDX for crossplatform support and KryoNet for networking stu
   - Player is created from basic 3 sets of sprites (head, torso, legs (only animated part)) + 1 sprite of arm
   - These sprites are changed accordingly to what player wears at the moment
   - Inventory system
+
+## Universe screen showcase video
+[![Click it](https://img.youtube.com/vi/pGeCmkzOE8U/0.jpg)](https://www.youtube.com/watch?v=pGeCmkzOE8U)
  
